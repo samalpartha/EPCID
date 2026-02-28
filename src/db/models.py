@@ -3,6 +3,7 @@ EPCID Database Models
 
 SQLAlchemy ORM models for all database entities.
 """
+from __future__ import annotations
 
 import enum
 from datetime import datetime
@@ -317,7 +318,7 @@ class AuditLog(Base):
     )
 
     # Relationships
-    user: Mapped["User" | None] = relationship("User", back_populates="audit_logs")
+    user: Mapped[User | None] = relationship("User", back_populates="audit_logs")
 
     # Indexes
     __table_args__ = (

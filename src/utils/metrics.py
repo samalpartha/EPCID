@@ -8,6 +8,7 @@ Performance and clinical metrics collection:
 - Model performance metrics
 - Safety rule trigger rates
 """
+from __future__ import annotations
 
 import logging
 import statistics
@@ -33,7 +34,7 @@ class MetricValue:
 class Timer:
     """Context manager for timing operations."""
 
-    def __init__(self, name: str, collector: "MetricsCollector" | None = None):
+    def __init__(self, name: str, collector: MetricsCollector | None = None):
         self.name = name
         self.collector = collector
         self.start_time: float | None = None
