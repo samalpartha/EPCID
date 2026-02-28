@@ -9,7 +9,7 @@ JWT-based authentication endpoints:
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -212,7 +212,10 @@ async def login(request: LoginRequest) -> TokenResponse:
 )
 async def login_form(form_data: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:
     """OAuth2 compatible login endpoint for Swagger UI."""
-    return await login(LoginRequest(email=form_data.username, password=form_data.password))
+    return cast(
+        TokenResponse,
+        await login(LoginRequest(email=form_data.username, password=form_data.password)),
+    )
 
 
 @router.post(

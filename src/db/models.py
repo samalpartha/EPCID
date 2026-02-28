@@ -6,6 +6,7 @@ SQLAlchemy ORM models for all database entities.
 
 import enum
 from datetime import datetime
+from typing import cast
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -162,7 +163,7 @@ class Child(Base):
         months = (today.year - self.date_of_birth.year) * 12 + (
             today.month - self.date_of_birth.month
         )
-        return max(0, months)
+        return cast(int, max(0, months))
 
     @property
     def age_display(self) -> str:

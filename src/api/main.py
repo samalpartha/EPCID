@@ -306,7 +306,7 @@ app = create_app()
 def custom_openapi() -> dict[str, Any]:
     """Generate custom OpenAPI schema."""
     if app.openapi_schema:
-        return app.openapi_schema
+        return cast(dict[str, Any], app.openapi_schema)
 
     openapi_schema = get_openapi(
         title="EPCID API",
@@ -377,7 +377,7 @@ def custom_openapi() -> dict[str, Any]:
     ]
 
     app.openapi_schema = openapi_schema
-    return app.openapi_schema
+    return cast(dict[str, Any], app.openapi_schema)
 
 
 app.openapi = custom_openapi  # type: ignore[method-assign]
