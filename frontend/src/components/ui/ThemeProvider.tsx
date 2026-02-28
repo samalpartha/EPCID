@@ -1,0 +1,77 @@
+'use client'
+
+import { createContext, useContext, useEffect, useState } from 'react'
+
+type Theme = 'light' | 'dark' | 'system'
+
+interface ThemeContextType {
+  theme: Theme
+  resolvedTheme: 'light' | 'dark'
+  setTheme: (theme: Theme) => void
+  mounted: boolean
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>('light')
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    // Get saved theme or default to light (medical apps should default to light)
+    const savedTheme = localStorage.getItem('theme') as Theme | null
+    const initialTheme = savedTheme || 'light'
+    setThemeState(initialTheme)
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
+    const root = document.documentElement
+    
+    const applyTheme = (isDark: boolean) => {
+      if (isDark) {
+        root.classList.add('dark')
+        setResolvedTheme('dark')
+      } else {
+        root.classList.remove('dark')
+        setResolvedTheme('light')
+      }
+    }
+
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      applyTheme(mediaQuery.matches)
+      
+      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches)
+      mediaQuery.addEventListener('change', handler)
+      return () => mediaQuery.removeEventListener('change', handler)
+    } else {
+      applyTheme(theme === 'dark')
+    }
+  }, [theme, mounted])
+
+  const setTheme = (newTheme: Theme) => {
+    localStorage.setItem('theme', newTheme)
+    setThemeState(newTheme)
+  }
+
+  // Always provide the context, but hide children until mounted to prevent flash
+  return (
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, mounted }}>
+      <div style={{ visibility: mounted ? 'visible' : 'hidden' }}>
+        {children}
+      </div>
+    </ThemeContext.Provider>
+  )
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext)
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
+  return context
+}

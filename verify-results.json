@@ -1,0 +1,39 @@
+{
+  "tests": [
+    {
+      "name": "Demo button visible",
+      "pass": true,
+      "detail": "Found"
+    },
+    {
+      "name": "Demo button clicked",
+      "pass": true,
+      "detail": "Clicked"
+    },
+    {
+      "name": "Landed on dashboard",
+      "pass": true,
+      "detail": "https://epcid-frontend-365415503294.us-central1.run.app/dashboard"
+    },
+    {
+      "name": "Dosage Add weight message",
+      "pass": true,
+      "detail": "GOOD: Correct message"
+    },
+    {
+      "name": "Chat disclaimer fully visible",
+      "pass": true,
+      "detail": "GOOD: Full disclaimer visible"
+    },
+    {
+      "name": "No CORS auth errors",
+      "pass": true,
+      "detail": "None"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "corsErrors": []
+}

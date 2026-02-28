@@ -1,0 +1,14 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=https://epcid-backend-lqgrtavcha-uc.a.run.app'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/epcid-frontend'
+      - '-f'
+      - 'frontend/Dockerfile'
+      - './frontend'
+images:
+  - 'gcr.io/$PROJECT_ID/epcid-frontend'
+timeout: '1800s'
