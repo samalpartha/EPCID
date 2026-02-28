@@ -121,7 +121,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U epcid -d epcid_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -138,7 +138,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-asyncio httpx
+          pip install pytest pytest-asyncio httpx pytest-timeout
       
       - name: Run integration tests
         env:
@@ -190,7 +190,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install httpx pytest schemathesis
+          pip install httpx pytest schemathesis pytest-timeout
       
       - name: Start API server
         run: |
