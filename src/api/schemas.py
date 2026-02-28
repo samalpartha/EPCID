@@ -5,14 +5,14 @@ Pydantic models for API request/response validation.
 """
 
 from datetime import datetime
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field, validator
 
 
 # Enums
-class RiskLevel(StrEnum):
+class RiskLevel(str, Enum):
     """Risk level classification."""
 
     LOW = "low"
@@ -21,7 +21,7 @@ class RiskLevel(StrEnum):
     CRITICAL = "critical"
 
 
-class SymptomSeverity(StrEnum):
+class SymptomSeverity(str, Enum):
     """Symptom severity levels."""
 
     MILD = "mild"
@@ -29,7 +29,7 @@ class SymptomSeverity(StrEnum):
     SEVERE = "severe"
 
 
-class Gender(StrEnum):
+class Gender(str, Enum):
     """Gender options."""
 
     MALE = "male"

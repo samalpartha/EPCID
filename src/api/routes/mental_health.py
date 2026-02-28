@@ -13,7 +13,7 @@ Inspired by OCD Action (https://github.com/womenhackfornonprofits/ocdaction)
 
 import uuid
 from datetime import datetime
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -25,7 +25,7 @@ router = APIRouter()
 # ============== Enums ==============
 
 
-class MoodLevel(StrEnum):
+class MoodLevel(str, Enum):
     VERY_SAD = "very_sad"
     SAD = "sad"
     NEUTRAL = "neutral"
@@ -33,14 +33,14 @@ class MoodLevel(StrEnum):
     VERY_HAPPY = "very_happy"
 
 
-class AnxietyLevel(StrEnum):
+class AnxietyLevel(str, Enum):
     NONE = "none"
     MILD = "mild"
     MODERATE = "moderate"
     SEVERE = "severe"
 
 
-class CopingCategory(StrEnum):
+class CopingCategory(str, Enum):
     BREATHING = "breathing"
     GROUNDING = "grounding"
     MOVEMENT = "movement"

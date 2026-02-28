@@ -34,7 +34,7 @@ def generate_uuid() -> str:
 
 
 # Enums
-class Gender(enum.StrEnum):
+class Gender(str, enum.Enum):
     """Gender options."""
 
     MALE = "male"
@@ -42,7 +42,7 @@ class Gender(enum.StrEnum):
     OTHER = "other"
 
 
-class SymptomSeverity(enum.StrEnum):
+class SymptomSeverity(str, enum.Enum):
     """Symptom severity levels."""
 
     MILD = "mild"
@@ -50,7 +50,7 @@ class SymptomSeverity(enum.StrEnum):
     SEVERE = "severe"
 
 
-class RiskLevel(enum.StrEnum):
+class RiskLevel(str, enum.Enum):
     """Risk level classification."""
 
     LOW = "low"
@@ -59,7 +59,7 @@ class RiskLevel(enum.StrEnum):
     CRITICAL = "critical"
 
 
-class AuditAction(enum.StrEnum):
+class AuditAction(str, enum.Enum):
     """Audit log action types."""
 
     CREATE = "create"

@@ -16,13 +16,13 @@ APIs Used:
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import StrEnum
+from enum import Enum
 from typing import Any, cast
 
 logger = logging.getLogger("epcid.services.cdc")
 
 
-class DiseaseType(StrEnum):
+class DiseaseType(str, Enum):
     """Trackable disease types."""
 
     INFLUENZA = "influenza"
@@ -32,7 +32,7 @@ class DiseaseType(StrEnum):
     ENTEROVIRUS = "enterovirus"
 
 
-class ActivityLevel(StrEnum):
+class ActivityLevel(str, Enum):
     """CDC activity levels."""
 
     MINIMAL = "minimal"
