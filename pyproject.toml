@@ -128,6 +128,14 @@ exclude = ["tests", "data"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = [
+    ".git",
+    ".venv",
+    "data",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -140,12 +148,7 @@ select = [
 ignore = [
     "E501",  # line too long (handled by black)
     "B008",  # do not perform function calls in argument defaults
-]
-exclude = [
-    ".git",
-    ".venv",
-    "data",
-    "__pycache__",
+    "UP042", # Class inherits from both str and enum.Enum (we need this for Python 3.10 compatibility)
 ]
 
 [tool.pytest.ini_options]
