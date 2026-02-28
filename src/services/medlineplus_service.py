@@ -409,14 +409,14 @@ class MedlinePlusService:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]
-            if datetime.now(__import__("datetime").timezone.utc) - timestamp < timedelta(hours=self.cache_ttl_hours):
+            if datetime.now(__import__('datetime').timezone.utc) - timestamp < timedelta(hours=self.cache_ttl_hours):
                 return result
             del self._cache[key]
         return None
 
     def _set_cached(self, key: str, value: List[MedlinePlusResult]) -> None:
         """Set cached result."""
-        self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))
+        self._cache[key] = (value, datetime.now(__import__('datetime').timezone.utc))
 
     def clear_cache(self) -> None:
         """Clear the cache."""

@@ -34,7 +34,7 @@ class Explanation:
     sections: List[ExplanationSection]
     confidence_statement: str
     disclaimers: List[str]
-    generated_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
+    generated_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
 
     def to_markdown(self) -> str:
         """Convert explanation to Markdown format."""

@@ -127,7 +127,7 @@ async def register(request: RegisterRequest):
         "hashed_password": hashed_password,
         "is_active": True,
         "is_verified": False,
-        "created_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
+        "created_at": datetime.now(__import__('datetime').timezone.utc).isoformat(),
     }
 
     fake_users_db[request.email] = new_user

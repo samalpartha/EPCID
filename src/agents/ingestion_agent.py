@@ -163,7 +163,7 @@ class IngestionAgent(BaseAgent):
         warnings: List[str] = []
 
         # Get timestamp
-        timestamp = input_data.get("timestamp", datetime.now(__import__("datetime").timezone.utc).isoformat())
+        timestamp = input_data.get("timestamp", datetime.now(__import__('datetime').timezone.utc).isoformat())
         normalized_data["timestamp"] = timestamp
 
         # Get child ID
@@ -420,7 +420,7 @@ class IngestionAgent(BaseAgent):
         elif "date_of_birth" in demographics:
             # Calculate age from DOB
             dob = datetime.fromisoformat(demographics["date_of_birth"].replace("Z", "+00:00"))
-            now = datetime.now(__import__("datetime").timezone.utc)
+            now = datetime.now(__import__('datetime').timezone.utc)
             age_days = (now - dob.replace(tzinfo=None)).days
             normalized["age_months"] = age_days // 30
             normalized["date_of_birth"] = dob.isoformat()
@@ -508,7 +508,7 @@ class IngestionAgent(BaseAgent):
             normalized["description"] = image_data["description"]
 
         # Timestamp
-        normalized["captured_at"] = image_data.get("timestamp", datetime.now(__import__("datetime").timezone.utc).isoformat())
+        normalized["captured_at"] = image_data.get("timestamp", datetime.now(__import__('datetime').timezone.utc).isoformat())
 
         return {
             "data": normalized,
@@ -556,7 +556,7 @@ class IngestionAgent(BaseAgent):
                 warnings.append("Audio clip is very long (>30 seconds)")
 
         # Timestamp
-        normalized["recorded_at"] = voice_data.get("timestamp", datetime.now(__import__("datetime").timezone.utc).isoformat())
+        normalized["recorded_at"] = voice_data.get("timestamp", datetime.now(__import__('datetime').timezone.utc).isoformat())
 
         return {
             "data": normalized,

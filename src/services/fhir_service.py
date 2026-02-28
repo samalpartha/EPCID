@@ -423,7 +423,7 @@ class FHIRService:
             "conditions": [c.to_dict() for c in conditions],
             "medications": [m.to_dict() for m in medications],
             "immunizations": [i.to_dict() for i in immunizations],
-            "retrieved_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
+            "retrieved_at": datetime.now(__import__('datetime').timezone.utc).isoformat(),
         }
 
     async def _make_request(self, url: str) -> Optional[Dict[str, Any]]:
@@ -453,7 +453,7 @@ class FHIRService:
         if birth_date:
             try:
                 dob = datetime.fromisoformat(birth_date)
-                age_days = (datetime.now(__import__("datetime").timezone.utc) - dob).days
+                age_days = (datetime.now(__import__('datetime').timezone.utc) - dob).days
                 age_months = age_days // 30
             except:
                 pass

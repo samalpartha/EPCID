@@ -406,7 +406,7 @@ class WeatherService:
                 visibility_miles=response.get("visibility", 0) / 1609,
                 pressure_hpa=main.get("pressure"),
                 location=response.get("name", ""),
-                timestamp=datetime.now(__import__("datetime").timezone.utc),
+                timestamp=datetime.now(__import__('datetime').timezone.utc),
                 source="OpenWeatherMap",
             )
 
@@ -487,7 +487,7 @@ class WeatherService:
                     severity=props.get("severity", "Unknown"),
                     headline=props.get("headline", ""),
                     description=props.get("description", ""),
-                    start=datetime.fromisoformat(props.get("onset", datetime.now(__import__("datetime").timezone.utc).isoformat()).replace("Z", "+00:00")),
+                    start=datetime.fromisoformat(props.get("onset", datetime.now(__import__('datetime').timezone.utc).isoformat()).replace("Z", "+00:00")),
                     end=datetime.fromisoformat(props.get("ends").replace("Z", "+00:00")) if props.get("ends") else None,
                 ))
 
@@ -512,13 +512,13 @@ class WeatherService:
             visibility_miles=10,
             pressure_hpa=1015,
             location=location,
-            timestamp=datetime.now(__import__("datetime").timezone.utc),
+            timestamp=datetime.now(__import__('datetime').timezone.utc),
             source="Simulated",
         )
 
     def _get_simulated_forecast(self) -> List[WeatherForecast]:
         """Get simulated forecast for testing."""
-        today = datetime.now(__import__("datetime").timezone.utc)
+        today = datetime.now(__import__('datetime').timezone.utc)
         return [
             WeatherForecast(
                 date=(today + timedelta(days=i)).strftime("%Y-%m-%d"),
@@ -535,11 +535,11 @@ class WeatherService:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]
-            if datetime.now(__import__("datetime").timezone.utc) - timestamp < timedelta(minutes=self.cache_ttl_minutes):
+            if datetime.now(__import__('datetime').timezone.utc) - timestamp < timedelta(minutes=self.cache_ttl_minutes):
                 return result
             del self._cache[key]
         return None
 
     def _set_cached(self, key: str, value: Any) -> None:
         """Set cached result."""
-        self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))
+        self._cache[key] = (value, datetime.now(__import__('datetime').timezone.utc))

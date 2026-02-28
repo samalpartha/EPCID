@@ -138,7 +138,7 @@ async def run_assessment_pipeline(
         response = AssessmentResponse(
             id=assessment_id,
             child_id=request.child_id,
-            timestamp=datetime.now(__import__("datetime").timezone.utc),
+            timestamp=datetime.now(__import__('datetime').timezone.utc),
             risk_level=risk_level,
             risk_score=risk_score,
             confidence=risk_result.get("confidence", 0.8),
@@ -172,7 +172,7 @@ async def run_assessment_pipeline(
             "assessment": response.model_dump(),
             "user_id": user_id,
             "request": request.model_dump(),
-            "created_at": datetime.now(__import__("datetime").timezone.utc),
+            "created_at": datetime.now(__import__('datetime').timezone.utc),
         }
 
         return response
@@ -182,7 +182,7 @@ async def run_assessment_pipeline(
         return AssessmentResponse(
             id=assessment_id,
             child_id=request.child_id,
-            timestamp=datetime.now(__import__("datetime").timezone.utc),
+            timestamp=datetime.now(__import__('datetime').timezone.utc),
             risk_level=RiskLevel.MODERATE,
             risk_score=0.5,
             confidence=0.5,
@@ -351,7 +351,7 @@ async def get_child_assessment_history(
     """Get assessment history for a child."""
     from datetime import timedelta
 
-    since = datetime.now(__import__("datetime").timezone.utc) - timedelta(days=days)
+    since = datetime.now(__import__('datetime').timezone.utc) - timedelta(days=days)
 
     assessments = [
         AssessmentResponse(**stored["assessment"])

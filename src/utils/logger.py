@@ -22,7 +22,7 @@ class JSONFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         log_data = {
-            "timestamp": datetime.now(__import__("datetime").timezone.utc).isoformat() + "Z",
+            "timestamp": datetime.now(__import__('datetime').timezone.utc).isoformat() + "Z",
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),

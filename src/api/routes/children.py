@@ -55,7 +55,7 @@ async def create_child(
     - **medications**: Current medications
     """
     child_id = f"child-{uuid4().hex[:8]}"
-    now = datetime.now(__import__("datetime").timezone.utc)
+    now = datetime.now(__import__('datetime').timezone.utc)
 
     child_data = {
         "id": child_id,
@@ -161,7 +161,7 @@ async def update_child(
     for key, value in update_data.items():
         child[key] = value
 
-    child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
+    child["updated_at"] = datetime.now(__import__('datetime').timezone.utc)
     child["age_months"] = calculate_age_months(child["date_of_birth"])
 
     fake_children_db[child_id] = child
@@ -218,7 +218,7 @@ async def add_condition(
 
     if condition not in child["medical_conditions"]:
         child["medical_conditions"].append(condition)
-        child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
+        child["updated_at"] = datetime.now(__import__('datetime').timezone.utc)
 
     child["age_months"] = calculate_age_months(child["date_of_birth"])
     return ChildResponse(**child)
@@ -242,7 +242,7 @@ async def remove_condition(
 
     if condition in child["medical_conditions"]:
         child["medical_conditions"].remove(condition)
-        child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
+        child["updated_at"] = datetime.now(__import__('datetime').timezone.utc)
 
     child["age_months"] = calculate_age_months(child["date_of_birth"])
     return ChildResponse(**child)
@@ -266,7 +266,7 @@ async def add_allergy(
 
     if allergy not in child["allergies"]:
         child["allergies"].append(allergy)
-        child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
+        child["updated_at"] = datetime.now(__import__('datetime').timezone.utc)
 
     child["age_months"] = calculate_age_months(child["date_of_birth"])
     return ChildResponse(**child)
@@ -290,7 +290,7 @@ async def add_medication(
 
     if medication not in child["medications"]:
         child["medications"].append(medication)
-        child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
+        child["updated_at"] = datetime.now(__import__('datetime').timezone.utc)
 
     child["age_months"] = calculate_age_months(child["date_of_birth"])
     return ChildResponse(**child)

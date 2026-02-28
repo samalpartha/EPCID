@@ -156,7 +156,7 @@ class ShortTermMemory(MemoryStore):
             if idx < len(self._items):
                 item = self._items[idx]
                 item.access_count += 1
-                item.last_accessed = datetime.now(__import__("datetime").timezone.utc)
+                item.last_accessed = datetime.now(__import__('datetime').timezone.utc)
                 return item
         return None
 
@@ -182,7 +182,7 @@ class ShortTermMemory(MemoryStore):
 
     def get_context_window(self, minutes: int = 30) -> List[MemoryItem]:
         """Get items from the last N minutes."""
-        cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(minutes=minutes)
+        cutoff = datetime.now(__import__('datetime').timezone.utc) - timedelta(minutes=minutes)
         return [item for item in self._items if item.timestamp > cutoff]
 
     def delete(self, item_id: str) -> bool:
@@ -206,7 +206,7 @@ class ShortTermMemory(MemoryStore):
 
     def _expire_old_items(self) -> None:
         """Remove items older than TTL."""
-        cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(minutes=self.ttl_minutes)
+        cutoff = datetime.now(__import__('datetime').timezone.utc) - timedelta(minutes=self.ttl_minutes)
         original_count = len(self._items)
 
         self._items = deque(
@@ -425,7 +425,7 @@ class SemanticMemory(MemoryStore):
         item = self._items.get(item_id)
         if item:
             item.access_count += 1
-            item.last_accessed = datetime.now(__import__("datetime").timezone.utc)
+            item.last_accessed = datetime.now(__import__('datetime').timezone.utc)
         return item
 
     def search(self, query: str, limit: int = 10) -> List[MemoryItem]:
@@ -564,7 +564,7 @@ class Memory:
         item = MemoryItem(
             id=self._generate_id(content),
             content=content,
-            timestamp=datetime.now(__import__("datetime").timezone.utc),
+            timestamp=datetime.now(__import__('datetime').timezone.utc),
             metadata=metadata or {},
             embedding=embedding,
             importance=importance,
@@ -643,7 +643,7 @@ class Memory:
     @staticmethod
     def _generate_id(content: Any) -> str:
         """Generate a unique ID for content."""
-        timestamp = datetime.now(__import__("datetime").timezone.utc).isoformat()
+        timestamp = datetime.now(__import__('datetime').timezone.utc).isoformat()
         content_str = json.dumps(content, default=str)
         hash_input = f"{timestamp}:{content_str}"
         return hashlib.sha256(hash_input.encode()).hexdigest()[:16]

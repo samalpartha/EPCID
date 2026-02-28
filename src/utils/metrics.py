@@ -119,7 +119,7 @@ class MetricsCollector:
         """Record a latency observation."""
         self._latencies[operation].append(MetricValue(
             value=latency_ms,
-            timestamp=datetime.now(__import__("datetime").timezone.utc),
+            timestamp=datetime.now(__import__('datetime').timezone.utc),
             labels=labels or {},
         ))
         self._cleanup_old_metrics()
@@ -156,7 +156,7 @@ class MetricsCollector:
         key = self._make_key(name, labels)
         self._gauges[key] = MetricValue(
             value=value,
-            timestamp=datetime.now(__import__("datetime").timezone.utc),
+            timestamp=datetime.now(__import__('datetime').timezone.utc),
             labels=labels or {},
         )
 
@@ -180,7 +180,7 @@ class MetricsCollector:
     ) -> None:
         """Record a risk assessment for analysis."""
         self._risk_assessments.append({
-            "timestamp": datetime.now(__import__("datetime").timezone.utc),
+            "timestamp": datetime.now(__import__('datetime').timezone.utc),
             "risk_tier": risk_tier,
             "confidence": confidence,
             "latency_ms": latency_ms,
@@ -204,7 +204,7 @@ class MetricsCollector:
     ) -> None:
         """Record a safety rule trigger."""
         self._safety_triggers.append({
-            "timestamp": datetime.now(__import__("datetime").timezone.utc),
+            "timestamp": datetime.now(__import__('datetime').timezone.utc),
             "rule_name": rule_name,
             "risk_tier": risk_tier,
         })
@@ -264,7 +264,7 @@ class MetricsCollector:
         window_minutes: int = 60,
     ) -> Dict[str, int]:
         """Get risk tier distribution for recent assessments."""
-        cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(minutes=window_minutes)
+        cutoff = datetime.now(__import__('datetime').timezone.utc) - timedelta(minutes=window_minutes)
 
         distribution = defaultdict(int)
         for assessment in self._risk_assessments:
@@ -279,7 +279,7 @@ class MetricsCollector:
         window_minutes: int = 60,
     ) -> float:
         """Get safety rule trigger rate per hour."""
-        cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(minutes=window_minutes)
+        cutoff = datetime.now(__import__('datetime').timezone.utc) - timedelta(minutes=window_minutes)
 
         triggers = [
             t for t in self._safety_triggers
@@ -337,7 +337,7 @@ class MetricsCollector:
 
     def _cleanup_old_metrics(self) -> None:
         """Remove metrics older than retention period."""
-        cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(minutes=self.retention_minutes)
+        cutoff = datetime.now(__import__('datetime').timezone.utc) - timedelta(minutes=self.retention_minutes)
 
         for op in list(self._latencies.keys()):
             self._latencies[op] = [

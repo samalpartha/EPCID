@@ -386,7 +386,7 @@ class ErrorResponse(BaseModel):
     error: str
     message: str
     detail: Optional[str] = None
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
 
 
 class SuccessResponse(BaseModel):

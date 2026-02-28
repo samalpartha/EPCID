@@ -15,7 +15,7 @@ def create_sample_data() -> Dict[str, Any]:
     Returns:
         Dictionary containing sample users, children, symptoms, etc.
     """
-    now = datetime.now(__import__("datetime").timezone.utc)
+    now = datetime.now(__import__('datetime').timezone.utc)
     
     # Sample users
     users = [
