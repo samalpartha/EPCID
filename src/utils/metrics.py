@@ -16,7 +16,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger("epcid.utils.metrics")
 
@@ -33,7 +33,7 @@ class MetricValue:
 class Timer:
     """Context manager for timing operations."""
 
-    def __init__(self, name: str, collector: Optional["MetricsCollector"] = None):
+    def __init__(self, name: str, collector: "MetricsCollector" | None = None):
         self.name = name
         self.collector = collector
         self.start_time: float | None = None

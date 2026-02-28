@@ -17,7 +17,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Optional, cast
+from typing import Any, cast
 from urllib.parse import urlencode
 
 logger = logging.getLogger("epcid.services.medlineplus")
@@ -412,8 +412,7 @@ class MedlinePlusService:
             if datetime.now(__import__("datetime").timezone.utc) - timestamp < timedelta(
                 hours=self.cache_ttl_hours
             ):
-                return cast(Optional[list[MedlinePlusResult]], result)
-                return cast(Optional[list[MedlinePlusResult]], result)
+                return cast(list[MedlinePlusResult] | None, result)
         return None
 
     def _set_cached(self, key: str, value: list[MedlinePlusResult]) -> None:

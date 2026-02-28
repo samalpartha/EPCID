@@ -6,7 +6,7 @@ SQLAlchemy ORM models for all database entities.
 
 import enum
 from datetime import datetime
-from typing import Optional
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -317,7 +317,7 @@ class AuditLog(Base):
     )
 
     # Relationships
-    user: Mapped[Optional["User"]] = relationship("User", back_populates="audit_logs")
+    user: Mapped["User" | None] = relationship("User", back_populates="audit_logs")
 
     # Indexes
     __table_args__ = (

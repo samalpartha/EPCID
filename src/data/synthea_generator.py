@@ -9,7 +9,7 @@ import json
 import random
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from uuid import uuid4
 
 
@@ -159,7 +159,7 @@ class SyntheaGenerator:
         },
     }
     
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: int | None = None):
         """
         Initialize the generator.
         
@@ -173,8 +173,8 @@ class SyntheaGenerator:
     
     def generate_patient(
         self,
-        age_months: Optional[int] = None,
-        gender: Optional[str] = None,
+        age_months: int | None = None,
+        gender: str | None = None,
     ) -> Dict[str, Any]:
         """
         Generate a single synthetic patient.
@@ -310,7 +310,7 @@ class SyntheaGenerator:
     def generate_symptom_episode(
         self,
         patient: Dict,
-        scenario_key: Optional[str] = None,
+        scenario_key: str | None = None,
     ) -> Dict[str, Any]:
         """
         Generate a symptom episode for a patient.

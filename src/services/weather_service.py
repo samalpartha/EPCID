@@ -16,7 +16,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Optional, cast
+from typing import Any, cast
 from urllib.parse import urlencode
 
 logger = logging.getLogger("epcid.services.weather")
@@ -145,7 +145,7 @@ class WeatherService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cast(Optional[WeatherConditions], cached)
+            return cast(WeatherConditions | None, cached)
 
         try:
             if self.openweather_api_key:
