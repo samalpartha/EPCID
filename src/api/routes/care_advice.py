@@ -7,7 +7,7 @@ including when to seek care and home management tips.
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
@@ -62,7 +62,7 @@ def load_care_guides() -> dict[str, Any]:
     try:
         data_path = Path(__file__).parent.parent.parent / "data" / "care_guides.json"
         with open(data_path) as f:
-            return json.load(f)
+            return cast(dict[str, Any], json.load(f))
     except FileNotFoundError:
         # Return default data if file not found
         return {
@@ -75,7 +75,7 @@ def load_care_guides() -> dict[str, Any]:
 
 
 @router.get("/", response_model=CareGuidesResponse)
-async def list_care_guides():
+async def list_care_guides() -> CareGuidesResponse:
     """
     List all available care guides.
 
@@ -97,7 +97,7 @@ async def list_care_guides():
 
 
 @router.get("/emergency-signs", response_model=EmergencySignsResponse)
-async def get_emergency_signs():
+async def get_emergency_signs() -> EmergencySignsResponse:
     """
     Get list of emergency warning signs.
 
@@ -115,7 +115,7 @@ async def get_emergency_signs():
 
 
 @router.get("/{condition_id}", response_model=CareGuide)
-async def get_care_guide(condition_id: str):
+async def get_care_guide(condition_id: str) -> CareGuide:
     """
     Get detailed care guide for a specific condition.
 
@@ -148,7 +148,7 @@ async def get_care_guide(condition_id: str):
 
 
 @router.get("/search/{query}")
-async def search_care_guides(query: str):
+async def search_care_guides(query: str) -> dict[str, Any]:
     """
     Search care guides by keyword.
 

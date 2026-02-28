@@ -170,8 +170,8 @@ class IngestionAgent(BaseAgent):
     def __init__(
         self,
         config: AgentConfig | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         config = config or AgentConfig(
             name="ingestion_agent",
             description="Normalizes and validates multimodal health inputs",

@@ -525,7 +525,7 @@ def create_action(
     parameters: dict[str, Any],
     category: ActionCategory = ActionCategory.COMPUTE,
     child_id: str | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> Action:
     """Factory function to create actions."""
     return Action(

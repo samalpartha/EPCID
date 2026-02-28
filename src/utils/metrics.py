@@ -43,7 +43,7 @@ class Timer:
         self.start_time = time.perf_counter()
         return self
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, *args: Any) -> None:
         self.end_time = time.perf_counter()
         if self.collector:
             self.collector.observe_latency(
@@ -128,7 +128,7 @@ class MetricsCollector:
         self._cleanup_old_metrics()
 
     @contextmanager
-    def time(self, operation: str, labels: dict[str, str] | None = None):
+    def time(self, operation: str, labels: dict[str, str] | None = None) -> Any:
         """Context manager for timing operations."""
         start = time.perf_counter()
         try:
@@ -275,7 +275,7 @@ class MetricsCollector:
             minutes=window_minutes
         )
 
-        distribution = defaultdict(int)
+        distribution: dict[str, int] = defaultdict(int)
         for assessment in self._risk_assessments:
             if assessment["timestamp"] > cutoff:
                 distribution[assessment["risk_tier"]] += 1

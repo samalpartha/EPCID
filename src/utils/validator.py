@@ -13,7 +13,7 @@ import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger("epcid.utils.validator")
 
@@ -402,7 +402,7 @@ class InputValidator:
         """Get the appropriate range for an age."""
         for (low, high), range_val in ranges.items():
             if low <= age_months < high:
-                return range_val
+                return cast(tuple[Any, ...] | None, range_val)
         return None
 
     def _run_rule(

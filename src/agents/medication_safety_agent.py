@@ -162,7 +162,7 @@ class MedicationSafetyAgent(BaseAgent):
     def __init__(
         self,
         config: AgentConfig | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         config = config or AgentConfig(
             name="medication_safety_agent",

@@ -92,8 +92,8 @@ class PhenotypeAgent(BaseAgent):
     def __init__(
         self,
         config: AgentConfig | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         config = config or AgentConfig(
             name="phenotype_agent",
             description="Derives clinical phenotypes from raw data",
@@ -262,7 +262,7 @@ class PhenotypeAgent(BaseAgent):
         vitals: dict[str, Any],
     ) -> Phenotype | None:
         """Compute respiratory effort score."""
-        score = 0
+        score = 0.0
         factors = []
 
         # Symptom contributions

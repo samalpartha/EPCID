@@ -8,6 +8,7 @@ Endpoints for accessing external health data:
 - Growth charts (WHO/CDC)
 """
 
+from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
@@ -123,7 +124,7 @@ class DrugInfoResponse(BaseModel):
 async def get_disease_activity(
     state: str,
     diseases: str | None = Query(None, description="Comma-separated disease types"),
-):
+) -> list[dict[str, Any]]:
     """
     Get current disease activity for a state.
 
@@ -152,7 +153,7 @@ async def get_disease_activity(
 async def get_outbreak_alerts(
     state: str,
     zip_code: str | None = None,
-):
+) -> list[OutbreakAlert]:
     """
     Get active outbreak alerts for a state.
 
@@ -163,7 +164,7 @@ async def get_outbreak_alerts(
     service = CDCService()
     alerts = await service.get_outbreak_alerts(state.upper(), zip_code)
 
-    return alerts
+    return [OutbreakAlert(**alert) if isinstance(alert, dict) else alert for alert in alerts]
 
 
 @router.get(
@@ -175,7 +176,7 @@ async def get_outbreak_alerts(
 async def get_due_vaccinations(
     age_months: int = Query(..., ge=0, le=216, description="Child's age in months"),
     include_catchup: bool = Query(True, description="Include catch-up vaccines"),
-):
+) -> list[dict[str, Any]]:
     """
     Get recommended vaccinations for a child's age.
 
@@ -195,7 +196,9 @@ async def get_due_vaccinations(
     summary="Calculate growth percentile",
     description="Calculate growth percentile based on WHO/CDC growth charts.",
 )
-async def calculate_growth_percentile(request: GrowthPercentileRequest):
+async def calculate_growth_percentile(
+    request: GrowthPercentileRequest,
+) -> GrowthPercentileResponse:
     """
     Calculate growth percentile for a measurement.
 
@@ -222,7 +225,7 @@ async def calculate_growth_percentile(request: GrowthPercentileRequest):
         value,
     )
 
-    return result
+    return GrowthPercentileResponse(**result)
 
 
 @router.get(
@@ -234,7 +237,7 @@ async def calculate_growth_percentile(request: GrowthPercentileRequest):
 async def get_vital_ranges(
     age_months: int = Query(..., ge=0, le=216, description="Child's age in months"),
     vital_type: str = Query(..., description="heart_rate, respiratory_rate, or temperature"),
-):
+) -> VitalRangeResponse | dict[str, Any]:
     """
     Get normal vital sign ranges for a child's age.
 
@@ -264,7 +267,7 @@ async def get_air_quality(
     zip_code: str | None = None,
     latitude: float | None = None,
     longitude: float | None = None,
-):
+) -> dict[str, Any]:
     """
     Get current air quality for a location.
 
@@ -301,7 +304,7 @@ async def get_air_quality(
     summary="Get drug information",
     description="Returns drug label information from OpenFDA.",
 )
-async def get_drug_info(drug_name: str):
+async def get_drug_info(drug_name: str) -> dict[str, Any]:
     """
     Get drug information from OpenFDA.
 
@@ -329,7 +332,7 @@ async def get_drug_info(drug_name: str):
 async def check_drug_interaction(
     drug_name: str = Query(..., description="Drug name"),
     symptom: str = Query(..., description="Symptom to check"),
-):
+) -> dict[str, Any]:
     """
     Check if a symptom is commonly reported with a drug.
 
@@ -356,7 +359,7 @@ async def get_health_context(
     state: str = Query(..., description="Two-letter state code"),
     zip_code: str | None = None,
     age_months: int | None = None,
-):
+) -> dict[str, Any]:
     """
     Get comprehensive health context for a location.
 

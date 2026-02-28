@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Info, 
-  X, 
-  Sparkles, 
-  Brain, 
-  Heart, 
-  Shield, 
+import {
+  Info,
+  X,
+  Sparkles,
+  Brain,
+  Heart,
+  Shield,
   Stethoscope,
   MessageSquare,
   TrendingUp,
@@ -59,7 +59,7 @@ export function DemoModeBanner() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full">
                   <Award className="w-4 h-4" />
-                  <span className="text-sm font-bold">HACKATHON DEMO</span>
+                  <span className="text-sm font-bold">PLATFORM DEMO</span>
                 </div>
                 <div className="hidden sm:flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
@@ -106,8 +106,8 @@ export function DemoModeBanner() {
                       The Problem We're Solving
                     </h3>
                     <p className="text-surface-600 dark:text-surface-400 text-sm mb-4">
-                      <strong>Every year, thousands of children die from conditions that could have been 
-                      detected earlier.</strong> Parents often don't recognize early warning signs of 
+                      <strong>Every year, thousands of children die from conditions that could have been
+                        detected earlier.</strong> Parents often don't recognize early warning signs of
                       serious illness like sepsis, meningitis, or respiratory failure.
                     </p>
                     <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-3">

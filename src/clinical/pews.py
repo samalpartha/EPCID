@@ -179,7 +179,7 @@ class PEWSCalculator:
             print("Consider escalation to senior clinician")
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.vital_normalizer = VitalSignNormalizer()
 
     def calculate(

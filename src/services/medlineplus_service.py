@@ -17,7 +17,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional, cast
 from urllib.parse import urlencode
 
 logger = logging.getLogger("epcid.services.medlineplus")
@@ -103,7 +103,7 @@ class MedlinePlusService:
         # Check cache
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(list[MedlinePlusResult], cached)
 
         try:
             # Build URL
@@ -175,7 +175,7 @@ class MedlinePlusService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(list[MedlinePlusResult], cached)
 
         try:
             # In production, would call the MedlinePlus API
@@ -208,7 +208,7 @@ class MedlinePlusService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(list[MedlinePlusResult], cached)
 
         try:
             # Map common medications to RxNorm codes
@@ -412,8 +412,8 @@ class MedlinePlusService:
             if datetime.now(__import__("datetime").timezone.utc) - timestamp < timedelta(
                 hours=self.cache_ttl_hours
             ):
-                return result
-            del self._cache[key]
+                return cast(Optional[list[MedlinePlusResult]], result)
+                return cast(Optional[list[MedlinePlusResult]], result)
         return None
 
     def _set_cached(self, key: str, value: list[MedlinePlusResult]) -> None:

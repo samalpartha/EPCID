@@ -17,7 +17,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional, cast
 from urllib.parse import urlencode
 
 logger = logging.getLogger("epcid.services.openfda")
@@ -137,7 +137,7 @@ class OpenFDAService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(Optional[DrugLabel], cached)
 
         try:
             # Build search query
@@ -191,7 +191,7 @@ class OpenFDAService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(list[AdverseEvent], cached)
 
         try:
             search = f'patient.drug.medicinalproduct:"{drug_name}"'
@@ -239,7 +239,7 @@ class OpenFDAService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(Optional[AdverseEventSummary], cached)
 
         try:
             # Get count of all reports

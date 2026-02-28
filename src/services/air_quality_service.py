@@ -16,7 +16,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional, cast
 from urllib.parse import urlencode
 
 logger = logging.getLogger("epcid.services.air_quality")
@@ -153,7 +153,7 @@ class AirQualityService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(Optional[AirQualityReading], cached)
 
         try:
             if zip_code and self.airnow_api_key:
@@ -170,7 +170,7 @@ class AirQualityService:
 
         except Exception as e:
             logger.error(f"Failed to get air quality: {e}")
-            return self._get_simulated_reading(location_key)
+            return cast(Optional[AirQualityReading], self._get_simulated_reading(location_key))
 
     async def get_forecast(
         self,
@@ -189,7 +189,7 @@ class AirQualityService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(list[AirQualityForecast], cached)
 
         try:
             if self.airnow_api_key:

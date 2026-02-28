@@ -16,7 +16,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional, cast
 from urllib.parse import urlencode
 
 logger = logging.getLogger("epcid.services.weather")
@@ -145,7 +145,7 @@ class WeatherService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(Optional[WeatherConditions], cached)
 
         try:
             if self.openweather_api_key:
@@ -186,7 +186,7 @@ class WeatherService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(list[WeatherForecast], cached)
 
         try:
             if self.openweather_api_key:
@@ -220,7 +220,7 @@ class WeatherService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(list[WeatherAlert], cached)
 
         try:
             result = await self._get_noaa_alerts(latitude, longitude)
@@ -392,7 +392,7 @@ class WeatherService:
         longitude: float | None,
     ) -> WeatherConditions | None:
         """Get current weather from OpenWeatherMap."""
-        params = {
+        params: dict[str, Any] = {
             "appid": self.openweather_api_key,
             "units": "imperial",
         }
@@ -438,7 +438,7 @@ class WeatherService:
         longitude: float | None,
     ) -> list[WeatherForecast]:
         """Get forecast from OpenWeatherMap."""
-        params = {
+        params: dict[str, Any] = {
             "appid": self.openweather_api_key,
             "units": "imperial",
         }

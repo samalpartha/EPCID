@@ -17,7 +17,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger("epcid.services.cdc")
 
@@ -150,7 +150,7 @@ class CDCService:
 
         cached = self._get_cached(cache_key)
         if cached:
-            return cached
+            return cast(list[DiseaseActivity], cached)
 
         diseases = diseases or list(DiseaseType)
         activities = []
@@ -374,7 +374,7 @@ class CDCService:
             disease=disease,
             region=self._state_to_region(state),
             state=state,
-            activity_level=data["activity_level"],
+            activity_level=cast(ActivityLevel, data['activity_level']),
             trend=data["trend"],
             week_number=current_week,
             year=datetime.now().year,
@@ -501,7 +501,7 @@ class CDCService:
     def _load_growth_charts(self) -> dict[str, list[GrowthPercentile]]:
         """Load WHO/CDC growth chart data."""
         # Abbreviated dataset - full data from CDC/WHO
-        charts = {
+        charts: dict[str, list[GrowthPercentile]] = {
             "weight_male": [],
             "weight_female": [],
             "height_male": [],

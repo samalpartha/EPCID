@@ -83,8 +83,10 @@ class PasswordResetRequest(BaseModel):
     email: EmailStr
 
 
+from typing import Any
+
 # Simulated user database (replace with real DB in production)
-fake_users_db = {
+fake_users_db: dict[str, dict[str, Any]] = {
     "demo@epcid.health": {
         "id": "user-001",
         "email": "demo@epcid.health",
@@ -104,7 +106,7 @@ fake_users_db = {
     summary="Register a new user",
     description="Create a new user account and return authentication tokens.",
 )
-async def register(request: RegisterRequest):
+async def register(request: RegisterRequest) -> TokenResponse:
     """
     Register a new user account.
 
@@ -147,7 +149,7 @@ async def register(request: RegisterRequest):
         token_type="bearer",
         expires_in=3600,  # 1 hour
         user=UserResponse(
-            id=user_id,
+            id=str(user_id),
             email=request.email,
             full_name=request.full_name,
             is_active=True,
@@ -162,7 +164,7 @@ async def register(request: RegisterRequest):
     summary="Login and get tokens",
     description="Authenticate with email and password to receive JWT tokens.",
 )
-async def login(request: LoginRequest):
+async def login(request: LoginRequest) -> TokenResponse:
     """
     Authenticate and receive access tokens.
 
@@ -171,7 +173,7 @@ async def login(request: LoginRequest):
     """
     user = fake_users_db.get(request.email)
 
-    if not user or not verify_password(request.password, user["hashed_password"]):
+    if not user or not verify_password(request.password, str(user["hashed_password"])):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -194,11 +196,11 @@ async def login(request: LoginRequest):
         token_type="bearer",
         expires_in=3600,
         user=UserResponse(
-            id=user["id"],
-            email=user["email"],
-            full_name=user["full_name"],
-            is_active=user["is_active"],
-            is_verified=user["is_verified"],
+            id=str(user["id"]),
+            email=str(user["email"]),
+            full_name=str(user["full_name"]),
+            is_active=bool(user["is_active"]),
+            is_verified=bool(user["is_verified"]),
         ),
     )
 
@@ -209,7 +211,7 @@ async def login(request: LoginRequest):
     summary="Login with form data",
     description="OAuth2 compatible login endpoint.",
 )
-async def login_form(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_form(form_data: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:
     """OAuth2 compatible login endpoint for Swagger UI."""
     return await login(LoginRequest(email=form_data.username, password=form_data.password))
 
@@ -220,7 +222,7 @@ async def login_form(form_data: OAuth2PasswordRequestForm = Depends()):
     summary="Refresh access token",
     description="Use refresh token to get a new access token.",
 )
-async def refresh_token(request: RefreshRequest):
+async def refresh_token(request: RefreshRequest) -> TokenResponse:
     """
     Refresh an access token using a valid refresh token.
 
@@ -253,11 +255,11 @@ async def refresh_token(request: RefreshRequest):
             token_type="bearer",
             expires_in=3600,
             user=UserResponse(
-                id=user["id"],
-                email=user["email"],
-                full_name=user["full_name"],
-                is_active=user["is_active"],
-                is_verified=user["is_verified"],
+                id=str(user["id"]),
+                email=str(user["email"]),
+                full_name=str(user["full_name"]),
+                is_active=bool(user["is_active"]),
+                is_verified=bool(user["is_verified"]),
             ),
         )
 
@@ -274,14 +276,14 @@ async def refresh_token(request: RefreshRequest):
     summary="Get current user",
     description="Get the currently authenticated user's profile.",
 )
-async def get_me(current_user: dict = Depends(get_current_active_user)):
+async def get_me(current_user: dict[str, Any] = Depends(get_current_active_user)) -> UserResponse:
     """Get the current authenticated user's profile."""
     return UserResponse(
-        id=current_user["id"],
-        email=current_user["email"],
-        full_name=current_user["full_name"],
-        is_active=current_user["is_active"],
-        is_verified=current_user["is_verified"],
+        id=str(current_user["id"]),
+        email=str(current_user["email"]),
+        full_name=str(current_user["full_name"]),
+        is_active=bool(current_user["is_active"]),
+        is_verified=bool(current_user["is_verified"]),
     )
 
 
@@ -291,7 +293,7 @@ async def get_me(current_user: dict = Depends(get_current_active_user)):
     summary="Logout",
     description="Invalidate the current session (client should discard tokens).",
 )
-async def logout(current_user: dict = Depends(get_current_active_user)):
+async def logout(current_user: dict[str, Any] = Depends(get_current_active_user)) -> None:
     """
     Logout the current user.
 
@@ -310,10 +312,10 @@ async def logout(current_user: dict = Depends(get_current_active_user)):
 )
 async def change_password(
     request: PasswordChangeRequest,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> None:
     """Change the current user's password."""
-    if not verify_password(request.current_password, current_user["hashed_password"]):
+    if not verify_password(request.current_password, str(current_user["hashed_password"])):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
@@ -333,7 +335,7 @@ async def change_password(
     summary="Request password reset",
     description="Request a password reset email.",
 )
-async def request_password_reset(request: PasswordResetRequest):
+async def request_password_reset(request: PasswordResetRequest) -> dict[str, str]:
     """
     Request a password reset.
 
@@ -345,15 +347,4 @@ async def request_password_reset(request: PasswordResetRequest):
     return {"message": "If this email exists, a reset link will be sent."}
 
 
-# Import UserResponse model here to avoid circular imports
-class UserResponse(BaseModel):
-    """User response model."""
 
-    id: str
-    email: EmailStr
-    full_name: str
-    is_active: bool = True
-    is_verified: bool = False
-
-    class Config:
-        from_attributes = True

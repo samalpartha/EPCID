@@ -17,7 +17,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger("epcid.core.memory")
 
@@ -525,7 +525,7 @@ class SemanticMemory(MemoryStore):
         if magnitude1 == 0 or magnitude2 == 0:
             return 0.0
 
-        return dot_product / (magnitude1 * magnitude2)
+        return cast(float, dot_product / (magnitude1 * magnitude2))
 
 
 class Memory:

@@ -19,8 +19,10 @@ from ...api.schemas import (
 router = APIRouter()
 
 
+from typing import Any
+
 # Simulated database
-fake_children_db = {}
+fake_children_db: dict[str, dict[str, Any]] = {}
 
 
 def calculate_age_months(dob: datetime) -> int:
@@ -39,8 +41,8 @@ def calculate_age_months(dob: datetime) -> int:
 )
 async def create_child(
     child: ChildCreate,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> ChildResponse:
     """
     Create a new child profile.
 
@@ -80,8 +82,8 @@ async def create_child(
     description="Get all children associated with your account.",
 )
 async def list_children(
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> list[ChildResponse]:
     """Get all children for the current user."""
     user_children = [
         ChildResponse(**child)
@@ -104,8 +106,8 @@ async def list_children(
 )
 async def get_child(
     child_id: str,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> ChildResponse:
     """Get a specific child by ID."""
     child = fake_children_db.get(child_id)
 
@@ -136,8 +138,8 @@ async def get_child(
 async def update_child(
     child_id: str,
     update: ChildUpdate,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> ChildResponse:
     """Update a child's profile."""
     child = fake_children_db.get(child_id)
 
@@ -174,8 +176,8 @@ async def update_child(
 )
 async def delete_child(
     child_id: str,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> None:
     """Delete a child profile."""
     child = fake_children_db.get(child_id)
 
@@ -205,8 +207,8 @@ async def delete_child(
 async def add_condition(
     child_id: str,
     condition: str = Query(..., min_length=1),
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> ChildResponse:
     """Add a medical condition."""
     child = fake_children_db.get(child_id)
 
@@ -229,8 +231,8 @@ async def add_condition(
 async def remove_condition(
     child_id: str,
     condition: str,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> ChildResponse:
     """Remove a medical condition."""
     child = fake_children_db.get(child_id)
 
@@ -253,8 +255,8 @@ async def remove_condition(
 async def add_allergy(
     child_id: str,
     allergy: str = Query(..., min_length=1),
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> ChildResponse:
     """Add an allergy."""
     child = fake_children_db.get(child_id)
 
@@ -277,8 +279,8 @@ async def add_allergy(
 async def add_medication(
     child_id: str,
     medication: str = Query(..., min_length=1),
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> ChildResponse:
     """Add a medication."""
     child = fake_children_db.get(child_id)
 

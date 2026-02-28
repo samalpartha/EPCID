@@ -243,8 +243,8 @@ class GuidelineRAGAgent(BaseAgent):
     def __init__(
         self,
         config: AgentConfig | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         config = config or AgentConfig(
             name="guideline_rag_agent",
             description="Retrieves validated clinical guidelines with citations",

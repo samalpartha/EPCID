@@ -12,6 +12,7 @@ Inspired by OCD Action (https://github.com/womenhackfornonprofits/ocdaction)
 """
 
 import uuid
+from typing import Any
 from datetime import datetime
 from enum import StrEnum
 
@@ -499,15 +500,15 @@ CRISIS_RESOURCES: list[CrisisResource] = [
 
 
 @router.post("/mood", response_model=MoodEntry, tags=["Mental Health"])
-async def log_mood(entry: MoodEntryCreate):
+async def log_mood(entry: MoodEntryCreate) -> MoodEntry:
     """Log a mood entry for a child"""
-    mood_entry = MoodEntry(**entry.dict())
+    mood_entry = MoodEntry(**entry.model_dump())
     mood_entries.append(mood_entry)
     return mood_entry
 
 
 @router.get("/mood/{child_id}", response_model=list[MoodEntry], tags=["Mental Health"])
-async def get_mood_history(child_id: str, days: int = 30):
+async def get_mood_history(child_id: str, days: int = 30) -> list[MoodEntry]:
     """Get mood history for a child"""
     from datetime import timedelta
 
@@ -516,7 +517,7 @@ async def get_mood_history(child_id: str, days: int = 30):
 
 
 @router.get("/mood/{child_id}/summary", tags=["Mental Health"])
-async def get_mood_summary(child_id: str, days: int = 7):
+async def get_mood_summary(child_id: str, days: int = 7) -> dict[str, Any]:
     """Get mood summary and trends for a child"""
     from datetime import timedelta
 
@@ -544,7 +545,7 @@ async def get_mood_summary(child_id: str, days: int = 7):
         if e.triggers:
             all_triggers.extend(e.triggers)
 
-    trigger_counts = {}
+    trigger_counts: dict[str, int] = {}
     for t in all_triggers:
         trigger_counts[t] = trigger_counts.get(t, 0) + 1
 
@@ -583,15 +584,15 @@ def _get_mood_recommendation(avg_mood: float, avg_anxiety: float) -> str:
 
 
 @router.post("/journal", response_model=JournalEntry, tags=["Mental Health"])
-async def create_journal_entry(entry: JournalEntryCreate):
+async def create_journal_entry(entry: JournalEntryCreate) -> JournalEntry:
     """Create a new journal entry"""
-    journal_entry = JournalEntry(**entry.dict())
+    journal_entry = JournalEntry(**entry.model_dump())
     journal_entries.append(journal_entry)
     return journal_entry
 
 
 @router.get("/journal/{child_id}", response_model=list[JournalEntry], tags=["Mental Health"])
-async def get_journal_entries(child_id: str, limit: int = 20):
+async def get_journal_entries(child_id: str, limit: int = 20) -> list[JournalEntry]:
     """Get journal entries for a child"""
     entries = [e for e in journal_entries if e.child_id == child_id]
     entries.sort(key=lambda x: x.timestamp, reverse=True)
@@ -599,7 +600,7 @@ async def get_journal_entries(child_id: str, limit: int = 20):
 
 
 @router.delete("/journal/{entry_id}", tags=["Mental Health"])
-async def delete_journal_entry(entry_id: str):
+async def delete_journal_entry(entry_id: str) -> dict[str, str]:
     """Delete a journal entry"""
     global journal_entries
     journal_entries = [e for e in journal_entries if e.id != entry_id]
@@ -610,7 +611,7 @@ async def delete_journal_entry(entry_id: str):
 
 
 @router.get("/assessment/questions/{assessment_type}", tags=["Mental Health"])
-async def get_assessment_questions(assessment_type: str = "GAD-7"):
+async def get_assessment_questions(assessment_type: str = "GAD-7") -> dict[str, Any]:
     """Get questions for an anxiety/depression assessment"""
     if assessment_type == "GAD-7":
         return {
@@ -630,7 +631,7 @@ async def get_assessment_questions(assessment_type: str = "GAD-7"):
 
 
 @router.post("/assessment/submit", response_model=AnxietyAssessmentResult, tags=["Mental Health"])
-async def submit_assessment(submission: AnxietyAssessmentSubmit):
+async def submit_assessment(submission: AnxietyAssessmentSubmit) -> AnxietyAssessmentResult:
     """Submit an anxiety assessment and get results"""
     total_score = sum(a.score for a in submission.answers)
 
@@ -691,7 +692,7 @@ async def submit_assessment(submission: AnxietyAssessmentSubmit):
     response_model=list[AnxietyAssessmentResult],
     tags=["Mental Health"],
 )
-async def get_assessment_history(child_id: str):
+async def get_assessment_history(child_id: str) -> list[AnxietyAssessmentResult]:
     """Get assessment history for a child"""
     return [r for r in assessment_results if r.child_id == child_id]
 
@@ -700,7 +701,9 @@ async def get_assessment_history(child_id: str):
 
 
 @router.get("/coping/strategies", response_model=list[CopingStrategy], tags=["Mental Health"])
-async def get_coping_strategies(age: int | None = None, category: CopingCategory | None = None):
+async def get_coping_strategies(
+    age: int | None = None, category: CopingCategory | None = None
+) -> list[CopingStrategy]:
     """Get coping strategies, optionally filtered by age and category"""
     strategies = COPING_STRATEGIES
 
@@ -718,7 +721,7 @@ async def get_coping_strategies(age: int | None = None, category: CopingCategory
 @router.get(
     "/coping/strategies/{strategy_id}", response_model=CopingStrategy, tags=["Mental Health"]
 )
-async def get_coping_strategy(strategy_id: str):
+async def get_coping_strategy(strategy_id: str) -> CopingStrategy:
     """Get a specific coping strategy by ID"""
     for strategy in COPING_STRATEGIES:
         if strategy.id == strategy_id:
@@ -727,7 +730,7 @@ async def get_coping_strategy(strategy_id: str):
 
 
 @router.get("/coping/categories", tags=["Mental Health"])
-async def get_coping_categories():
+async def get_coping_categories() -> list[dict[str, Any]]:
     """Get all coping strategy categories"""
     return [
         {
@@ -779,7 +782,7 @@ async def get_coping_categories():
 
 
 @router.get("/crisis/resources", response_model=list[CrisisResource], tags=["Mental Health"])
-async def get_crisis_resources(for_children: bool | None = None):
+async def get_crisis_resources(for_children: bool | None = None) -> list[CrisisResource]:
     """Get crisis resources and hotlines"""
     resources = CRISIS_RESOURCES
 
@@ -795,7 +798,7 @@ async def get_crisis_resources(for_children: bool | None = None):
 @router.get("/crisis/emergency-check", tags=["Mental Health"])
 async def emergency_check(
     suicidal_thoughts: bool = False, self_harm: bool = False, immediate_danger: bool = False
-):
+) -> dict[str, Any]:
     """Check if immediate crisis intervention is needed"""
     if any([suicidal_thoughts, self_harm, immediate_danger]):
         return {

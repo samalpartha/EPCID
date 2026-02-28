@@ -15,7 +15,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 # Risk level constants
 RISK_LOW = "low"
@@ -226,7 +226,7 @@ class SafetyRule:
     def check(self, context: dict[str, Any]) -> tuple[bool, str | None]:
         """Check if rule is triggered. Returns (triggered, message)."""
         try:
-            return self.check_function(context)
+            return cast(tuple[bool, str | None], self.check_function(context))
         except Exception as e:
             logger.error(f"Safety rule {self.name} check failed: {e}")
             return False, None
@@ -495,7 +495,7 @@ class DecisionMaker:
         context: dict[str, Any],
     ) -> dict[str, list[str]]:
         """Generate action recommendations based on assessment."""
-        recommendations = {
+        recommendations: dict[str, list[str]] = {
             "actions": [],
             "contraindicated": [],
             "follow_up": [],

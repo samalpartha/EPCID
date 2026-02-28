@@ -6,7 +6,7 @@ JWT authentication and password hashing utilities.
 
 import os
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 import bcrypt
 from jose import JWTError, jwt
@@ -62,7 +62,7 @@ def create_access_token(
         }
     )
 
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return cast(str, jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM))
 
 
 def create_refresh_token(
@@ -96,7 +96,7 @@ def create_refresh_token(
         }
     )
 
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return cast(str, jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM))
 
 
 def decode_token(token: str) -> dict[str, Any]:
@@ -112,7 +112,7 @@ def decode_token(token: str) -> dict[str, Any]:
     Raises:
         JWTError: If token is invalid or expired
     """
-    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    return cast(dict[str, Any], jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]))
 
 
 def verify_token(token: str, token_type: str = "access") -> dict[str, Any] | None:

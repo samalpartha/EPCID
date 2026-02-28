@@ -24,8 +24,10 @@ router = APIRouter()
 medlineplus = MedlinePlusService()
 
 
+from typing import Any
+
 # Curated pediatric guidelines database
-PEDIATRIC_GUIDELINES = {
+PEDIATRIC_GUIDELINES: dict[str, dict[str, Any]] = {
     "fever": {
         "id": "guide-fever-001",
         "title": "Fever in Children: What Parents Need to Know",
@@ -228,7 +230,7 @@ Children can become dehydrated quickly, especially during illness with fever, vo
 async def search_guidelines(
     request: GuidelineRequest,
     current_user: dict | None = Depends(get_optional_user),
-):
+) -> GuidelinesResponse:
     """
     Search for relevant pediatric guidelines.
 
@@ -298,7 +300,7 @@ async def search_guidelines(
     summary="Get fever guidelines",
     description="Get comprehensive fever management guidelines.",
 )
-async def get_fever_guidelines():
+async def get_fever_guidelines() -> GuidelineResponse:
     """Get fever guidelines."""
     guideline = PEDIATRIC_GUIDELINES["fever"]
     return GuidelineResponse(
@@ -324,7 +326,7 @@ async def get_fever_guidelines():
     summary="Get breathing guidelines",
     description="Get respiratory emergency guidelines.",
 )
-async def get_breathing_guidelines():
+async def get_breathing_guidelines() -> GuidelineResponse:
     """Get breathing difficulty guidelines."""
     guideline = PEDIATRIC_GUIDELINES["breathing"]
     return GuidelineResponse(
@@ -349,7 +351,7 @@ async def get_breathing_guidelines():
     response_model=GuidelineResponse,
     summary="Get dehydration guidelines",
 )
-async def get_dehydration_guidelines():
+async def get_dehydration_guidelines() -> GuidelineResponse:
     """Get dehydration prevention and recognition guidelines."""
     guideline = PEDIATRIC_GUIDELINES["dehydration"]
     return GuidelineResponse(
@@ -375,7 +377,7 @@ async def get_dehydration_guidelines():
     summary="Get emergency warning signs",
     description="Get a list of emergency warning signs for quick reference.",
 )
-async def get_emergency_signs():
+async def get_emergency_signs() -> list[dict[str, Any]]:
     """Get emergency warning signs for all conditions."""
     return [
         {
@@ -441,6 +443,6 @@ async def get_emergency_signs():
     summary="Get available topics",
     description="Get list of available guideline topics.",
 )
-async def get_guideline_topics():
+async def get_guideline_topics() -> list[dict[str, Any]]:
     """Get list of available guideline topics."""
     return [{"id": key, "title": g["title"]} for key, g in PEDIATRIC_GUIDELINES.items()]

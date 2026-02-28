@@ -6,6 +6,7 @@ This is the core intelligence endpoint that orchestrates all agents.
 """
 
 from datetime import datetime
+from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
@@ -29,7 +30,7 @@ router = APIRouter()
 
 
 # Simulated assessment storage
-fake_assessments_db = {}
+fake_assessments_db: dict[str, dict[str, Any]] = {}
 
 
 async def run_assessment_pipeline(
@@ -249,8 +250,8 @@ async def run_assessment_pipeline(
 async def create_assessment(
     request: AssessmentRequest,
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> AssessmentResponse:
     """
     Run a comprehensive risk assessment.
 
@@ -273,8 +274,8 @@ async def create_assessment(
 async def list_assessments(
     child_id: str | None = None,
     limit: int = 20,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> list[AssessmentResponse]:
     """Get previous assessments."""
     assessments = []
 
@@ -301,8 +302,8 @@ async def list_assessments(
 )
 async def get_assessment(
     assessment_id: str,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> AssessmentResponse:
     """Get a specific assessment."""
     stored = fake_assessments_db.get(assessment_id)
 
@@ -330,8 +331,8 @@ async def get_assessment(
 async def quick_assessment(
     child_id: str,
     symptoms: list[str],
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> AssessmentResponse:
     """
     Run a quick assessment with just symptom types.
 
@@ -369,8 +370,8 @@ async def quick_assessment(
 async def get_child_assessment_history(
     child_id: str,
     days: int = 30,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> list[AssessmentResponse]:
     """Get assessment history for a child."""
     from datetime import timedelta
 
@@ -397,8 +398,8 @@ async def get_child_assessment_history(
 )
 async def delete_assessment(
     assessment_id: str,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> None:
     """Delete a specific assessment."""
     stored = fake_assessments_db.get(assessment_id)
 

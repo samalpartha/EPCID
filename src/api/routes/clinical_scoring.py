@@ -178,7 +178,7 @@ class PhysicalExamResponse(BaseModel):
 
 
 @router.post("/phoenix-score", response_model=PhoenixScoreResponse)
-async def calculate_phoenix_score(request: PhoenixScoreRequest):
+async def calculate_phoenix_score(request: PhoenixScoreRequest) -> PhoenixScoreResponse:
     """
     Calculate Phoenix Sepsis Score.
 
@@ -276,7 +276,7 @@ async def calculate_phoenix_score(request: PhoenixScoreRequest):
 
 
 @router.post("/pews", response_model=PEWSResponse)
-async def calculate_pews(request: PEWSRequest):
+async def calculate_pews(request: PEWSRequest) -> PEWSResponse:
     """
     Calculate Pediatric Early Warning Score (PEWS).
 
@@ -365,7 +365,7 @@ async def calculate_pews(request: PEWSRequest):
 
 
 @router.post("/physical-exam", response_model=PhysicalExamResponse)
-async def assess_physical_exam(request: PhysicalExamRequest):
+async def assess_physical_exam(request: PhysicalExamRequest) -> PhysicalExamResponse:
     """
     Assess physical exam findings for critical illness risk.
 

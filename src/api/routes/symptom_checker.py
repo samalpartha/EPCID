@@ -114,8 +114,8 @@ sessions: dict[str, dict[str, Any]] = {}
 @router.post("/start", response_model=SymptomCheckerStartResponse)
 async def start_symptom_checker(
     request: SymptomCheckerStartRequest,
-    current_user: dict = Depends(get_current_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> SymptomCheckerStartResponse:
     """
     Start a new symptom checker session.
 
@@ -138,13 +138,14 @@ async def start_symptom_checker(
             "fevers above 101°F (38.3°C)."
         )
 
+    now = datetime.now(__import__("datetime").timezone.utc)
     session = {
         "session_id": session_id,
         "user_id": current_user.get("id"),
         "child_id": request.child_id,
         "age_months": request.age_months,
         "sex": request.sex,
-        "created_at": datetime.now(__import__("datetime").timezone.utc),
+        "created_at": now,
         "symptoms": [],
         "warnings": warnings,
     }
@@ -155,7 +156,7 @@ async def start_symptom_checker(
         session_id=session_id,
         age_months=request.age_months,
         sex=request.sex,
-        created_at=session["created_at"],
+        created_at=now,
         warnings=warnings,
     )
 
@@ -163,8 +164,8 @@ async def start_symptom_checker(
 @router.post("/symptoms", response_model=AddSymptomsResponse)
 async def add_symptoms(
     request: AddSymptomsRequest,
-    current_user: dict = Depends(get_current_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> AddSymptomsResponse:
     """
     Add symptoms to an existing session.
 
@@ -226,8 +227,8 @@ async def add_symptoms(
 @router.post("/triage", response_model=TriageResponse)
 async def get_triage(
     request: TriageRequest,
-    current_user: dict = Depends(get_current_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> TriageResponse:
     """
     Get triage recommendation based on collected symptoms.
 
@@ -259,8 +260,8 @@ async def get_triage(
 @router.delete("/session/{session_id}")
 async def delete_session(
     session_id: str,
-    current_user: dict = Depends(get_current_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, str]:
     """Delete a symptom checker session."""
     session = sessions.get(session_id)
     if not session:

@@ -500,8 +500,8 @@ class ChainOfThought(ReasoningStrategy):
         # Weighted average with more weight on critical steps
         weights = [1.0, 1.0, 1.5, 0.8, 1.2]  # Weights for each step
 
-        total_weight = 0
-        weighted_sum = 0
+        total_weight = 0.0
+        weighted_sum = 0.0
 
         for i, step in enumerate(steps):
             weight = weights[i] if i < len(weights) else 1.0

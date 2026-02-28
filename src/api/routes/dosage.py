@@ -7,7 +7,7 @@ common over-the-counter pediatric medications.
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -87,7 +87,7 @@ def load_dosage_data() -> dict[str, Any]:
     try:
         data_path = Path(__file__).parent.parent.parent / "data" / "dosage_tables.json"
         with open(data_path) as f:
-            return json.load(f)
+            return cast(dict[str, Any], json.load(f))
     except FileNotFoundError:
         return {"medications": {}, "disclaimer": "Always consult your healthcare provider."}
 
@@ -96,7 +96,7 @@ def load_dosage_data() -> dict[str, Any]:
 
 
 @router.get("/medications", response_model=MedicationsResponse)
-async def list_medications():
+async def list_medications() -> MedicationsResponse:
     """
     List all available medications with dosing information.
 
@@ -129,7 +129,7 @@ async def list_medications():
 
 
 @router.get("/medications/{medication_id}", response_model=MedicationInfo)
-async def get_medication_info(medication_id: str):
+async def get_medication_info(medication_id: str) -> MedicationInfo:
     """
     Get detailed information about a specific medication.
 
@@ -171,7 +171,7 @@ async def get_medication_info(medication_id: str):
 
 
 @router.post("/calculate", response_model=DoseCalculationResponse)
-async def calculate_dose(request: DoseCalculationRequest):
+async def calculate_dose(request: DoseCalculationRequest) -> DoseCalculationResponse:
     """
     Calculate medication dose based on weight.
 
@@ -254,7 +254,7 @@ async def calculate_dose(request: DoseCalculationRequest):
 async def convert_weight(
     value: float = Query(..., description="Weight value to convert"),
     from_unit: str = Query(..., pattern="^(lbs|kg)$", description="Source unit"),
-):
+) -> dict[str, Any]:
     """
     Convert weight between pounds and kilograms.
 

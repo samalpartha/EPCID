@@ -5,7 +5,6 @@
   
   **Agentic AI Platform for Pediatric Health Monitoring**
   
-  [![TerraCode Hackathon](https://img.shields.io/badge/TerraCode-Convergence_2026-purple?style=for-the-badge)](https://terracode.dev)
   [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org/)
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
   [![AI Powered](https://img.shields.io/badge/AI-Google_Gemini_2.5-4285F4?style=flat-square&logo=google)](https://ai.google.dev/)
@@ -441,7 +440,7 @@ User Input → Rate Limiting → Symptom Intake Agent → Structural Factors
 
 ## 👥 Team
 
-Built with ❤️ for the TerraCode Convergence Hackathon 2026
+Built with ❤️ by the EPCID Team
 
 ## 📄 License
 

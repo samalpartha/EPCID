@@ -342,7 +342,7 @@ class BaseAgent(ABC):
         data: dict[str, Any],
         confidence: float,
         explanation: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> AgentResponse:
         """Helper to create a standardized response."""
         return AgentResponse(

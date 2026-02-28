@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 _redis_client = None
 
 
-def get_redis_client():
+def get_redis_client() -> Any:
     """Get or create Redis client with lazy loading."""
     global _redis_client
 
@@ -64,7 +64,7 @@ class CacheService:
     PREFIX_ASSESSMENT = "assessment:"
     PREFIX_GUIDELINES = "guidelines:"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._memory_cache: dict = {}  # Fallback in-memory cache
         self._redis = get_redis_client()
 

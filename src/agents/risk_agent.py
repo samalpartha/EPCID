@@ -21,7 +21,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from .. import RISK_CRITICAL, RISK_HIGH, RISK_LOW, RISK_MODERATE
 from .base_agent import AgentConfig, AgentResponse, BaseAgent
@@ -77,7 +77,7 @@ class RiskRule:
     def evaluate(self, context: dict[str, Any]) -> tuple[bool, str | None]:
         """Evaluate the rule. Returns (triggered, message)."""
         try:
-            return self.condition(context)
+            return cast(tuple[bool, str | None], self.condition(context))
         except Exception as e:
             logger.error(f"Rule {self.id} evaluation failed: {e}")
             return False, None
@@ -114,8 +114,8 @@ class RiskAgent(BaseAgent):
         config: AgentConfig | None = None,
         enable_ml: bool = True,
         enable_clinical_scoring: bool = True,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         config = config or AgentConfig(
             name="risk_agent",
             description="Risk stratification with clinical scoring, rules, and ML ensemble",
@@ -130,19 +130,19 @@ class RiskAgent(BaseAgent):
         self.rules = self._initialize_rules()
 
         # Initialize clinical scoring calculators
+        self.phoenix_calculator: Any = None
+        self.pews_calculator: Any = None
+        self.physical_exam_assessor: Any = None
+        self.vital_normalizer: Any = None
+        
         if self.enable_clinical_scoring:
             self.phoenix_calculator = PhoenixScoreCalculator()
             self.pews_calculator = PEWSCalculator()
             self.physical_exam_assessor = PhysicalExamAssessor()
             self.vital_normalizer = VitalSignNormalizer()
             logger.info("Clinical scoring systems initialized (Phoenix, PEWS, Physical Exam)")
-        else:
-            self.phoenix_calculator = None
-            self.pews_calculator = None
-            self.physical_exam_assessor = None
-            self.vital_normalizer = None
-            if not CLINICAL_SCORING_AVAILABLE:
-                logger.warning("Clinical scoring modules not available")
+        elif not CLINICAL_SCORING_AVAILABLE:
+            logger.warning("Clinical scoring modules not available")
 
     async def process(
         self,
@@ -298,7 +298,7 @@ class RiskAgent(BaseAgent):
 
         Returns combined assessment with recommendations for escalation.
         """
-        result = {
+        result: dict[str, Any] = {
             "phoenix_total": 0,
             "meets_sepsis_criteria": False,
             "meets_septic_shock_criteria": False,
@@ -856,8 +856,8 @@ class RiskAgent(BaseAgent):
             "ml_multimodal": 0.05,
         }
 
-        total_weight = 0
-        weighted_score = 0
+        total_weight = 0.0
+        weighted_score = 0.0
         all_factors = []
 
         # Add clinical scoring contribution
@@ -1203,7 +1203,7 @@ Please seek medical evaluation immediately.
         # ===== SAFETY RULES (immediate override) =====
 
         # Critical symptoms
-        def check_critical_symptoms(ctx):
+        def check_critical_symptoms(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
             critical = ["cyanosis", "unresponsive", "seizure", "apnea", "not_breathing"]
             found = [s for s in critical if s in symptoms]
@@ -1224,7 +1224,7 @@ Please seek medical evaluation immediately.
         )
 
         # Infant fever (<3 months with ANY fever)
-        def check_infant_fever(ctx):
+        def check_infant_fever(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             age = ctx.get("demographics", {}).get("age_months", 99)
             temp = ctx.get("vitals", {}).get("temperature", 37)
             if age < 3 and temp >= 38.0:
@@ -1244,7 +1244,7 @@ Please seek medical evaluation immediately.
         )
 
         # Severe respiratory distress
-        def check_respiratory_distress(ctx):
+        def check_respiratory_distress(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
             spo2 = ctx.get("vitals", {}).get("oxygen_saturation", 100)
 
@@ -1272,7 +1272,7 @@ Please seek medical evaluation immediately.
         )
 
         # Shock signs (based on physical exam research)
-        def check_shock_signs(ctx):
+        def check_shock_signs(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             physical_exam = ctx.get("physical_exam", {})
             symptoms = ctx.get("symptoms", [])
 
@@ -1323,7 +1323,7 @@ Please seek medical evaluation immediately.
         )
 
         # Severe dehydration
-        def check_severe_dehydration(ctx):
+        def check_severe_dehydration(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
             ctx.get("physical_exam", {})
 
@@ -1353,7 +1353,7 @@ Please seek medical evaluation immediately.
         # ===== CLINICAL RULES =====
 
         # High fever
-        def check_high_fever(ctx):
+        def check_high_fever(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             temp = ctx.get("vitals", {}).get("temperature", 37)
             if temp >= 40.0:
                 return True, f"Very high fever: {temp}°C"
@@ -1372,7 +1372,7 @@ Please seek medical evaluation immediately.
         )
 
         # Prolonged fever
-        def check_prolonged_fever(ctx):
+        def check_prolonged_fever(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             temp = ctx.get("vitals", {}).get("temperature", 37)
             duration = ctx.get("symptom_duration_hours", 0)
             if temp >= 38.0 and duration >= 72:
@@ -1392,7 +1392,7 @@ Please seek medical evaluation immediately.
         )
 
         # Fever in 3-6 month infant (elevated concern but not critical)
-        def check_young_infant_fever(ctx):
+        def check_young_infant_fever(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             age = ctx.get("demographics", {}).get("age_months", 99)
             temp = ctx.get("vitals", {}).get("temperature", 37)
             if 3 <= age < 6 and temp >= 38.5:
@@ -1412,7 +1412,7 @@ Please seek medical evaluation immediately.
         )
 
         # Dehydration signs
-        def check_dehydration(ctx):
+        def check_dehydration(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
             signs = ["decreased_urine", "dry_mouth", "no_tears", "sunken_eyes", "dry_diaper"]
             count = sum(1 for s in signs if s in symptoms)
@@ -1433,7 +1433,7 @@ Please seek medical evaluation immediately.
         )
 
         # Young age with illness
-        def check_young_age(ctx):
+        def check_young_age(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             age = ctx.get("demographics", {}).get("age_months", 99)
             symptoms = ctx.get("symptoms", [])
             if age < 6 and len(symptoms) >= 2:
@@ -1453,7 +1453,7 @@ Please seek medical evaluation immediately.
         )
 
         # Multiple symptoms
-        def check_symptom_count(ctx):
+        def check_symptom_count(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
             if len(symptoms) >= 5:
                 return True, f"Multiple symptoms ({len(symptoms)})"
@@ -1472,7 +1472,7 @@ Please seek medical evaluation immediately.
         )
 
         # Tachycardia (age-adjusted)
-        def check_tachycardia(ctx):
+        def check_tachycardia(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             hr = ctx.get("vitals", {}).get("heart_rate")
             age = ctx.get("demographics", {}).get("age_months", 24)
             if hr and self._has_tachycardia(hr, age):
@@ -1492,7 +1492,7 @@ Please seek medical evaluation immediately.
         )
 
         # Respiratory distress (moderate)
-        def check_moderate_respiratory(ctx):
+        def check_moderate_respiratory(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
             spo2 = ctx.get("vitals", {}).get("oxygen_saturation", 100)
 
@@ -1517,7 +1517,7 @@ Please seek medical evaluation immediately.
         )
 
         # Petechial or purpuric rash with fever (concern for meningococcemia)
-        def check_petechial_rash(ctx):
+        def check_petechial_rash(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
             temp = ctx.get("vitals", {}).get("temperature", 37)
 
@@ -1544,7 +1544,7 @@ Please seek medical evaluation immediately.
         )
 
         # Neck stiffness with fever (concern for meningitis)
-        def check_meningeal_signs(ctx):
+        def check_meningeal_signs(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
             temp = ctx.get("vitals", {}).get("temperature", 37)
 
@@ -1568,7 +1568,7 @@ Please seek medical evaluation immediately.
         )
 
         # Single physical exam warning sign (RR 2.71)
-        def check_single_exam_sign(ctx):
+        def check_single_exam_sign(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             physical_exam = ctx.get("physical_exam", {})
             symptoms = ctx.get("symptoms", [])
 

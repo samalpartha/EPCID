@@ -7,6 +7,8 @@ With Redis caching for improved performance.
 
 from datetime import datetime
 
+from typing import Any, cast
+
 from fastapi import APIRouter, Depends, Query
 
 from ...api.dependencies import get_optional_user
@@ -98,8 +100,8 @@ def get_aqi_recommendation(aqi: int) -> str:
 async def get_air_quality(
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
-    current_user: dict | None = Depends(get_optional_user),
-):
+    current_user: dict[str, Any] | None = Depends(get_optional_user),
+) -> AirQualityResponse:
     """
     Get air quality data for a location.
 
@@ -114,23 +116,20 @@ async def get_air_quality(
 
     try:
         # Get data from service
-        data = await air_quality_service.get_air_quality(latitude, longitude)
+        data = await air_quality_service.get_current_aqi(latitude=latitude, longitude=longitude)
 
-        aqi = data.get("aqi", 50)
+        aqi = data.aqi if data else 50
 
         response_data = {
             "aqi": aqi,
             "category": get_aqi_category(aqi),
-            "dominant_pollutant": data.get("dominant_pollutant", "pm25"),
-            "pollutants": data.get(
-                "pollutants",
-                {
-                    "pm25": 15.0,
-                    "pm10": 25.0,
-                    "o3": 30.0,
-                    "no2": 10.0,
-                },
-            ),
+            "dominant_pollutant": data.pollutant if data else "pm25",
+            "pollutants": {
+                "pm25": getattr(data, "value", 15.0) if data and data.pollutant == "PM2.5" else 15.0,
+                "pm10": 25.0,
+                "o3": 30.0,
+                "no2": 10.0,
+            },
             "health_implications": get_aqi_health_implications(aqi),
             "recommendation": get_aqi_recommendation(aqi),
             "pediatric_advisory": get_aqi_pediatric_advisory(aqi),
@@ -141,7 +140,7 @@ async def get_air_quality(
         # Cache for 30 minutes
         cache.set(cache_key, response_data, ttl=1800)
 
-        return AirQualityResponse(**response_data)
+        return AirQualityResponse(**cast(dict[str, Any], response_data))
 
     except Exception:
         # Return default data on error
@@ -167,8 +166,8 @@ async def get_air_quality(
 async def get_weather(
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
-    current_user: dict | None = Depends(get_optional_user),
-):
+    current_user: dict[str, Any] | None = Depends(get_optional_user),
+) -> WeatherResponse:
     """
     Get weather data for a location.
 
@@ -182,10 +181,10 @@ async def get_weather(
         return WeatherResponse(**cached)
 
     try:
-        data = await weather_service.get_weather(latitude, longitude)
+        data = await weather_service.get_current_weather(latitude=latitude, longitude=longitude)
 
-        temp = data.get("temperature", 72.0)
-        humidity = data.get("humidity", 50)
+        temp = getattr(data, "temperature_f", 72.0) if data else 72.0
+        humidity = getattr(data, "humidity_percent", 50) if data else 50
 
         # Generate pediatric considerations
         considerations = []
@@ -216,7 +215,7 @@ async def get_weather(
                 "Low humidity: Dry air may irritate airways. Consider a humidifier indoors."
             )
 
-        uv_index = data.get("uv_index")
+        uv_index = getattr(data, "uv_index", None) if data else None
         if uv_index and uv_index > 6:
             considerations.append(
                 "High UV index: Apply sunscreen and limit sun exposure between 10am-4pm."
@@ -227,12 +226,12 @@ async def get_weather(
 
         response_data = {
             "temperature": temp,
-            "feels_like": data.get("feels_like", temp),
+            "feels_like": getattr(data, "feels_like_f", temp) if data else temp,
             "humidity": humidity,
-            "conditions": data.get("conditions", "Clear"),
-            "wind_speed": data.get("wind_speed", 5.0),
+            "conditions": getattr(data, "condition", "Clear") if data else "Clear",
+            "wind_speed": getattr(data, "wind_speed_mph", 5.0) if data else 5.0,
             "uv_index": uv_index,
-            "alerts": data.get("alerts", []),
+            "alerts": [],
             "pediatric_considerations": considerations,
             "data_timestamp": datetime.now(__import__("datetime").timezone.utc).isoformat(),
             "location": f"{latitude:.4f}, {longitude:.4f}",
@@ -241,7 +240,7 @@ async def get_weather(
         # Cache for 15 minutes
         cache.set(cache_key, response_data, ttl=900)
 
-        return WeatherResponse(**response_data)
+        return WeatherResponse(**cast(dict[str, Any], response_data))
 
     except Exception:
         return WeatherResponse(
@@ -266,8 +265,8 @@ async def get_weather(
 )
 async def get_environment(
     location: LocationRequest,
-    current_user: dict | None = Depends(get_optional_user),
-):
+    current_user: dict[str, Any] | None = Depends(get_optional_user),
+) -> EnvironmentResponse:
     """
     Get comprehensive environmental data for a location.
 
@@ -326,7 +325,7 @@ async def get_health_risks(
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
     symptoms: str | None = Query(None, description="Comma-separated symptoms"),
-):
+) -> dict[str, Any]:
     """
     Analyze environmental factors that may be contributing to symptoms.
     """

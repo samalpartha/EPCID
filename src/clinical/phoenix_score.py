@@ -24,6 +24,7 @@ import logging
 from dataclasses import dataclass, field
 from enum import Enum
 
+from typing import Any
 from .vital_signs import VitalSignNormalizer
 
 logger = logging.getLogger("epcid.clinical.phoenix")
@@ -194,7 +195,7 @@ class PhoenixScoreCalculator:
         (144, 216, 46),  # 12-<18 years: MAP >= 46
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.vital_normalizer = VitalSignNormalizer()
 
     def calculate(
@@ -689,7 +690,7 @@ class PhoenixScoreCalculator:
 
         return factors
 
-    def _identify_missing_data(self, **kwargs) -> list[str]:
+    def _identify_missing_data(self, **kwargs: Any) -> list[str]:
         """Identify missing data that would improve assessment."""
         missing = []
 

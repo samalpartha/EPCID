@@ -6,11 +6,13 @@ SQLAlchemy async database setup with connection pooling.
 
 import os
 from collections.abc import AsyncGenerator
+from typing import Any, Generator
 from contextlib import asynccontextmanager
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 
 # Database URL from environment
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/epcid.db")
@@ -62,7 +64,7 @@ AsyncSessionLocal = async_sessionmaker(
 
 # Enable foreign keys for SQLite
 @event.listens_for(engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
+def set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
     """Enable foreign key support for SQLite."""
     if DATABASE_URL.startswith("sqlite:"):
         cursor = dbapi_connection.cursor()
@@ -70,7 +72,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor.close()
 
 
-def get_db():
+def get_db() -> Generator[Session, None, None]:
     """
     Synchronous database session dependency.
 
@@ -123,7 +125,7 @@ async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-def init_db():
+def init_db() -> None:
     """
     Initialize the database by creating all tables.
 
@@ -136,7 +138,7 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 
-async def init_async_db():
+async def init_async_db() -> None:
     """
     Async version of database initialization.
     """
@@ -146,7 +148,7 @@ async def init_async_db():
         await conn.run_sync(Base.metadata.create_all)
 
 
-def drop_db():
+def drop_db() -> None:
     """
     Drop all database tables.
 
@@ -155,7 +157,7 @@ def drop_db():
     Base.metadata.drop_all(bind=engine)
 
 
-async def drop_async_db():
+async def drop_async_db() -> None:
     """
     Async version of database drop.
     """

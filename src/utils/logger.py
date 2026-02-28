@@ -91,9 +91,9 @@ def setup_logging(
     root_logger.handlers.clear()
 
     # Create formatters
+    formatter: logging.Formatter
     if json_format:
         formatter = JSONFormatter()
-    else:
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",

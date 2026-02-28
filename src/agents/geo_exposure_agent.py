@@ -106,8 +106,8 @@ class GeoExposureAgent(BaseAgent):
     def __init__(
         self,
         config: AgentConfig | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         config = config or AgentConfig(
             name="geo_exposure_agent",
             description="Analyzes environmental exposure risks for pediatric health",

@@ -20,8 +20,10 @@ from ...api.schemas import (
 router = APIRouter()
 
 
+from typing import Any
+
 # Simulated database
-fake_symptoms_db = {}
+fake_symptoms_db: dict[str, dict[str, Any]] = {}
 
 
 @router.post(
@@ -33,8 +35,8 @@ fake_symptoms_db = {}
 )
 async def create_symptom(
     symptom: SymptomCreate,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> SymptomResponse:
     """
     Log a new symptom.
 
@@ -74,8 +76,8 @@ async def create_symptom(
 )
 async def create_symptoms_batch(
     symptoms: list[SymptomCreate],
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> list[SymptomResponse]:
     """Log multiple symptoms in a single request."""
     results = []
     now = datetime.now(__import__("datetime").timezone.utc)
@@ -113,8 +115,8 @@ async def list_symptoms(
     severity: SymptomSeverity | None = None,
     since: datetime | None = None,
     limit: int = Query(default=50, ge=1, le=200),
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> list[SymptomResponse]:
     """
     List symptoms with optional filters.
 
@@ -159,8 +161,8 @@ async def list_symptoms(
 async def get_child_symptoms(
     child_id: str,
     days: int = Query(default=30, ge=1, le=365),
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> SymptomHistory:
     """Get symptom history for a child."""
     since = datetime.now(__import__("datetime").timezone.utc) - timedelta(days=days)
 
@@ -195,8 +197,8 @@ async def get_child_symptoms(
 )
 async def get_symptom(
     symptom_id: str,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> SymptomResponse:
     """Get a specific symptom by ID."""
     symptom = fake_symptoms_db.get(symptom_id)
 
@@ -223,8 +225,8 @@ async def get_symptom(
 )
 async def delete_symptom(
     symptom_id: str,
-    current_user: dict = Depends(get_current_active_user),
-):
+    current_user: dict[str, Any] = Depends(get_current_active_user),
+) -> None:
     """Delete a symptom record."""
     symptom = fake_symptoms_db.get(symptom_id)
 
@@ -251,7 +253,7 @@ async def delete_symptom(
     summary="Get common symptom types",
     description="Get a list of common pediatric symptom types.",
 )
-async def get_common_symptom_types():
+async def get_common_symptom_types() -> list[dict[str, Any]]:
     """Get common pediatric symptom types for the UI."""
     return [
         {

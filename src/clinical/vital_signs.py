@@ -284,8 +284,8 @@ class VitalSignNormalizer:
     pediatric vital signs, accounting for age-dependent normal values.
     """
 
-    def __init__(self):
-        self.ranges = VITAL_SIGN_RANGES
+    def __init__(self) -> None:
+        self.ranges: list[VitalSignRange] = VITAL_SIGN_RANGES
 
     def get_range_for_age(self, age_months: int) -> VitalSignRange:
         """Get the appropriate vital sign range for a given age."""

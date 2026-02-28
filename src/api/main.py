@@ -13,7 +13,7 @@ Production-ready FastAPI server with:
 import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, cast
 
 from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,7 +29,7 @@ logger = get_logger("api")
 
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Any:
     """Manage application lifespan events."""
     # Startup
     logger.info("Starting EPCID API server...")
@@ -188,7 +188,7 @@ Authorization: Bearer <your_token>
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Response-Time"] = f"{duration_ms:.2f}ms"
 
-        return response
+        return cast(Response, response)
 
     # Exception handlers
     @app.exception_handler(Exception)
@@ -280,7 +280,7 @@ Authorization: Bearer <your_token>
     async def get_metrics(request: Request) -> dict[str, Any]:
         """Get application metrics."""
         if hasattr(request.app.state, "metrics"):
-            return request.app.state.metrics.get_summary()
+            return cast(dict[str, Any], request.app.state.metrics.get_summary())
         return {"message": "Metrics not available"}
 
     # Root endpoint
@@ -303,7 +303,7 @@ app = create_app()
 
 
 # Custom OpenAPI schema
-def custom_openapi():
+def custom_openapi() -> dict[str, Any]:
     """Generate custom OpenAPI schema."""
     if app.openapi_schema:
         return app.openapi_schema
@@ -380,7 +380,7 @@ def custom_openapi():
     return app.openapi_schema
 
 
-app.openapi = custom_openapi
+app.openapi = custom_openapi  # type: ignore[method-assign]
 
 
 if __name__ == "__main__":

@@ -89,7 +89,7 @@ class ChildBase(BaseModel):
     gender: Gender
 
     @validator("date_of_birth")
-    def validate_dob(cls, v):
+    def validate_dob(cls, v: datetime) -> datetime:
         if v > datetime.now():
             raise ValueError("Date of birth cannot be in the future")
         return v

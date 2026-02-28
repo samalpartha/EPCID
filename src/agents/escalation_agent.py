@@ -164,8 +164,8 @@ class EscalationAgent(BaseAgent):
     def __init__(
         self,
         config: AgentConfig | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         config = config or AgentConfig(
             name="escalation_agent",
             description="Workflow automation and care navigation",

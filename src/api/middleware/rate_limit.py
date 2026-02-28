@@ -11,6 +11,7 @@ Implements token bucket algorithm with:
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
+from typing import Any, Callable, cast
 
 from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -26,7 +27,7 @@ class TokenBucket:
     tokens: float = field(default=0)
     last_refill: float = field(default_factory=time.time)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.tokens = float(self.capacity)
 
     def consume(self, tokens: int = 1) -> tuple[bool, float]:
@@ -97,7 +98,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     Tracks limits per IP address and per authenticated user.
     """
 
-    def __init__(self, app, enabled: bool = True):
+    def __init__(self, app: Any, enabled: bool = True) -> None:
         super().__init__(app)
         self.enabled = enabled
         self.buckets: dict[str, dict[str, TokenBucket]] = defaultdict(dict)
@@ -125,14 +126,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     def _get_or_create_bucket(self, identifier: str, category: str) -> TokenBucket:
         """Get or create a token bucket for the identifier and category."""
-        if category not in self.buckets[identifier]:
-            config = RATE_LIMITS.get(category, RATE_LIMITS["default"])
-            self.buckets[identifier][category] = TokenBucket(
+        buckets = cast(dict[str, TokenBucket], self.buckets[identifier])
+        if category not in buckets:
+            config = cast(dict[str, Any], RATE_LIMITS.get(category, RATE_LIMITS["default"]))
+            buckets[category] = TokenBucket(
                 capacity=config["capacity"], refill_rate=config["refill_rate"]
             )
-        return self.buckets[identifier][category]
+        return buckets[category]
 
-    def _cleanup_old_buckets(self):
+    def _cleanup_old_buckets(self) -> None:
         """Remove buckets that haven't been used recently."""
         now = time.time()
         if now - self.last_cleanup < self.cleanup_interval:
@@ -157,7 +159,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         for identifier in identifiers_to_remove:
             del self.buckets[identifier]
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Callable) -> Any:
         """Process the request with rate limiting."""
         # Skip rate limiting if disabled
         if not self.enabled:
@@ -208,10 +210,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return response
 
 
-def create_rate_limit_middleware(enabled: bool = True):
+def create_rate_limit_middleware(enabled: bool = True) -> Callable:
     """Factory function to create rate limit middleware."""
 
-    def middleware(app):
+    def middleware(app: Any) -> RateLimitMiddleware:
         return RateLimitMiddleware(app, enabled=enabled)
 
     return middleware
