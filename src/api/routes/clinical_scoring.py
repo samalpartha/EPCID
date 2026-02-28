@@ -7,7 +7,6 @@ Provides endpoints for clinical scoring systems:
 - Physical Exam Assessment
 """
 
-
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
@@ -16,8 +15,10 @@ router = APIRouter(prefix="/clinical-scoring", tags=["Clinical Scoring"])
 
 # ============== Schemas ==============
 
+
 class PhoenixScoreRequest(BaseModel):
     """Request for Phoenix Sepsis Score calculation."""
+
     age_months: int = Field(..., ge=0, le=216)
 
     # Respiratory
@@ -47,6 +48,7 @@ class PhoenixScoreRequest(BaseModel):
 
 class PhoenixScoreComponent(BaseModel):
     """Individual component score."""
+
     score: int
     max_score: int
     factors: list[str]
@@ -54,6 +56,7 @@ class PhoenixScoreComponent(BaseModel):
 
 class PhoenixScoreResponse(BaseModel):
     """Response with Phoenix Score calculation."""
+
     total_score: int
 
     respiratory: PhoenixScoreComponent
@@ -73,6 +76,7 @@ class PhoenixScoreResponse(BaseModel):
 
 class PEWSRequest(BaseModel):
     """Request for PEWS calculation."""
+
     age_months: int = Field(..., ge=0, le=216)
 
     # Cardiovascular
@@ -98,6 +102,7 @@ class PEWSRequest(BaseModel):
 
 class PEWSComponent(BaseModel):
     """Individual PEWS component score."""
+
     score: int
     max_score: int
     factors: list[str]
@@ -105,6 +110,7 @@ class PEWSComponent(BaseModel):
 
 class PEWSResponse(BaseModel):
     """Response with PEWS calculation."""
+
     total_score: int
     max_score: int = 9
 
@@ -123,8 +129,11 @@ class PEWSResponse(BaseModel):
 
 class PhysicalExamRequest(BaseModel):
     """Request for physical exam assessment."""
+
     # Mental status
-    mental_status: str = "normal"  # normal, mildly_altered, moderately_altered, severely_altered, unresponsive
+    mental_status: str = (
+        "normal"  # normal, mildly_altered, moderately_altered, severely_altered, unresponsive
+    )
     gcs_total: int | None = Field(None, ge=3, le=15)
     avpu: str | None = Field(None, pattern="^[AVPUavpu]$")
 
@@ -142,6 +151,7 @@ class PhysicalExamRequest(BaseModel):
 
 class ExamFindingResult(BaseModel):
     """Individual exam finding result."""
+
     name: str
     present: bool
     severity: str
@@ -150,6 +160,7 @@ class ExamFindingResult(BaseModel):
 
 class PhysicalExamResponse(BaseModel):
     """Response with physical exam assessment."""
+
     signs_present_count: int
     composite_relative_risk: float
 
@@ -164,6 +175,7 @@ class PhysicalExamResponse(BaseModel):
 
 
 # ============== Endpoints ==============
+
 
 @router.post("/phoenix-score", response_model=PhoenixScoreResponse)
 async def calculate_phoenix_score(request: PhoenixScoreRequest):
@@ -259,7 +271,7 @@ async def calculate_phoenix_score(request: PhoenixScoreRequest):
         # Fallback if clinical module not available
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Clinical scoring module not available"
+            detail="Clinical scoring module not available",
         ) from None
 
 
@@ -295,8 +307,10 @@ async def calculate_pews(request: PEWSRequest):
 
         # Map AVPU
         avpu_map = {
-            "A": AVPU.ALERT, "V": AVPU.VERBAL,
-            "P": AVPU.PAIN, "U": AVPU.UNRESPONSIVE,
+            "A": AVPU.ALERT,
+            "V": AVPU.VERBAL,
+            "P": AVPU.PAIN,
+            "U": AVPU.UNRESPONSIVE,
         }
         avpu = avpu_map.get(request.avpu.upper(), AVPU.ALERT)
 
@@ -346,7 +360,7 @@ async def calculate_pews(request: PEWSRequest):
     except ImportError:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Clinical scoring module not available"
+            detail="Clinical scoring module not available",
         ) from None
 
 
@@ -456,5 +470,5 @@ async def assess_physical_exam(request: PhysicalExamRequest):
     except ImportError:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Clinical scoring module not available"
+            detail="Clinical scoring module not available",
         ) from None

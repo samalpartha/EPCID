@@ -27,6 +27,7 @@ logger = logging.getLogger("epcid.clinical.physical_exam")
 
 class MentalStatus(Enum):
     """Mental status assessment categories."""
+
     NORMAL = "normal"  # Alert, age-appropriate interaction
     MILDLY_ALTERED = "mildly_altered"  # Slightly drowsy but arousable
     MODERATELY_ALTERED = "moderately_altered"  # Lethargic, decreased responsiveness
@@ -36,6 +37,7 @@ class MentalStatus(Enum):
 
 class PulseQuality(Enum):
     """Peripheral pulse quality assessment."""
+
     NORMAL = "normal"  # Strong, easily palpable
     SLIGHTLY_WEAK = "slightly_weak"  # Palpable but diminished
     WEAK = "weak"  # Difficult to palpate
@@ -45,6 +47,7 @@ class PulseQuality(Enum):
 
 class SkinPerfusion(Enum):
     """Skin perfusion and color assessment."""
+
     NORMAL = "normal"  # Pink, warm, dry
     PALE = "pale"  # Pallor
     MOTTLED = "mottled"  # Mottled appearance
@@ -56,6 +59,7 @@ class SkinPerfusion(Enum):
 @dataclass
 class ExamFinding:
     """Individual physical exam finding."""
+
     name: str
     present: bool
     severity: str = "none"  # none, mild, moderate, severe
@@ -78,37 +82,45 @@ class PhysicalExamAssessment:
     """
 
     # Primary exam findings
-    altered_mental_status: ExamFinding = field(default_factory=lambda: ExamFinding(
-        name="Altered Mental Status",
-        present=False,
-        sensitivity=0.54,
-        specificity=0.84,
-        relative_risk=2.71,
-    ))
+    altered_mental_status: ExamFinding = field(
+        default_factory=lambda: ExamFinding(
+            name="Altered Mental Status",
+            present=False,
+            sensitivity=0.54,
+            specificity=0.84,
+            relative_risk=2.71,
+        )
+    )
 
-    abnormal_pulse_quality: ExamFinding = field(default_factory=lambda: ExamFinding(
-        name="Abnormal Peripheral Pulse Quality",
-        present=False,
-        sensitivity=0.08,
-        specificity=0.98,
-        relative_risk=2.71,
-    ))
+    abnormal_pulse_quality: ExamFinding = field(
+        default_factory=lambda: ExamFinding(
+            name="Abnormal Peripheral Pulse Quality",
+            present=False,
+            sensitivity=0.08,
+            specificity=0.98,
+            relative_risk=2.71,
+        )
+    )
 
-    prolonged_capillary_refill: ExamFinding = field(default_factory=lambda: ExamFinding(
-        name="Prolonged Capillary Refill (>2s)",
-        present=False,
-        sensitivity=0.23,
-        specificity=0.91,
-        relative_risk=1.5,  # Not independently significant
-    ))
+    prolonged_capillary_refill: ExamFinding = field(
+        default_factory=lambda: ExamFinding(
+            name="Prolonged Capillary Refill (>2s)",
+            present=False,
+            sensitivity=0.23,
+            specificity=0.91,
+            relative_risk=1.5,  # Not independently significant
+        )
+    )
 
-    cold_mottled_extremities: ExamFinding = field(default_factory=lambda: ExamFinding(
-        name="Cold or Mottled Extremities",
-        present=False,
-        sensitivity=0.15,
-        specificity=0.95,
-        relative_risk=1.3,  # Not independently significant
-    ))
+    cold_mottled_extremities: ExamFinding = field(
+        default_factory=lambda: ExamFinding(
+            name="Cold or Mottled Extremities",
+            present=False,
+            sensitivity=0.15,
+            specificity=0.95,
+            relative_risk=1.3,  # Not independently significant
+        )
+    )
 
     # Additional findings
     mental_status: MentalStatus = MentalStatus.NORMAL
@@ -215,7 +227,9 @@ class PhysicalExamAssessor:
         # Evaluate each primary finding
         assessment.altered_mental_status = self._assess_mental_status(mental_status)
         assessment.abnormal_pulse_quality = self._assess_pulse_quality(pulse_quality)
-        assessment.prolonged_capillary_refill = self._assess_capillary_refill(capillary_refill_seconds)
+        assessment.prolonged_capillary_refill = self._assess_capillary_refill(
+            capillary_refill_seconds
+        )
         assessment.cold_mottled_extremities = self._assess_extremities(
             skin_perfusion, extremities_temperature
         )
@@ -328,9 +342,7 @@ class PhysicalExamAssessor:
 
         return finding
 
-    def _assess_capillary_refill(
-        self, seconds: float | None
-    ) -> ExamFinding:
+    def _assess_capillary_refill(self, seconds: float | None) -> ExamFinding:
         """Assess capillary refill finding."""
         finding = ExamFinding(
             name="Prolonged Capillary Refill (>2s)",
@@ -444,9 +456,7 @@ class PhysicalExamAssessor:
 
         return "low"
 
-    def _generate_findings_summary(
-        self, assessment: PhysicalExamAssessment
-    ) -> list[str]:
+    def _generate_findings_summary(self, assessment: PhysicalExamAssessment) -> list[str]:
         """Generate summary of positive findings."""
         summary = []
 
@@ -479,36 +489,42 @@ class PhysicalExamAssessor:
 
         return summary
 
-    def _generate_recommendations(
-        self, assessment: PhysicalExamAssessment
-    ) -> list[str]:
+    def _generate_recommendations(self, assessment: PhysicalExamAssessment) -> list[str]:
         """Generate recommendations based on findings."""
         recommendations = []
 
         if assessment.signs_present_count >= 2:
-            recommendations.extend([
-                "High risk for organ dysfunction (RR 4.98)",
-                "Immediate physician evaluation recommended",
-                "Consider sepsis workup",
-                "Monitor closely for deterioration",
-                "Consider fluid resuscitation if signs of shock",
-            ])
+            recommendations.extend(
+                [
+                    "High risk for organ dysfunction (RR 4.98)",
+                    "Immediate physician evaluation recommended",
+                    "Consider sepsis workup",
+                    "Monitor closely for deterioration",
+                    "Consider fluid resuscitation if signs of shock",
+                ]
+            )
         elif assessment.signs_present_count == 1:
-            recommendations.extend([
-                "Moderate risk for organ dysfunction (RR 2.71)",
-                "Close monitoring recommended",
-                "Re-evaluate physical exam in 30-60 minutes",
-                "Lower threshold for escalation",
-            ])
+            recommendations.extend(
+                [
+                    "Moderate risk for organ dysfunction (RR 2.71)",
+                    "Close monitoring recommended",
+                    "Re-evaluate physical exam in 30-60 minutes",
+                    "Lower threshold for escalation",
+                ]
+            )
         else:
-            recommendations.extend([
-                "Continue routine monitoring",
-                "Reassess if clinical status changes",
-            ])
+            recommendations.extend(
+                [
+                    "Continue routine monitoring",
+                    "Reassess if clinical status changes",
+                ]
+            )
 
         # Specific recommendations based on findings
         if assessment.altered_mental_status.severity in ["severe", "critical"]:
-            recommendations.append("URGENT: Severe altered mental status requires immediate evaluation")
+            recommendations.append(
+                "URGENT: Severe altered mental status requires immediate evaluation"
+            )
 
         if assessment.abnormal_pulse_quality.severity in ["severe", "critical"]:
             recommendations.append("URGENT: Poor peripheral perfusion - assess for shock")
@@ -520,13 +536,22 @@ class PhysicalExamAssessor:
         confidence = 0.5
 
         # Each finding assessed adds confidence
-        if assessment.mental_status != MentalStatus.NORMAL or assessment.altered_mental_status.present:
+        if (
+            assessment.mental_status != MentalStatus.NORMAL
+            or assessment.altered_mental_status.present
+        ):
             confidence += 0.15
-        if assessment.pulse_quality != PulseQuality.NORMAL or assessment.abnormal_pulse_quality.present:
+        if (
+            assessment.pulse_quality != PulseQuality.NORMAL
+            or assessment.abnormal_pulse_quality.present
+        ):
             confidence += 0.15
         if assessment.capillary_refill_seconds is not None:
             confidence += 0.1
-        if assessment.skin_perfusion != SkinPerfusion.NORMAL or assessment.cold_mottled_extremities.present:
+        if (
+            assessment.skin_perfusion != SkinPerfusion.NORMAL
+            or assessment.cold_mottled_extremities.present
+        ):
             confidence += 0.1
 
         return min(0.95, confidence)

@@ -267,7 +267,11 @@ async def search_guidelines(
                         name=source_data["name"],
                         organization=source_data["organization"],
                         url=source_data.get("url"),
-                        last_updated=datetime.fromisoformat(source_data["last_updated"]) if source_data.get("last_updated") else None,
+                        last_updated=(
+                            datetime.fromisoformat(source_data["last_updated"])
+                            if source_data.get("last_updated")
+                            else None
+                        ),
                     ),
                     key_points=guideline["key_points"],
                     age_specific=request.age_months is not None,
@@ -279,7 +283,7 @@ async def search_guidelines(
     results.sort(key=lambda x: x.relevance_score, reverse=True)
 
     # Limit results
-    results = results[:request.max_results]
+    results = results[: request.max_results]
 
     return GuidelinesResponse(
         query=request.query,
@@ -439,7 +443,4 @@ async def get_emergency_signs():
 )
 async def get_guideline_topics():
     """Get list of available guideline topics."""
-    return [
-        {"id": key, "title": g["title"]}
-        for key, g in PEDIATRIC_GUIDELINES.items()
-    ]
+    return [{"id": key, "title": g["title"]} for key, g in PEDIATRIC_GUIDELINES.items()]

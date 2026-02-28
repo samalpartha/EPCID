@@ -30,12 +30,14 @@ router = APIRouter()
 # Request/Response Models
 class LoginRequest(BaseModel):
     """Login request model."""
+
     email: EmailStr
     password: str = Field(..., min_length=8)
 
 
 class RegisterRequest(BaseModel):
     """Registration request model."""
+
     email: EmailStr
     password: str = Field(..., min_length=8, description="Minimum 8 characters")
     full_name: str = Field(..., min_length=2, max_length=100)
@@ -54,6 +56,7 @@ class RegisterRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     """Token response model."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -63,17 +66,20 @@ class TokenResponse(BaseModel):
 
 class RefreshRequest(BaseModel):
     """Token refresh request."""
+
     refresh_token: str
 
 
 class PasswordChangeRequest(BaseModel):
     """Password change request."""
+
     current_password: str
     new_password: str = Field(..., min_length=8)
 
 
 class PasswordResetRequest(BaseModel):
     """Password reset request."""
+
     email: EmailStr
 
 
@@ -126,7 +132,7 @@ async def register(request: RegisterRequest):
         "hashed_password": hashed_password,
         "is_active": True,
         "is_verified": False,
-        "created_at": datetime.now(__import__('datetime').timezone.utc).isoformat(),
+        "created_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
     }
 
     fake_users_db[request.email] = new_user
@@ -314,7 +320,9 @@ async def change_password(
         )
 
     # Update password
-    fake_users_db[current_user["email"]]["hashed_password"] = get_password_hash(request.new_password)
+    fake_users_db[current_user["email"]]["hashed_password"] = get_password_hash(
+        request.new_password
+    )
 
     return None
 
@@ -340,6 +348,7 @@ async def request_password_reset(request: PasswordResetRequest):
 # Import UserResponse model here to avoid circular imports
 class UserResponse(BaseModel):
     """User response model."""
+
     id: str
     email: EmailStr
     full_name: str

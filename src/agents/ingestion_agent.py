@@ -27,6 +27,7 @@ logger = logging.getLogger("epcid.agents.ingestion")
 
 class InputType(Enum):
     """Types of input data supported."""
+
     SYMPTOMS = "symptoms"
     VITALS = "vitals"
     IMAGE = "image"
@@ -41,6 +42,7 @@ class InputType(Enum):
 
 class ValidationStatus(Enum):
     """Validation result status."""
+
     VALID = "valid"
     INVALID = "invalid"
     WARNING = "warning"
@@ -50,6 +52,7 @@ class ValidationStatus(Enum):
 @dataclass
 class ValidationResult:
     """Result of input validation."""
+
     status: ValidationStatus
     field: str
     original_value: Any
@@ -71,20 +74,62 @@ class IngestionAgent(BaseAgent):
 
     # Valid symptom categories
     SYMPTOM_CATEGORIES = {
-        "respiratory": ["cough", "wheezing", "difficulty_breathing", "rapid_breathing",
-                       "stridor", "nasal_congestion", "runny_nose", "sneezing"],
-        "gastrointestinal": ["vomiting", "diarrhea", "abdominal_pain", "nausea",
-                           "poor_appetite", "constipation", "blood_in_stool"],
-        "neurological": ["headache", "dizziness", "confusion", "seizure",
-                        "unresponsive", "irritability", "lethargy"],
-        "skin": ["rash", "hives", "swelling", "bruising", "pallor", "jaundice",
-                "cyanosis", "petechiae"],
-        "general": ["fever", "chills", "fatigue", "weakness", "pain",
-                   "decreased_activity", "poor_sleep"],
-        "hydration": ["decreased_urine", "dry_mouth", "no_tears", "sunken_eyes",
-                     "sunken_fontanelle", "thirst"],
-        "ear_nose_throat": ["ear_pain", "sore_throat", "neck_stiffness",
-                          "swollen_lymph_nodes"],
+        "respiratory": [
+            "cough",
+            "wheezing",
+            "difficulty_breathing",
+            "rapid_breathing",
+            "stridor",
+            "nasal_congestion",
+            "runny_nose",
+            "sneezing",
+        ],
+        "gastrointestinal": [
+            "vomiting",
+            "diarrhea",
+            "abdominal_pain",
+            "nausea",
+            "poor_appetite",
+            "constipation",
+            "blood_in_stool",
+        ],
+        "neurological": [
+            "headache",
+            "dizziness",
+            "confusion",
+            "seizure",
+            "unresponsive",
+            "irritability",
+            "lethargy",
+        ],
+        "skin": [
+            "rash",
+            "hives",
+            "swelling",
+            "bruising",
+            "pallor",
+            "jaundice",
+            "cyanosis",
+            "petechiae",
+        ],
+        "general": [
+            "fever",
+            "chills",
+            "fatigue",
+            "weakness",
+            "pain",
+            "decreased_activity",
+            "poor_sleep",
+        ],
+        "hydration": [
+            "decreased_urine",
+            "dry_mouth",
+            "no_tears",
+            "sunken_eyes",
+            "sunken_fontanelle",
+            "thirst",
+        ],
+        "ear_nose_throat": ["ear_pain", "sore_throat", "neck_stiffness", "swollen_lymph_nodes"],
     }
 
     # Vital sign normal ranges by age group (months)
@@ -156,6 +201,7 @@ class IngestionAgent(BaseAgent):
             AgentResponse with normalized data
         """
         import uuid
+
         request_id = str(uuid.uuid4())[:12]
 
         normalized_data = {}
@@ -163,7 +209,9 @@ class IngestionAgent(BaseAgent):
         warnings: list[str] = []
 
         # Get timestamp
-        timestamp = input_data.get("timestamp", datetime.now(__import__('datetime').timezone.utc).isoformat())
+        timestamp = input_data.get(
+            "timestamp", datetime.now(__import__("datetime").timezone.utc).isoformat()
+        )
         normalized_data["timestamp"] = timestamp
 
         # Get child ID
@@ -245,9 +293,15 @@ class IngestionAgent(BaseAgent):
                 "input_types_processed": list(normalized_data.keys()),
                 "validation_summary": {
                     "total": len(validation_results),
-                    "valid": sum(1 for v in validation_results if v.status == ValidationStatus.VALID),
-                    "warnings": sum(1 for v in validation_results if v.status == ValidationStatus.WARNING),
-                    "invalid": sum(1 for v in validation_results if v.status == ValidationStatus.INVALID),
+                    "valid": sum(
+                        1 for v in validation_results if v.status == ValidationStatus.VALID
+                    ),
+                    "warnings": sum(
+                        1 for v in validation_results if v.status == ValidationStatus.WARNING
+                    ),
+                    "invalid": sum(
+                        1 for v in validation_results if v.status == ValidationStatus.INVALID
+                    ),
                 },
             },
             confidence=quality_score,
@@ -273,32 +327,38 @@ class IngestionAgent(BaseAgent):
 
             if normalized in self._all_symptoms:
                 normalized_symptoms.append(normalized)
-                validations.append(ValidationResult(
-                    status=ValidationStatus.VALID,
-                    field="symptom",
-                    original_value=symptom,
-                    normalized_value=normalized,
-                ))
+                validations.append(
+                    ValidationResult(
+                        status=ValidationStatus.VALID,
+                        field="symptom",
+                        original_value=symptom,
+                        normalized_value=normalized,
+                    )
+                )
 
                 # Find category
                 for category, syms in self.SYMPTOM_CATEGORIES.items():
                     if normalized in syms:
-                        symptom_details.append({
-                            "name": normalized,
-                            "category": category,
-                        })
+                        symptom_details.append(
+                            {
+                                "name": normalized,
+                                "category": category,
+                            }
+                        )
                         break
             else:
                 # Unknown symptom - still include but flag
                 normalized_symptoms.append(normalized)
                 warnings.append(f"Unknown symptom: {symptom}")
-                validations.append(ValidationResult(
-                    status=ValidationStatus.WARNING,
-                    field="symptom",
-                    original_value=symptom,
-                    normalized_value=normalized,
-                    message="Symptom not in known list",
-                ))
+                validations.append(
+                    ValidationResult(
+                        status=ValidationStatus.WARNING,
+                        field="symptom",
+                        original_value=symptom,
+                        normalized_value=normalized,
+                        message="Symptom not in known list",
+                    )
+                )
 
         return {
             "data": normalized_symptoms,
@@ -336,20 +396,24 @@ class IngestionAgent(BaseAgent):
                 min_val, max_val, _ = ranges["temperature"]
                 if temp < min_val - 1 or temp > max_val + 2:
                     warnings.append(f"Temperature {temp:.1f}°C is outside normal range")
-                    validations.append(ValidationResult(
-                        status=ValidationStatus.WARNING,
-                        field="temperature",
-                        original_value=vitals["temperature"],
-                        normalized_value=temp,
-                        message="Outside normal range",
-                    ))
+                    validations.append(
+                        ValidationResult(
+                            status=ValidationStatus.WARNING,
+                            field="temperature",
+                            original_value=vitals["temperature"],
+                            normalized_value=temp,
+                            message="Outside normal range",
+                        )
+                    )
                 else:
-                    validations.append(ValidationResult(
-                        status=ValidationStatus.VALID,
-                        field="temperature",
-                        original_value=vitals["temperature"],
-                        normalized_value=temp,
-                    ))
+                    validations.append(
+                        ValidationResult(
+                            status=ValidationStatus.VALID,
+                            field="temperature",
+                            original_value=vitals["temperature"],
+                            normalized_value=temp,
+                        )
+                    )
 
         # Heart rate
         if "heart_rate" in vitals:
@@ -360,13 +424,15 @@ class IngestionAgent(BaseAgent):
                 min_val, max_val, _ = ranges["heart_rate"]
                 if hr < min_val * 0.7 or hr > max_val * 1.3:
                     warnings.append(f"Heart rate {hr} bpm is significantly abnormal")
-                    validations.append(ValidationResult(
-                        status=ValidationStatus.WARNING,
-                        field="heart_rate",
-                        original_value=vitals["heart_rate"],
-                        normalized_value=hr,
-                        message="Significantly outside normal range",
-                    ))
+                    validations.append(
+                        ValidationResult(
+                            status=ValidationStatus.WARNING,
+                            field="heart_rate",
+                            original_value=vitals["heart_rate"],
+                            normalized_value=hr,
+                            message="Significantly outside normal range",
+                        )
+                    )
 
         # Respiratory rate
         if "respiratory_rate" in vitals:
@@ -420,7 +486,7 @@ class IngestionAgent(BaseAgent):
         elif "date_of_birth" in demographics:
             # Calculate age from DOB
             dob = datetime.fromisoformat(demographics["date_of_birth"].replace("Z", "+00:00"))
-            now = datetime.now(__import__('datetime').timezone.utc)
+            now = datetime.now(__import__("datetime").timezone.utc)
             age_days = (now - dob.replace(tzinfo=None)).days
             normalized["age_months"] = age_days // 30
             normalized["date_of_birth"] = dob.isoformat()
@@ -430,13 +496,15 @@ class IngestionAgent(BaseAgent):
             age = normalized["age_months"]
             if age < 0 or age > 216:  # 0-18 years
                 warnings.append(f"Age {age} months is outside expected range")
-                validations.append(ValidationResult(
-                    status=ValidationStatus.WARNING,
-                    field="age_months",
-                    original_value=demographics.get("age_months"),
-                    normalized_value=age,
-                    message="Outside expected pediatric range",
-                ))
+                validations.append(
+                    ValidationResult(
+                        status=ValidationStatus.WARNING,
+                        field="age_months",
+                        original_value=demographics.get("age_months"),
+                        normalized_value=age,
+                        message="Outside expected pediatric range",
+                    )
+                )
 
         # Sex
         if "sex" in demographics:
@@ -483,21 +551,25 @@ class IngestionAgent(BaseAgent):
                 normalized["has_image_data"] = True
                 normalized["image_size_bytes"] = len(data) * 3 // 4  # Approximate
 
-                validations.append(ValidationResult(
-                    status=ValidationStatus.VALID,
-                    field="image",
-                    original_value="[base64 data]",
-                    normalized_value="validated",
-                ))
+                validations.append(
+                    ValidationResult(
+                        status=ValidationStatus.VALID,
+                        field="image",
+                        original_value="[base64 data]",
+                        normalized_value="validated",
+                    )
+                )
             except Exception:
                 warnings.append("Invalid image data format")
-                validations.append(ValidationResult(
-                    status=ValidationStatus.INVALID,
-                    field="image",
-                    original_value="[data]",
-                    normalized_value=None,
-                    message="Invalid base64 encoding",
-                ))
+                validations.append(
+                    ValidationResult(
+                        status=ValidationStatus.INVALID,
+                        field="image",
+                        original_value="[data]",
+                        normalized_value=None,
+                        message="Invalid base64 encoding",
+                    )
+                )
 
         # Body location
         if "body_location" in image_data:
@@ -508,7 +580,9 @@ class IngestionAgent(BaseAgent):
             normalized["description"] = image_data["description"]
 
         # Timestamp
-        normalized["captured_at"] = image_data.get("timestamp", datetime.now(__import__('datetime').timezone.utc).isoformat())
+        normalized["captured_at"] = image_data.get(
+            "timestamp", datetime.now(__import__("datetime").timezone.utc).isoformat()
+        )
 
         return {
             "data": normalized,
@@ -528,12 +602,14 @@ class IngestionAgent(BaseAgent):
             normalized["has_audio_data"] = True
             normalized["audio_size_bytes"] = len(data) * 3 // 4
 
-            validations.append(ValidationResult(
-                status=ValidationStatus.VALID,
-                field="voice",
-                original_value="[audio data]",
-                normalized_value="validated",
-            ))
+            validations.append(
+                ValidationResult(
+                    status=ValidationStatus.VALID,
+                    field="voice",
+                    original_value="[audio data]",
+                    normalized_value="validated",
+                )
+            )
 
         # Audio type (cough, breathing, etc.)
         if "audio_type" in voice_data:
@@ -556,7 +632,9 @@ class IngestionAgent(BaseAgent):
                 warnings.append("Audio clip is very long (>30 seconds)")
 
         # Timestamp
-        normalized["recorded_at"] = voice_data.get("timestamp", datetime.now(__import__('datetime').timezone.utc).isoformat())
+        normalized["recorded_at"] = voice_data.get(
+            "timestamp", datetime.now(__import__("datetime").timezone.utc).isoformat()
+        )
 
         return {
             "data": normalized,
@@ -723,7 +801,9 @@ class IngestionAgent(BaseAgent):
         lines.append(f"\n**Validation:** {valid} valid, {warnings} warnings, {invalid} invalid")
 
         # Specific warnings
-        warning_msgs = [v.message for v in validations if v.status == ValidationStatus.WARNING and v.message]
+        warning_msgs = [
+            v.message for v in validations if v.status == ValidationStatus.WARNING and v.message
+        ]
         if warning_msgs:
             lines.append("\n**Warnings:**")
             for msg in warning_msgs[:5]:

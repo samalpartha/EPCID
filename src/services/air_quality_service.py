@@ -25,6 +25,7 @@ logger = logging.getLogger("epcid.services.air_quality")
 @dataclass
 class AirQualityReading:
     """An air quality reading."""
+
     aqi: int
     category: str
     pollutant: str
@@ -50,6 +51,7 @@ class AirQualityReading:
 @dataclass
 class AirQualityForecast:
     """Air quality forecast."""
+
     date: str
     aqi: int
     category: str
@@ -262,7 +264,7 @@ class AirQualityService:
                 value=data.get("AQI", 0),
                 unit="AQI",
                 location=f"{data.get('ReportingArea', '')}, {data.get('StateCode', '')}",
-                timestamp=datetime.now(__import__('datetime').timezone.utc),
+                timestamp=datetime.now(__import__("datetime").timezone.utc),
                 source="AirNow",
             )
 
@@ -284,13 +286,15 @@ class AirQualityService:
         forecasts = []
         if response:
             for data in response:
-                forecasts.append(AirQualityForecast(
-                    date=data.get("DateForecast", ""),
-                    aqi=data.get("AQI", 0),
-                    category=data.get("Category", {}).get("Name", "Unknown"),
-                    pollutant=data.get("ParameterName", "PM2.5"),
-                    discussion=data.get("Discussion"),
-                ))
+                forecasts.append(
+                    AirQualityForecast(
+                        date=data.get("DateForecast", ""),
+                        aqi=data.get("AQI", 0),
+                        category=data.get("Category", {}).get("Name", "Unknown"),
+                        pollutant=data.get("ParameterName", "PM2.5"),
+                        discussion=data.get("Discussion"),
+                    )
+                )
 
         return forecasts
 
@@ -331,7 +335,7 @@ class AirQualityService:
                 value=pm25.get("value", 0),
                 unit=pm25.get("unit", "µg/m³"),
                 location=data.get("location", ""),
-                timestamp=datetime.now(__import__('datetime').timezone.utc),
+                timestamp=datetime.now(__import__("datetime").timezone.utc),
                 source="OpenAQ",
             )
 
@@ -377,13 +381,13 @@ class AirQualityService:
             value=18.5,
             unit="µg/m³",
             location=location,
-            timestamp=datetime.now(__import__('datetime').timezone.utc),
+            timestamp=datetime.now(__import__("datetime").timezone.utc),
             source="Simulated",
         )
 
     def _get_simulated_forecast(self) -> list[AirQualityForecast]:
         """Get simulated forecast for testing."""
-        today = datetime.now(__import__('datetime').timezone.utc)
+        today = datetime.now(__import__("datetime").timezone.utc)
         return [
             AirQualityForecast(
                 date=(today + timedelta(days=i)).strftime("%Y-%m-%d"),
@@ -438,11 +442,13 @@ class AirQualityService:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]
-            if datetime.now(__import__('datetime').timezone.utc) - timestamp < timedelta(minutes=self.cache_ttl_minutes):
+            if datetime.now(__import__("datetime").timezone.utc) - timestamp < timedelta(
+                minutes=self.cache_ttl_minutes
+            ):
                 return result
             del self._cache[key]
         return None
 
     def _set_cached(self, key: str, value: Any) -> None:
         """Set cached result."""
-        self._cache[key] = (value, datetime.now(__import__('datetime').timezone.utc))
+        self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))

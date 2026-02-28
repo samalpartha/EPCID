@@ -27,6 +27,7 @@ logger = logging.getLogger("epcid.clinical.pews")
 
 class WorkOfBreathing(Enum):
     """Work of breathing assessment levels."""
+
     NORMAL = "normal"
     MILD = "mild"  # Mild increase, nasal flaring
     MODERATE = "moderate"  # Retractions, accessory muscle use
@@ -35,6 +36,7 @@ class WorkOfBreathing(Enum):
 
 class CapillaryRefill(Enum):
     """Capillary refill time categories."""
+
     NORMAL = "normal"  # <=2 seconds
     SLIGHTLY_PROLONGED = "slightly_prolonged"  # 2-3 seconds
     PROLONGED = "prolonged"  # 3-4 seconds
@@ -43,6 +45,7 @@ class CapillaryRefill(Enum):
 
 class AVPU(Enum):
     """AVPU neurological assessment scale."""
+
     ALERT = "A"  # Alert and responsive
     VERBAL = "V"  # Responds to verbal stimuli
     PAIN = "P"  # Responds only to pain
@@ -51,6 +54,7 @@ class AVPU(Enum):
 
 class BehaviorStatus(Enum):
     """Behavior/activity assessment."""
+
     APPROPRIATE = "appropriate"
     DECREASED_ACTIVITY = "decreased_activity"  # Less active than normal
     IRRITABLE = "irritable"  # Unusually irritable
@@ -61,6 +65,7 @@ class BehaviorStatus(Enum):
 @dataclass
 class CardiovascularPEWS:
     """Cardiovascular component of PEWS."""
+
     heart_rate: int | None = None
     capillary_refill: CapillaryRefill = CapillaryRefill.NORMAL
     systolic_bp: int | None = None
@@ -78,6 +83,7 @@ class CardiovascularPEWS:
 @dataclass
 class RespiratoryPEWS:
     """Respiratory component of PEWS."""
+
     respiratory_rate: int | None = None
     work_of_breathing: WorkOfBreathing = WorkOfBreathing.NORMAL
     oxygen_requirement: float = 0.21  # FiO2 (room air = 0.21)
@@ -102,6 +108,7 @@ class RespiratoryPEWS:
 @dataclass
 class BehaviorPEWS:
     """Behavior/Neurological component of PEWS."""
+
     avpu: AVPU = AVPU.ALERT
     behavior: BehaviorStatus = BehaviorStatus.APPROPRIATE
 
@@ -120,6 +127,7 @@ class BehaviorPEWS:
 @dataclass
 class PEWSScore:
     """Complete PEWS assessment result."""
+
     # Component scores
     cardiovascular: CardiovascularPEWS = field(default_factory=CardiovascularPEWS)
     respiratory: RespiratoryPEWS = field(default_factory=RespiratoryPEWS)
@@ -271,9 +279,7 @@ class PEWSCalculator:
 
         # Calculate total score
         result.total_score = (
-            result.cardiovascular.score +
-            result.respiratory.score +
-            result.behavior.score
+            result.cardiovascular.score + result.respiratory.score + result.behavior.score
         )
 
         # Determine risk level and recommendations
@@ -286,9 +292,7 @@ class PEWSCalculator:
         result.recommended_actions = self._generate_recommendations(result)
 
         # Calculate confidence
-        result.confidence = self._calculate_confidence(
-            vitals, work_of_breathing, avpu
-        )
+        result.confidence = self._calculate_confidence(vitals, work_of_breathing, avpu)
 
         return result
 
@@ -386,8 +390,8 @@ class PEWSCalculator:
             grunting=grunting,
             stridor=stridor,
             wheezing=wheezing,
-            tachypnea=vitals.tachypnea if hasattr(vitals, 'tachypnea') else False,
-            hypoxia=vitals.hypoxia if hasattr(vitals, 'hypoxia') else False,
+            tachypnea=vitals.tachypnea if hasattr(vitals, "tachypnea") else False,
+            hypoxia=vitals.hypoxia if hasattr(vitals, "hypoxia") else False,
         )
 
         score = 0
@@ -544,31 +548,39 @@ class PEWSCalculator:
         score = result.total_score
 
         if score >= 7:
-            actions.extend([
-                "Activate rapid response team",
-                "Immediate senior clinician review",
-                "Consider ICU evaluation",
-                "Continuous monitoring required",
-                "Document escalation in medical record",
-            ])
+            actions.extend(
+                [
+                    "Activate rapid response team",
+                    "Immediate senior clinician review",
+                    "Consider ICU evaluation",
+                    "Continuous monitoring required",
+                    "Document escalation in medical record",
+                ]
+            )
         elif score >= 5:
-            actions.extend([
-                "Notify senior clinician within 30 minutes",
-                "Increase monitoring to every 15-30 minutes",
-                "Consider additional interventions",
-                "Prepare for potential escalation",
-            ])
+            actions.extend(
+                [
+                    "Notify senior clinician within 30 minutes",
+                    "Increase monitoring to every 15-30 minutes",
+                    "Consider additional interventions",
+                    "Prepare for potential escalation",
+                ]
+            )
         elif score >= 3:
-            actions.extend([
-                "Increase monitoring frequency to hourly",
-                "Clinical review within 2 hours",
-                "Reassess response to current interventions",
-            ])
+            actions.extend(
+                [
+                    "Increase monitoring frequency to hourly",
+                    "Clinical review within 2 hours",
+                    "Reassess response to current interventions",
+                ]
+            )
         else:
-            actions.extend([
-                "Continue routine monitoring",
-                "Reassess per standard protocol",
-            ])
+            actions.extend(
+                [
+                    "Continue routine monitoring",
+                    "Reassess per standard protocol",
+                ]
+            )
 
         # Add specific component-based recommendations
         if result.respiratory.score >= 2:
@@ -578,7 +590,9 @@ class PEWSCalculator:
             actions.append("Cardiovascular assessment - check perfusion and fluid status")
 
         if result.behavior.score >= 2:
-            actions.append("Neurological assessment - evaluate for underlying cause of altered status")
+            actions.append(
+                "Neurological assessment - evaluate for underlying cause of altered status"
+            )
 
         return actions
 

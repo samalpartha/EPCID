@@ -21,20 +21,14 @@ REFRESH_TOKEN_EXPIRE_DAYS = 7
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
     try:
-        return bcrypt.checkpw(
-            plain_password.encode('utf-8'),
-            hashed_password.encode('utf-8')
-        )
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
     except Exception:
         return False
 
 
 def get_password_hash(password: str) -> str:
     """Hash a password."""
-    return bcrypt.hashpw(
-        password.encode('utf-8'),
-        bcrypt.gensalt()
-    ).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def create_access_token(
@@ -54,15 +48,19 @@ def create_access_token(
     to_encode = data.copy()
 
     if expires_delta:
-        expire = datetime.now(__import__('datetime').timezone.utc) + expires_delta
+        expire = datetime.now(__import__("datetime").timezone.utc) + expires_delta
     else:
-        expire = datetime.now(__import__('datetime').timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(__import__("datetime").timezone.utc) + timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        )
 
-    to_encode.update({
-        "exp": expire,
-        "iat": datetime.now(__import__('datetime').timezone.utc),
-        "type": "access",
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": datetime.now(__import__("datetime").timezone.utc),
+            "type": "access",
+        }
+    )
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -84,15 +82,19 @@ def create_refresh_token(
     to_encode = data.copy()
 
     if expires_delta:
-        expire = datetime.now(__import__('datetime').timezone.utc) + expires_delta
+        expire = datetime.now(__import__("datetime").timezone.utc) + expires_delta
     else:
-        expire = datetime.now(__import__('datetime').timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = datetime.now(__import__("datetime").timezone.utc) + timedelta(
+            days=REFRESH_TOKEN_EXPIRE_DAYS
+        )
 
-    to_encode.update({
-        "exp": expire,
-        "iat": datetime.now(__import__('datetime').timezone.utc),
-        "type": "refresh",
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": datetime.now(__import__("datetime").timezone.utc),
+            "type": "refresh",
+        }
+    )
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 

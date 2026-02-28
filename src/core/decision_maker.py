@@ -27,6 +27,7 @@ logger = logging.getLogger("epcid.core.decision_maker")
 
 class DecisionType(Enum):
     """Types of decisions the system can make."""
+
     RISK_CLASSIFICATION = "risk_classification"
     ESCALATION = "escalation"
     CARE_RECOMMENDATION = "care_recommendation"
@@ -37,11 +38,12 @@ class DecisionType(Enum):
 
 class UrgencyLevel(Enum):
     """Urgency levels for actions."""
-    EMERGENCY = "emergency"         # Immediate (911)
-    URGENT = "urgent"               # Within hours
-    SEMI_URGENT = "semi_urgent"     # Within 24 hours
-    ROUTINE = "routine"             # Scheduled
-    INFORMATIONAL = "informational" # No action required
+
+    EMERGENCY = "emergency"  # Immediate (911)
+    URGENT = "urgent"  # Within hours
+    SEMI_URGENT = "semi_urgent"  # Within 24 hours
+    ROUTINE = "routine"  # Scheduled
+    INFORMATIONAL = "informational"  # No action required
 
 
 @dataclass
@@ -52,6 +54,7 @@ class RiskAssessment:
     Includes risk tier, confidence, uncertainty factors,
     and explainable evidence for the assessment.
     """
+
     id: str
     child_id: str
     risk_tier: str
@@ -79,7 +82,9 @@ class RiskAssessment:
     trend_confidence: float
 
     # Metadata
-    timestamp: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    timestamp: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
     assessment_version: str = "1.0"
 
     def get_explanation(self) -> str:
@@ -145,6 +150,7 @@ class Decision:
     Includes the decision itself, supporting evidence,
     recommended actions, and explicit uncertainty.
     """
+
     id: str
     decision_type: DecisionType
     summary: str
@@ -173,7 +179,9 @@ class Decision:
     escalation_criteria: list[str]
 
     # Metadata
-    timestamp: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    timestamp: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -458,7 +466,7 @@ class DecisionMaker:
         # Model agreement boosts confidence
         if model_scores and len(model_scores) > 1:
             scores = list(model_scores.values())
-            variance = sum((s - sum(scores)/len(scores))**2 for s in scores) / len(scores)
+            variance = sum((s - sum(scores) / len(scores)) ** 2 for s in scores) / len(scores)
             if variance < 0.05:
                 confidence += 0.1  # Models agree
 
@@ -605,7 +613,9 @@ class DecisionMaker:
             statement += f"Uncertainty is increased due to: {', '.join(factors[:2])}. "
 
         if missing:
-            statement += f"The following additional data would improve accuracy: {', '.join(missing[:2])}."
+            statement += (
+                f"The following additional data would improve accuracy: {', '.join(missing[:2])}."
+            )
 
         return statement
 
@@ -800,19 +810,27 @@ class DecisionMaker:
         # Critical symptom rule
         def check_critical_symptoms(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
-            critical = ["cyanosis", "unresponsive", "seizure", "severe_difficulty_breathing", "apnea"]
+            critical = [
+                "cyanosis",
+                "unresponsive",
+                "seizure",
+                "severe_difficulty_breathing",
+                "apnea",
+            ]
             found = [s for s in critical if s in symptoms]
             if found:
                 return True, f"Critical symptom detected: {', '.join(found)}"
             return False, None
 
-        rules.append(SafetyRule(
-            name="CRITICAL_SYMPTOM",
-            description="Detects immediately life-threatening symptoms",
-            check_function=check_critical_symptoms,
-            override_to_risk=RISK_CRITICAL,
-            urgency=UrgencyLevel.EMERGENCY,
-        ))
+        rules.append(
+            SafetyRule(
+                name="CRITICAL_SYMPTOM",
+                description="Detects immediately life-threatening symptoms",
+                check_function=check_critical_symptoms,
+                override_to_risk=RISK_CRITICAL,
+                urgency=UrgencyLevel.EMERGENCY,
+            )
+        )
 
         # Infant fever rule
         def check_infant_fever(ctx: dict[str, Any]) -> tuple[bool, str | None]:
@@ -822,30 +840,40 @@ class DecisionMaker:
                 return True, f"Fever ({temp}°C) in infant under 3 months"
             return False, None
 
-        rules.append(SafetyRule(
-            name="INFANT_FEVER",
-            description="Fever in infant under 3 months requires immediate evaluation",
-            check_function=check_infant_fever,
-            override_to_risk=RISK_CRITICAL,
-            urgency=UrgencyLevel.EMERGENCY,
-        ))
+        rules.append(
+            SafetyRule(
+                name="INFANT_FEVER",
+                description="Fever in infant under 3 months requires immediate evaluation",
+                check_function=check_infant_fever,
+                override_to_risk=RISK_CRITICAL,
+                urgency=UrgencyLevel.EMERGENCY,
+            )
+        )
 
         # Severe dehydration rule
         def check_severe_dehydration(ctx: dict[str, Any]) -> tuple[bool, str | None]:
             symptoms = ctx.get("symptoms", [])
-            dehydration_signs = ["no_urine_8_hours", "sunken_fontanelle", "very_dry_mouth", "no_tears", "lethargic"]
+            dehydration_signs = [
+                "no_urine_8_hours",
+                "sunken_fontanelle",
+                "very_dry_mouth",
+                "no_tears",
+                "lethargic",
+            ]
             count = sum(1 for s in dehydration_signs if s in symptoms)
             if count >= 3:
                 return True, f"Multiple signs of severe dehydration ({count} signs)"
             return False, None
 
-        rules.append(SafetyRule(
-            name="SEVERE_DEHYDRATION",
-            description="Multiple signs of severe dehydration",
-            check_function=check_severe_dehydration,
-            override_to_risk=RISK_HIGH,
-            urgency=UrgencyLevel.URGENT,
-        ))
+        rules.append(
+            SafetyRule(
+                name="SEVERE_DEHYDRATION",
+                description="Multiple signs of severe dehydration",
+                check_function=check_severe_dehydration,
+                override_to_risk=RISK_HIGH,
+                urgency=UrgencyLevel.URGENT,
+            )
+        )
 
         # High fever rule
         def check_high_fever(ctx: dict[str, Any]) -> tuple[bool, str | None]:
@@ -854,12 +882,14 @@ class DecisionMaker:
                 return True, f"Very high fever: {temp}°C"
             return False, None
 
-        rules.append(SafetyRule(
-            name="HIGH_FEVER",
-            description="Very high fever (≥40°C) requiring evaluation",
-            check_function=check_high_fever,
-            override_to_risk=RISK_HIGH,
-            urgency=UrgencyLevel.URGENT,
-        ))
+        rules.append(
+            SafetyRule(
+                name="HIGH_FEVER",
+                description="Very high fever (≥40°C) requiring evaluation",
+                check_function=check_high_fever,
+                override_to_risk=RISK_HIGH,
+                urgency=UrgencyLevel.URGENT,
+            )
+        )
 
         return rules

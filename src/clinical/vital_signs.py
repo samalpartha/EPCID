@@ -16,6 +16,7 @@ from enum import Enum
 
 class VitalSignStatus(Enum):
     """Status of a vital sign relative to normal range."""
+
     CRITICALLY_LOW = "critically_low"
     LOW = "low"
     NORMAL = "normal"
@@ -26,6 +27,7 @@ class VitalSignStatus(Enum):
 @dataclass
 class VitalSignRange:
     """Age-specific vital sign reference range."""
+
     age_min_months: int
     age_max_months: int
 
@@ -55,82 +57,182 @@ class VitalSignRange:
 VITAL_SIGN_RANGES: list[VitalSignRange] = [
     # Newborn (0-1 month)
     VitalSignRange(
-        age_min_months=0, age_max_months=1,
-        hr_low=90, hr_normal_low=100, hr_normal_high=160, hr_high=180,
-        rr_low=25, rr_normal_low=30, rr_normal_high=50, rr_high=60,
-        sbp_low=50, sbp_normal_low=60, sbp_normal_high=80, sbp_high=90,
+        age_min_months=0,
+        age_max_months=1,
+        hr_low=90,
+        hr_normal_low=100,
+        hr_normal_high=160,
+        hr_high=180,
+        rr_low=25,
+        rr_normal_low=30,
+        rr_normal_high=50,
+        rr_high=60,
+        sbp_low=50,
+        sbp_normal_low=60,
+        sbp_normal_high=80,
+        sbp_high=90,
         map_critical_low=31,
     ),
     # Infant (1-3 months)
     VitalSignRange(
-        age_min_months=1, age_max_months=3,
-        hr_low=100, hr_normal_low=110, hr_normal_high=160, hr_high=180,
-        rr_low=25, rr_normal_low=30, rr_normal_high=45, rr_high=55,
-        sbp_low=55, sbp_normal_low=65, sbp_normal_high=85, sbp_high=95,
+        age_min_months=1,
+        age_max_months=3,
+        hr_low=100,
+        hr_normal_low=110,
+        hr_normal_high=160,
+        hr_high=180,
+        rr_low=25,
+        rr_normal_low=30,
+        rr_normal_high=45,
+        rr_high=55,
+        sbp_low=55,
+        sbp_normal_low=65,
+        sbp_normal_high=85,
+        sbp_high=95,
         map_critical_low=31,
     ),
     # Infant (3-6 months)
     VitalSignRange(
-        age_min_months=3, age_max_months=6,
-        hr_low=90, hr_normal_low=100, hr_normal_high=150, hr_high=170,
-        rr_low=22, rr_normal_low=25, rr_normal_high=40, rr_high=50,
-        sbp_low=60, sbp_normal_low=70, sbp_normal_high=90, sbp_high=100,
+        age_min_months=3,
+        age_max_months=6,
+        hr_low=90,
+        hr_normal_low=100,
+        hr_normal_high=150,
+        hr_high=170,
+        rr_low=22,
+        rr_normal_low=25,
+        rr_normal_high=40,
+        rr_high=50,
+        sbp_low=60,
+        sbp_normal_low=70,
+        sbp_normal_high=90,
+        sbp_high=100,
         map_critical_low=32,
     ),
     # Infant (6-12 months)
     VitalSignRange(
-        age_min_months=6, age_max_months=12,
-        hr_low=80, hr_normal_low=90, hr_normal_high=140, hr_high=160,
-        rr_low=20, rr_normal_low=22, rr_normal_high=35, rr_high=45,
-        sbp_low=65, sbp_normal_low=75, sbp_normal_high=95, sbp_high=105,
+        age_min_months=6,
+        age_max_months=12,
+        hr_low=80,
+        hr_normal_low=90,
+        hr_normal_high=140,
+        hr_high=160,
+        rr_low=20,
+        rr_normal_low=22,
+        rr_normal_high=35,
+        rr_high=45,
+        sbp_low=65,
+        sbp_normal_low=75,
+        sbp_normal_high=95,
+        sbp_high=105,
         map_critical_low=34,
     ),
     # Toddler (1-2 years)
     VitalSignRange(
-        age_min_months=12, age_max_months=24,
-        hr_low=70, hr_normal_low=80, hr_normal_high=130, hr_high=150,
-        rr_low=18, rr_normal_low=20, rr_normal_high=30, rr_high=40,
-        sbp_low=70, sbp_normal_low=80, sbp_normal_high=100, sbp_high=110,
+        age_min_months=12,
+        age_max_months=24,
+        hr_low=70,
+        hr_normal_low=80,
+        hr_normal_high=130,
+        hr_high=150,
+        rr_low=18,
+        rr_normal_low=20,
+        rr_normal_high=30,
+        rr_high=40,
+        sbp_low=70,
+        sbp_normal_low=80,
+        sbp_normal_high=100,
+        sbp_high=110,
         map_critical_low=35,
     ),
     # Preschool (2-4 years)
     VitalSignRange(
-        age_min_months=24, age_max_months=48,
-        hr_low=65, hr_normal_low=75, hr_normal_high=120, hr_high=140,
-        rr_low=16, rr_normal_low=18, rr_normal_high=26, rr_high=34,
-        sbp_low=75, sbp_normal_low=85, sbp_normal_high=105, sbp_high=115,
+        age_min_months=24,
+        age_max_months=48,
+        hr_low=65,
+        hr_normal_low=75,
+        hr_normal_high=120,
+        hr_high=140,
+        rr_low=16,
+        rr_normal_low=18,
+        rr_normal_high=26,
+        rr_high=34,
+        sbp_low=75,
+        sbp_normal_low=85,
+        sbp_normal_high=105,
+        sbp_high=115,
         map_critical_low=38,
     ),
     # School age (4-6 years)
     VitalSignRange(
-        age_min_months=48, age_max_months=72,
-        hr_low=60, hr_normal_low=70, hr_normal_high=110, hr_high=130,
-        rr_low=14, rr_normal_low=16, rr_normal_high=24, rr_high=30,
-        sbp_low=80, sbp_normal_low=90, sbp_normal_high=110, sbp_high=120,
+        age_min_months=48,
+        age_max_months=72,
+        hr_low=60,
+        hr_normal_low=70,
+        hr_normal_high=110,
+        hr_high=130,
+        rr_low=14,
+        rr_normal_low=16,
+        rr_normal_high=24,
+        rr_high=30,
+        sbp_low=80,
+        sbp_normal_low=90,
+        sbp_normal_high=110,
+        sbp_high=120,
         map_critical_low=40,
     ),
     # School age (6-10 years)
     VitalSignRange(
-        age_min_months=72, age_max_months=120,
-        hr_low=55, hr_normal_low=65, hr_normal_high=105, hr_high=120,
-        rr_low=12, rr_normal_low=14, rr_normal_high=22, rr_high=28,
-        sbp_low=85, sbp_normal_low=95, sbp_normal_high=115, sbp_high=125,
+        age_min_months=72,
+        age_max_months=120,
+        hr_low=55,
+        hr_normal_low=65,
+        hr_normal_high=105,
+        hr_high=120,
+        rr_low=12,
+        rr_normal_low=14,
+        rr_normal_high=22,
+        rr_high=28,
+        sbp_low=85,
+        sbp_normal_low=95,
+        sbp_normal_high=115,
+        sbp_high=125,
         map_critical_low=44,
     ),
     # Pre-adolescent (10-12 years)
     VitalSignRange(
-        age_min_months=120, age_max_months=144,
-        hr_low=50, hr_normal_low=60, hr_normal_high=100, hr_high=115,
-        rr_low=12, rr_normal_low=12, rr_normal_high=20, rr_high=26,
-        sbp_low=90, sbp_normal_low=100, sbp_normal_high=120, sbp_high=130,
+        age_min_months=120,
+        age_max_months=144,
+        hr_low=50,
+        hr_normal_low=60,
+        hr_normal_high=100,
+        hr_high=115,
+        rr_low=12,
+        rr_normal_low=12,
+        rr_normal_high=20,
+        rr_high=26,
+        sbp_low=90,
+        sbp_normal_low=100,
+        sbp_normal_high=120,
+        sbp_high=130,
         map_critical_low=48,
     ),
     # Adolescent (12-18 years)
     VitalSignRange(
-        age_min_months=144, age_max_months=216,
-        hr_low=45, hr_normal_low=55, hr_normal_high=95, hr_high=110,
-        rr_low=10, rr_normal_low=12, rr_normal_high=18, rr_high=24,
-        sbp_low=95, sbp_normal_low=105, sbp_normal_high=125, sbp_high=135,
+        age_min_months=144,
+        age_max_months=216,
+        hr_low=45,
+        hr_normal_low=55,
+        hr_normal_high=95,
+        hr_high=110,
+        rr_low=10,
+        rr_normal_low=12,
+        rr_normal_high=18,
+        rr_high=24,
+        sbp_low=95,
+        sbp_normal_low=105,
+        sbp_normal_high=125,
+        sbp_high=135,
         map_critical_low=52,
     ),
 ]
@@ -139,6 +241,7 @@ VITAL_SIGN_RANGES: list[VitalSignRange] = [
 @dataclass
 class AgeAdjustedVitals:
     """Age-adjusted vital sign assessment results."""
+
     age_months: int
 
     # Raw values
@@ -231,8 +334,10 @@ class VitalSignNormalizer:
             )
             result.hr_status = self._assess_status(
                 heart_rate,
-                ref.hr_low, ref.hr_normal_low,
-                ref.hr_normal_high, ref.hr_high,
+                ref.hr_low,
+                ref.hr_normal_low,
+                ref.hr_normal_high,
+                ref.hr_high,
             )
             result.tachycardia = heart_rate > ref.hr_normal_high
             result.bradycardia = heart_rate < ref.hr_normal_low
@@ -247,8 +352,10 @@ class VitalSignNormalizer:
             )
             result.rr_status = self._assess_status(
                 respiratory_rate,
-                ref.rr_low, ref.rr_normal_low,
-                ref.rr_normal_high, ref.rr_high,
+                ref.rr_low,
+                ref.rr_normal_low,
+                ref.rr_normal_high,
+                ref.rr_high,
             )
             result.tachypnea = respiratory_rate > ref.rr_normal_high
 
@@ -262,8 +369,10 @@ class VitalSignNormalizer:
             )
             result.sbp_status = self._assess_status(
                 systolic_bp,
-                ref.sbp_low, ref.sbp_normal_low,
-                ref.sbp_normal_high, ref.sbp_high,
+                ref.sbp_low,
+                ref.sbp_normal_low,
+                ref.sbp_normal_high,
+                ref.sbp_high,
             )
             result.hypotension = systolic_bp < ref.sbp_low
 
@@ -272,12 +381,8 @@ class VitalSignNormalizer:
 
         # Calculate MAP if we have both SBP and DBP
         if systolic_bp is not None and diastolic_bp is not None:
-            result.mean_arterial_pressure = (
-                diastolic_bp + (systolic_bp - diastolic_bp) / 3
-            )
-            result.map_below_threshold = (
-                result.mean_arterial_pressure < ref.map_critical_low
-            )
+            result.mean_arterial_pressure = diastolic_bp + (systolic_bp - diastolic_bp) / 3
+            result.map_below_threshold = result.mean_arterial_pressure < ref.map_critical_low
 
         # Oxygen saturation assessment
         if oxygen_saturation is not None:

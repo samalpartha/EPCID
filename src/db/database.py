@@ -13,10 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 # Database URL from environment
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///./data/epcid.db"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/epcid.db")
 
 # Convert to async URL for SQLite
 ASYNC_DATABASE_URL = DATABASE_URL
@@ -29,6 +26,7 @@ elif DATABASE_URL.startswith("postgresql:"):
 # Base class for all models
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
+
     pass
 
 

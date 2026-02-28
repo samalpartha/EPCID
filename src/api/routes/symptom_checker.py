@@ -19,8 +19,10 @@ router = APIRouter(prefix="/symptom-checker", tags=["Symptom Checker"])
 
 # ============== Schemas ==============
 
+
 class TriageLevel(str):
     """Triage level matching ChildrensMD 4-tier output."""
+
     CALL_911 = "call_911"
     CALL_NOW = "call_now"
     CALL_24_HOURS = "call_24_hours"
@@ -29,6 +31,7 @@ class TriageLevel(str):
 
 class SymptomInput(BaseModel):
     """Individual symptom input."""
+
     symptom_id: str
     name: str
     severity: str = Field(..., description="mild, moderate, or severe")
@@ -38,6 +41,7 @@ class SymptomInput(BaseModel):
 
 class SymptomCheckerStartRequest(BaseModel):
     """Request to start a symptom checker session."""
+
     child_id: str | None = None
     age_months: int = Field(..., ge=0, le=216)
     sex: str = Field(..., pattern="^(male|female)$")
@@ -45,6 +49,7 @@ class SymptomCheckerStartRequest(BaseModel):
 
 class SymptomCheckerStartResponse(BaseModel):
     """Response with session ID."""
+
     session_id: str
     age_months: int
     sex: str
@@ -54,12 +59,14 @@ class SymptomCheckerStartResponse(BaseModel):
 
 class AddSymptomsRequest(BaseModel):
     """Request to add symptoms to session."""
+
     session_id: str
     symptoms: list[SymptomInput]
 
 
 class AddSymptomsResponse(BaseModel):
     """Response after adding symptoms."""
+
     session_id: str
     symptoms_count: int
     red_flags_detected: list[str] = []
@@ -68,12 +75,14 @@ class AddSymptomsResponse(BaseModel):
 
 class TriageRequest(BaseModel):
     """Request for triage assessment."""
+
     session_id: str
     additional_context: dict[str, Any] | None = None
 
 
 class TriageRecommendation(BaseModel):
     """Triage recommendation result."""
+
     level: str  # call_911, call_now, call_24_hours, home_care
     title: str
     description: str
@@ -85,6 +94,7 @@ class TriageRecommendation(BaseModel):
 
 class TriageResponse(BaseModel):
     """Full triage response."""
+
     session_id: str
     triage: TriageRecommendation
     symptoms_assessed: list[SymptomInput]
@@ -99,6 +109,7 @@ sessions: dict[str, dict[str, Any]] = {}
 
 
 # ============== Endpoints ==============
+
 
 @router.post("/start", response_model=SymptomCheckerStartResponse)
 async def start_symptom_checker(
@@ -133,7 +144,7 @@ async def start_symptom_checker(
         "child_id": request.child_id,
         "age_months": request.age_months,
         "sex": request.sex,
-        "created_at": datetime.now(__import__('datetime').timezone.utc),
+        "created_at": datetime.now(__import__("datetime").timezone.utc),
         "symptoms": [],
         "warnings": warnings,
     }
@@ -162,16 +173,12 @@ async def add_symptoms(
     """
     session = sessions.get(request.session_id)
     if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
     # Verify user owns session
     if session.get("user_id") != current_user.get("id"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this session"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this session"
         )
 
     # Add symptoms
@@ -182,9 +189,16 @@ async def add_symptoms(
     immediate_escalation = False
 
     critical_symptoms = [
-        "unresponsive", "seizure", "severe_difficulty_breathing",
-        "blue_lips", "not_breathing", "apnea", "severe_abdominal_pain",
-        "bloody_vomit", "currant_jelly_stool", "petechiae"
+        "unresponsive",
+        "seizure",
+        "severe_difficulty_breathing",
+        "blue_lips",
+        "not_breathing",
+        "apnea",
+        "severe_abdominal_pain",
+        "bloody_vomit",
+        "currant_jelly_stool",
+        "petechiae",
     ]
 
     for symptom in request.symptoms:
@@ -222,16 +236,10 @@ async def get_triage(
     """
     session = sessions.get(request.session_id)
     if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
     if session.get("user_id") != current_user.get("id"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
     symptoms = session["symptoms"]
     age_months = session["age_months"]
@@ -243,7 +251,7 @@ async def get_triage(
         session_id=request.session_id,
         triage=triage,
         symptoms_assessed=[SymptomInput(**s) for s in symptoms],
-        assessment_time=datetime.now(__import__('datetime').timezone.utc),
+        assessment_time=datetime.now(__import__("datetime").timezone.utc),
         confidence=0.85,
     )
 
@@ -256,22 +264,17 @@ async def delete_session(
     """Delete a symptom checker session."""
     session = sessions.get(session_id)
     if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
     if session.get("user_id") != current_user.get("id"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
     del sessions[session_id]
     return {"message": "Session deleted"}
 
 
 # ============== Triage Logic ==============
+
 
 def calculate_triage(symptoms: list[dict], age_months: int) -> TriageRecommendation:
     """
@@ -293,18 +296,39 @@ def calculate_triage(symptoms: list[dict], age_months: int) -> TriageRecommendat
 
     # Critical symptoms - Call 911
     critical_symptoms = {
-        "unresponsive", "seizure", "severe_difficulty_breathing", "apnea",
-        "blue_lips", "not_breathing", "severe_abdominal_pain", "bloody_vomit",
-        "currant_jelly_stool", "petechiae", "purpura", "mottled_skin",
-        "drooling", "stiff_neck"
+        "unresponsive",
+        "seizure",
+        "severe_difficulty_breathing",
+        "apnea",
+        "blue_lips",
+        "not_breathing",
+        "severe_abdominal_pain",
+        "bloody_vomit",
+        "currant_jelly_stool",
+        "petechiae",
+        "purpura",
+        "mottled_skin",
+        "drooling",
+        "stiff_neck",
     }
 
     # High priority symptoms - Call Now
     high_priority = {
-        "difficulty_breathing", "high_fever", "lethargy", "confusion",
-        "bloody_stool", "no_urine_8_hours", "no_tears", "sunken_eyes",
-        "sunken_fontanelle", "vomiting_projectile", "inconsolable",
-        "grunting", "stridor", "nasal_flaring", "retractions"
+        "difficulty_breathing",
+        "high_fever",
+        "lethargy",
+        "confusion",
+        "bloody_stool",
+        "no_urine_8_hours",
+        "no_tears",
+        "sunken_eyes",
+        "sunken_fontanelle",
+        "vomiting_projectile",
+        "inconsolable",
+        "grunting",
+        "stridor",
+        "nasal_flaring",
+        "retractions",
     }
 
     symptom_ids = {s["symptom_id"] for s in symptoms}

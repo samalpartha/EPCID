@@ -11,7 +11,6 @@ Tests for the EPCID agent system including:
 - EscalationAgent
 """
 
-
 import pytest
 
 from src.agents.base_agent import AgentStatus
@@ -67,6 +66,7 @@ def critical_input():
 # =====================
 # Ingestion Agent Tests
 # =====================
+
 
 class TestIngestionAgent:
     """Tests for IngestionAgent."""
@@ -130,6 +130,7 @@ class TestIngestionAgent:
 # Phenotype Agent Tests
 # =====================
 
+
 class TestPhenotypeAgent:
     """Tests for PhenotypeAgent."""
 
@@ -150,10 +151,7 @@ class TestPhenotypeAgent:
         assert response.success
         phenotypes = response.data["phenotypes"]
 
-        fever_phenotype = next(
-            (p for p in phenotypes if p["name"] == "fever"),
-            None
-        )
+        fever_phenotype = next((p for p in phenotypes if p["name"] == "fever"), None)
         assert fever_phenotype is not None
         assert fever_phenotype["severity"] in ["moderate", "severe"]
 
@@ -174,10 +172,7 @@ class TestPhenotypeAgent:
         assert response.success
         phenotypes = response.data["phenotypes"]
 
-        resp_phenotype = next(
-            (p for p in phenotypes if p["name"] == "respiratory_effort"),
-            None
-        )
+        resp_phenotype = next((p for p in phenotypes if p["name"] == "respiratory_effort"), None)
         assert resp_phenotype is not None
 
     @pytest.mark.asyncio
@@ -197,10 +192,7 @@ class TestPhenotypeAgent:
         assert response.success
         phenotypes = response.data["phenotypes"]
 
-        burden = next(
-            (p for p in phenotypes if p["name"] == "symptom_burden"),
-            None
-        )
+        burden = next((p for p in phenotypes if p["name"] == "symptom_burden"), None)
         assert burden is not None
         assert burden["value"] > 0
 
@@ -208,6 +200,7 @@ class TestPhenotypeAgent:
 # =====================
 # Risk Agent Tests
 # =====================
+
 
 class TestRiskAgent:
     """Tests for RiskAgent."""
@@ -273,6 +266,7 @@ class TestRiskAgent:
 # Guideline RAG Tests
 # =====================
 
+
 class TestGuidelineRAGAgent:
     """Tests for GuidelineRAGAgent."""
 
@@ -311,6 +305,7 @@ class TestGuidelineRAGAgent:
 # =====================
 # Escalation Agent Tests
 # =====================
+
 
 class TestEscalationAgent:
     """Tests for EscalationAgent."""
@@ -370,6 +365,7 @@ class TestEscalationAgent:
 # Integration Tests
 # =====================
 
+
 class TestAgentIntegration:
     """Integration tests for agent pipeline."""
 
@@ -392,20 +388,24 @@ class TestAgentIntegration:
 
         # Stage 3: Risk
         risk = RiskAgent(memory=memory)
-        risk_response = await risk.run({
-            "normalized": normalized,
-            "phenotypes": phenotypes,
-        })
+        risk_response = await risk.run(
+            {
+                "normalized": normalized,
+                "phenotypes": phenotypes,
+            }
+        )
         assert risk_response.success
 
         risk_tier = risk_response.data["risk_tier"]
 
         # Stage 4: Escalation
         escalation = EscalationAgent(memory=memory)
-        esc_response = await escalation.run({
-            "risk_tier": risk_tier,
-            "symptoms": normalized.get("symptoms", []),
-        })
+        esc_response = await escalation.run(
+            {
+                "risk_tier": risk_tier,
+                "symptoms": normalized.get("symptoms", []),
+            }
+        )
         assert esc_response.success
 
     @pytest.mark.asyncio

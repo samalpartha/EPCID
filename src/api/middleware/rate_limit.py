@@ -20,6 +20,7 @@ from starlette.responses import JSONResponse
 @dataclass
 class TokenBucket:
     """Token bucket for rate limiting."""
+
     capacity: int  # Maximum tokens
     refill_rate: float  # Tokens per second
     tokens: float = field(default=0)
@@ -53,19 +54,14 @@ class TokenBucket:
 RATE_LIMITS = {
     # Auth endpoints - stricter to prevent brute force
     "auth": {"capacity": 10, "refill_rate": 0.5},  # 10 requests, refills 1 every 2 seconds
-
     # Assessment/Clinical - moderate limits
     "clinical": {"capacity": 30, "refill_rate": 1},  # 30 requests, 1 per second refill
-
     # Read endpoints - more generous
     "read": {"capacity": 100, "refill_rate": 5},  # 100 requests, 5 per second refill
-
     # Write endpoints - moderate
     "write": {"capacity": 50, "refill_rate": 2},  # 50 requests, 2 per second refill
-
     # AI/LLM endpoints - stricter due to cost
     "ai": {"capacity": 20, "refill_rate": 0.5},  # 20 requests, 1 every 2 seconds
-
     # Default
     "default": {"capacity": 60, "refill_rate": 2},
 }
@@ -132,8 +128,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if category not in self.buckets[identifier]:
             config = RATE_LIMITS.get(category, RATE_LIMITS["default"])
             self.buckets[identifier][category] = TokenBucket(
-                capacity=config["capacity"],
-                refill_rate=config["refill_rate"]
+                capacity=config["capacity"], refill_rate=config["refill_rate"]
             )
         return self.buckets[identifier][category]
 
@@ -199,7 +194,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     "Retry-After": str(int(wait_time) + 1),
                     "X-RateLimit-Category": category,
                     "X-RateLimit-Remaining": "0",
-                }
+                },
             )
 
         # Process the request
@@ -215,6 +210,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 def create_rate_limit_middleware(enabled: bool = True):
     """Factory function to create rate limit middleware."""
+
     def middleware(app):
         return RateLimitMiddleware(app, enabled=enabled)
+
     return middleware

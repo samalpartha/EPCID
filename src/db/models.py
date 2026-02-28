@@ -34,6 +34,7 @@ def generate_uuid() -> str:
 # Enums
 class Gender(enum.StrEnum):
     """Gender options."""
+
     MALE = "male"
     FEMALE = "female"
     OTHER = "other"
@@ -41,6 +42,7 @@ class Gender(enum.StrEnum):
 
 class SymptomSeverity(enum.StrEnum):
     """Symptom severity levels."""
+
     MILD = "mild"
     MODERATE = "moderate"
     SEVERE = "severe"
@@ -48,6 +50,7 @@ class SymptomSeverity(enum.StrEnum):
 
 class RiskLevel(enum.StrEnum):
     """Risk level classification."""
+
     LOW = "low"
     MODERATE = "moderate"
     HIGH = "high"
@@ -56,6 +59,7 @@ class RiskLevel(enum.StrEnum):
 
 class AuditAction(enum.StrEnum):
     """Audit log action types."""
+
     CREATE = "create"
     READ = "read"
     UPDATE = "update"
@@ -83,16 +87,27 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), onupdate=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(__import__("datetime").timezone.utc),
+        onupdate=lambda: datetime.now(__import__("datetime").timezone.utc),
+        nullable=False,
+    )
     last_login: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Preferences
     preferences: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Relationships
-    children: Mapped[list["Child"]] = relationship("Child", back_populates="user", cascade="all, delete-orphan")
-    audit_logs: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
+    children: Mapped[list["Child"]] = relationship(
+        "Child", back_populates="user", cascade="all, delete-orphan"
+    )
+    audit_logs: Mapped[list["AuditLog"]] = relationship(
+        "AuditLog", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
@@ -104,7 +119,9 @@ class Child(Base):
     __tablename__ = "children"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Basic info
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -120,19 +137,32 @@ class Child(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), onupdate=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(__import__("datetime").timezone.utc),
+        onupdate=lambda: datetime.now(__import__("datetime").timezone.utc),
+        nullable=False,
+    )
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="children")
-    symptoms: Mapped[list["Symptom"]] = relationship("Symptom", back_populates="child", cascade="all, delete-orphan")
-    assessments: Mapped[list["Assessment"]] = relationship("Assessment", back_populates="child", cascade="all, delete-orphan")
+    symptoms: Mapped[list["Symptom"]] = relationship(
+        "Symptom", back_populates="child", cascade="all, delete-orphan"
+    )
+    assessments: Mapped[list["Assessment"]] = relationship(
+        "Assessment", back_populates="child", cascade="all, delete-orphan"
+    )
 
     @property
     def age_months(self) -> int:
         """Calculate age in months."""
         today = datetime.now()
-        months = (today.year - self.date_of_birth.year) * 12 + (today.month - self.date_of_birth.month)
+        months = (today.year - self.date_of_birth.year) * 12 + (
+            today.month - self.date_of_birth.month
+        )
         return max(0, months)
 
     @property
@@ -161,7 +191,9 @@ class Symptom(Base):
     __tablename__ = "symptoms"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    child_id: Mapped[str] = mapped_column(String(36), ForeignKey("children.id", ondelete="CASCADE"), nullable=False, index=True)
+    child_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("children.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Symptom details
     symptom_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
@@ -171,7 +203,12 @@ class Symptom(Base):
 
     # Timing
     onset_time: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    recorded_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False, index=True)
+    recorded_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(__import__("datetime").timezone.utc),
+        nullable=False,
+        index=True,
+    )
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
@@ -193,7 +230,9 @@ class Assessment(Base):
     __tablename__ = "assessments"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    child_id: Mapped[str] = mapped_column(String(36), ForeignKey("children.id", ondelete="CASCADE"), nullable=False, index=True)
+    child_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("children.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Risk assessment
     risk_level: Mapped[RiskLevel] = mapped_column(Enum(RiskLevel), nullable=False, index=True)
@@ -223,7 +262,12 @@ class Assessment(Base):
     environmental_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(__import__("datetime").timezone.utc),
+        nullable=False,
+        index=True,
+    )
 
     # Model versioning
     model_version: Mapped[str] = mapped_column(String(20), default="1.0.0", nullable=False)
@@ -247,7 +291,9 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Action details
     action: Mapped[AuditAction] = mapped_column(Enum(AuditAction), nullable=False, index=True)
@@ -263,7 +309,12 @@ class AuditLog(Base):
     details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Timestamp
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(__import__("datetime").timezone.utc),
+        nullable=False,
+        index=True,
+    )
 
     # Relationships
     user: Mapped[Optional["User"]] = relationship("User", back_populates="audit_logs")
@@ -285,7 +336,9 @@ class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Token info
     token_hash: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
@@ -300,11 +353,11 @@ class RefreshToken(Base):
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
 
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
-
-    __table_args__ = (
-        Index("ix_refresh_tokens_user_expires", "user_id", "expires_at"),
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False
     )
+
+    __table_args__ = (Index("ix_refresh_tokens_user_expires", "user_id", "expires_at"),)
 
 
 class EnvironmentData(Base):
@@ -331,7 +384,9 @@ class EnvironmentData(Base):
 
     # Timestamps
     data_timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False
+    )
 
     __table_args__ = (
         Index("ix_environment_location", "latitude", "longitude"),

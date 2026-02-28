@@ -23,6 +23,7 @@ router = APIRouter()
 
 # ============== Enums ==============
 
+
 class MoodLevel(StrEnum):
     VERY_SAD = "very_sad"
     SAD = "sad"
@@ -49,6 +50,7 @@ class CopingCategory(StrEnum):
 
 
 # ============== Models ==============
+
 
 class MoodEntry(BaseModel):
     id: str = Field(default_factory=lambda: f"mood_{uuid.uuid4().hex[:8]}")
@@ -104,7 +106,9 @@ class AnxietyAssessmentQuestion(BaseModel):
 
 class AnxietyAssessmentAnswer(BaseModel):
     question_id: int
-    score: int = Field(ge=0, le=3, description="0=Not at all, 1=Several days, 2=More than half, 3=Nearly every day")
+    score: int = Field(
+        ge=0, le=3, description="0=Not at all, 1=Several days, 2=More than half, 3=Nearly every day"
+    )
 
 
 class AnxietyAssessmentSubmit(BaseModel):
@@ -162,37 +166,37 @@ GAD7_QUESTIONS: list[AnxietyAssessmentQuestion] = [
     AnxietyAssessmentQuestion(
         id=1,
         text="Feeling nervous, anxious, or on edge",
-        child_friendly_text="Do you feel worried or scared a lot?"
+        child_friendly_text="Do you feel worried or scared a lot?",
     ),
     AnxietyAssessmentQuestion(
         id=2,
         text="Not being able to stop or control worrying",
-        child_friendly_text="Is it hard to stop thinking about scary or worrying things?"
+        child_friendly_text="Is it hard to stop thinking about scary or worrying things?",
     ),
     AnxietyAssessmentQuestion(
         id=3,
         text="Worrying too much about different things",
-        child_friendly_text="Do you worry about lots of different things?"
+        child_friendly_text="Do you worry about lots of different things?",
     ),
     AnxietyAssessmentQuestion(
         id=4,
         text="Trouble relaxing",
-        child_friendly_text="Is it hard for you to relax and feel calm?"
+        child_friendly_text="Is it hard for you to relax and feel calm?",
     ),
     AnxietyAssessmentQuestion(
         id=5,
         text="Being so restless that it's hard to sit still",
-        child_friendly_text="Do you feel like you can't sit still or need to move around?"
+        child_friendly_text="Do you feel like you can't sit still or need to move around?",
     ),
     AnxietyAssessmentQuestion(
         id=6,
         text="Becoming easily annoyed or irritable",
-        child_friendly_text="Do you get grumpy or upset easily?"
+        child_friendly_text="Do you get grumpy or upset easily?",
     ),
     AnxietyAssessmentQuestion(
         id=7,
         text="Feeling afraid as if something awful might happen",
-        child_friendly_text="Do you feel like something bad might happen?"
+        child_friendly_text="Do you feel like something bad might happen?",
     ),
 ]
 
@@ -214,11 +218,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Take a deep breath in through your nose (count to 4)",
             "Slowly blow out through your mouth like you're making a big bubble",
             "Watch your imaginary bubble float away",
-            "Repeat 5 times"
+            "Repeat 5 times",
         ],
         benefits=["Calms the nervous system", "Reduces anxiety quickly", "Easy to do anywhere"],
         when_to_use=["Feeling anxious", "Before bed", "After an upsetting event"],
-        icon="wind"
+        icon="wind",
     ),
     CopingStrategy(
         id="breathe_2",
@@ -233,11 +237,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Breathe in quietly through your nose for 4 seconds",
             "Hold your breath for 7 seconds",
             "Exhale completely through your mouth for 8 seconds",
-            "Repeat the cycle 3-4 times"
+            "Repeat the cycle 3-4 times",
         ],
         benefits=["Activates relaxation response", "Helps with sleep", "Reduces panic symptoms"],
         when_to_use=["Panic attacks", "Can't fall asleep", "Feeling overwhelmed"],
-        icon="heart-pulse"
+        icon="heart-pulse",
     ),
     CopingStrategy(
         id="ground_1",
@@ -252,11 +256,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Touch and name 4 things you can FEEL",
             "Listen and name 3 things you can HEAR",
             "Notice 2 things you can SMELL",
-            "Name 1 thing you can TASTE"
+            "Name 1 thing you can TASTE",
         ],
         benefits=["Stops spiraling thoughts", "Brings focus to present", "Works during panic"],
         when_to_use=["Feeling disconnected", "Anxious thoughts racing", "Panic attack starting"],
-        icon="eye"
+        icon="eye",
     ),
     CopingStrategy(
         id="ground_2",
@@ -273,11 +277,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "What sounds do you hear there?",
             "What does it feel like? Warm? Cool? Cozy?",
             "Stay in your safe place for a few minutes",
-            "When ready, slowly open your eyes"
+            "When ready, slowly open your eyes",
         ],
         benefits=["Creates mental escape", "Builds coping resource", "Reduces fear response"],
         when_to_use=["Feeling unsafe", "Before stressful events", "Nighttime fears"],
-        icon="shield"
+        icon="shield",
     ),
     CopingStrategy(
         id="move_1",
@@ -294,11 +298,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Add your shoulders, wiggling them up and down",
             "Shake your whole body! Jump around!",
             "Slow down gradually",
-            "Take 3 deep breaths and notice how you feel"
+            "Take 3 deep breaths and notice how you feel",
         ],
         benefits=["Releases physical tension", "Fun and engaging", "Shifts mood quickly"],
         when_to_use=["Feeling tense or angry", "Lots of energy", "Need a quick reset"],
-        icon="zap"
+        icon="zap",
     ),
     CopingStrategy(
         id="move_2",
@@ -314,11 +318,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Slowly tap alternating hands - left, right, left, right",
             "Keep a slow, steady rhythm",
             "Close your eyes and think of something calming",
-            "Continue for 2-3 minutes"
+            "Continue for 2-3 minutes",
         ],
         benefits=["Self-soothing", "Can be done discreetly", "EMDR-based technique"],
         when_to_use=["Feeling sad or scared", "After upsetting news", "Need comfort"],
-        icon="heart"
+        icon="heart",
     ),
     CopingStrategy(
         id="creative_1",
@@ -334,11 +338,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Fold the paper and put it in the box",
             "Close the box - your worries are safe there",
             "You can throw them away later or talk about them with someone",
-            "The worries don't need to stay in your head"
+            "The worries don't need to stay in your head",
         ],
         benefits=["Externalizes worries", "Creates sense of control", "Good for bedtime worries"],
         when_to_use=["Mind won't stop worrying", "Before sleep", "Feeling overwhelmed"],
-        icon="box"
+        icon="box",
     ),
     CopingStrategy(
         id="creative_2",
@@ -354,11 +358,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Pick colors that match your feelings",
             "Draw, scribble, or color - no rules!",
             "It doesn't have to look like anything",
-            "Notice how you feel after creating"
+            "Notice how you feel after creating",
         ],
         benefits=["Non-verbal expression", "Releases emotions", "Meditative"],
         when_to_use=["Hard to put feelings into words", "Feel like crying", "Need to process"],
-        icon="palette"
+        icon="palette",
     ),
     CopingStrategy(
         id="mindful_1",
@@ -375,11 +379,15 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Slowly move attention up: feet, legs, tummy, chest",
             "Continue to arms, hands, neck, face, top of head",
             "If you find tension, breathe into that area",
-            "End by noticing your whole body at once"
+            "End by noticing your whole body at once",
         ],
-        benefits=["Increases body awareness", "Identifies where stress is held", "Promotes relaxation"],
+        benefits=[
+            "Increases body awareness",
+            "Identifies where stress is held",
+            "Promotes relaxation",
+        ],
         when_to_use=["Before bed", "Feeling tense", "Need to slow down"],
-        icon="scan"
+        icon="scan",
     ),
     CopingStrategy(
         id="social_1",
@@ -395,11 +403,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Start by saying 'I've been feeling...'",
             "It's okay if you cry or feel awkward",
             "Let them know if you want advice or just want them to listen",
-            "Thank them for listening"
+            "Thank them for listening",
         ],
         benefits=["Reduces isolation", "Gets support", "Builds connection"],
         when_to_use=["Feeling alone", "Big worries", "Something happened"],
-        icon="users"
+        icon="users",
     ),
     CopingStrategy(
         id="distract_1",
@@ -414,11 +422,11 @@ COPING_STRATEGIES: list[CopingStrategy] = [
             "Go through the alphabet: A is for... B is for...",
             "Try to think of something for each letter",
             "If you get stuck, skip to the next letter",
-            "See if you can get through the whole alphabet!"
+            "See if you can get through the whole alphabet!",
         ],
         benefits=["Redirects anxious thoughts", "Engages the mind", "Can do anywhere"],
         when_to_use=["Waiting for something scary", "Can't stop worrying", "Need distraction"],
-        icon="list-ordered"
+        icon="list-ordered",
     ),
 ]
 
@@ -434,7 +442,7 @@ CRISIS_RESOURCES: list[CrisisResource] = [
         website="https://988lifeline.org",
         available_24_7=True,
         for_children=True,
-        for_parents=True
+        for_parents=True,
     ),
     CrisisResource(
         name="Crisis Text Line",
@@ -443,7 +451,7 @@ CRISIS_RESOURCES: list[CrisisResource] = [
         website="https://www.crisistextline.org",
         available_24_7=True,
         for_children=True,
-        for_parents=True
+        for_parents=True,
     ),
     CrisisResource(
         name="SAMHSA National Helpline",
@@ -452,7 +460,7 @@ CRISIS_RESOURCES: list[CrisisResource] = [
         website="https://www.samhsa.gov/find-help/national-helpline",
         available_24_7=True,
         for_children=False,
-        for_parents=True
+        for_parents=True,
     ),
     CrisisResource(
         name="Childhelp National Child Abuse Hotline",
@@ -461,7 +469,7 @@ CRISIS_RESOURCES: list[CrisisResource] = [
         website="https://www.childhelp.org",
         available_24_7=True,
         for_children=True,
-        for_parents=True
+        for_parents=True,
     ),
     CrisisResource(
         name="The Trevor Project",
@@ -471,7 +479,7 @@ CRISIS_RESOURCES: list[CrisisResource] = [
         website="https://www.thetrevorproject.org",
         available_24_7=True,
         for_children=True,
-        for_parents=False
+        for_parents=False,
     ),
     CrisisResource(
         name="Boys Town National Hotline",
@@ -480,7 +488,7 @@ CRISIS_RESOURCES: list[CrisisResource] = [
         website="https://www.boystown.org/hotline",
         available_24_7=True,
         for_children=True,
-        for_parents=True
+        for_parents=True,
     ),
 ]
 
@@ -488,6 +496,7 @@ CRISIS_RESOURCES: list[CrisisResource] = [
 # ============== API Endpoints ==============
 
 # ----- Mood Tracking -----
+
 
 @router.post("/mood", response_model=MoodEntry, tags=["Mental Health"])
 async def log_mood(entry: MoodEntryCreate):
@@ -501,35 +510,28 @@ async def log_mood(entry: MoodEntryCreate):
 async def get_mood_history(child_id: str, days: int = 30):
     """Get mood history for a child"""
     from datetime import timedelta
+
     cutoff = datetime.now() - timedelta(days=days)
-    return [
-        e for e in mood_entries
-        if e.child_id == child_id and e.timestamp > cutoff
-    ]
+    return [e for e in mood_entries if e.child_id == child_id and e.timestamp > cutoff]
 
 
 @router.get("/mood/{child_id}/summary", tags=["Mental Health"])
 async def get_mood_summary(child_id: str, days: int = 7):
     """Get mood summary and trends for a child"""
     from datetime import timedelta
+
     cutoff = datetime.now() - timedelta(days=days)
-    entries = [
-        e for e in mood_entries
-        if e.child_id == child_id and e.timestamp > cutoff
-    ]
+    entries = [e for e in mood_entries if e.child_id == child_id and e.timestamp > cutoff]
 
     if not entries:
-        return {
-            "has_data": False,
-            "message": "No mood data for this period"
-        }
+        return {"has_data": False, "message": "No mood data for this period"}
 
     mood_values = {
         MoodLevel.VERY_SAD: 1,
         MoodLevel.SAD: 2,
         MoodLevel.NEUTRAL: 3,
         MoodLevel.HAPPY: 4,
-        MoodLevel.VERY_HAPPY: 5
+        MoodLevel.VERY_HAPPY: 5,
     }
 
     avg_mood = sum(mood_values[e.mood_level] for e in entries) / len(entries)
@@ -555,9 +557,14 @@ async def get_mood_summary(child_id: str, days: int = 7):
         "average_mood": round(avg_mood, 1),
         "average_anxiety": round(avg_anxiety, 1),
         "average_energy": round(avg_energy, 1),
-        "mood_trend": "improving" if len(entries) > 1 and mood_values[entries[-1].mood_level] > mood_values[entries[0].mood_level] else "stable",
+        "mood_trend": (
+            "improving"
+            if len(entries) > 1
+            and mood_values[entries[-1].mood_level] > mood_values[entries[0].mood_level]
+            else "stable"
+        ),
         "top_triggers": [{"trigger": t, "count": c} for t, c in top_triggers],
-        "recommendation": _get_mood_recommendation(avg_mood, avg_anxiety)
+        "recommendation": _get_mood_recommendation(avg_mood, avg_anxiety),
     }
 
 
@@ -573,6 +580,7 @@ def _get_mood_recommendation(avg_mood: float, avg_anxiety: float) -> str:
 
 
 # ----- Journal -----
+
 
 @router.post("/journal", response_model=JournalEntry, tags=["Mental Health"])
 async def create_journal_entry(entry: JournalEntryCreate):
@@ -600,6 +608,7 @@ async def delete_journal_entry(entry_id: str):
 
 # ----- Anxiety Assessment -----
 
+
 @router.get("/assessment/questions/{assessment_type}", tags=["Mental Health"])
 async def get_assessment_questions(assessment_type: str = "GAD-7"):
     """Get questions for an anxiety/depression assessment"""
@@ -612,9 +621,9 @@ async def get_assessment_questions(assessment_type: str = "GAD-7"):
                 "0": "Not at all",
                 "1": "Several days",
                 "2": "More than half the days",
-                "3": "Nearly every day"
+                "3": "Nearly every day",
             },
-            "questions": GAD7_QUESTIONS
+            "questions": GAD7_QUESTIONS,
         }
     else:
         raise HTTPException(status_code=404, detail="Assessment type not found")
@@ -632,7 +641,7 @@ async def submit_assessment(submission: AnxietyAssessmentSubmit):
         recommendations = [
             "Continue monitoring mood",
             "Practice regular self-care",
-            "Maintain healthy sleep habits"
+            "Maintain healthy sleep habits",
         ]
     elif total_score <= 9:
         severity = AnxietyLevel.MILD
@@ -641,7 +650,7 @@ async def submit_assessment(submission: AnxietyAssessmentSubmit):
             "Try relaxation techniques like deep breathing",
             "Regular physical activity can help",
             "Talk to a trusted adult about your feelings",
-            "Consider using coping strategies from the app"
+            "Consider using coping strategies from the app",
         ]
     elif total_score <= 14:
         severity = AnxietyLevel.MODERATE
@@ -651,7 +660,7 @@ async def submit_assessment(submission: AnxietyAssessmentSubmit):
             "Consider consulting with a healthcare provider",
             "Practice daily anxiety management techniques",
             "Limit screen time before bed",
-            "Regular exercise is important"
+            "Regular exercise is important",
         ]
     else:
         severity = AnxietyLevel.SEVERE
@@ -661,7 +670,7 @@ async def submit_assessment(submission: AnxietyAssessmentSubmit):
             "Consider scheduling an appointment with a mental health professional",
             "Use crisis resources if you're feeling overwhelmed",
             "Remember: anxiety is treatable and you can feel better",
-            "Don't try to manage this alone"
+            "Don't try to manage this alone",
         ]
 
     result = AnxietyAssessmentResult(
@@ -670,14 +679,18 @@ async def submit_assessment(submission: AnxietyAssessmentSubmit):
         total_score=total_score,
         severity=severity,
         interpretation=interpretation,
-        recommendations=recommendations
+        recommendations=recommendations,
     )
 
     assessment_results.append(result)
     return result
 
 
-@router.get("/assessment/history/{child_id}", response_model=list[AnxietyAssessmentResult], tags=["Mental Health"])
+@router.get(
+    "/assessment/history/{child_id}",
+    response_model=list[AnxietyAssessmentResult],
+    tags=["Mental Health"],
+)
 async def get_assessment_history(child_id: str):
     """Get assessment history for a child"""
     return [r for r in assessment_results if r.child_id == child_id]
@@ -685,18 +698,15 @@ async def get_assessment_history(child_id: str):
 
 # ----- Coping Strategies -----
 
+
 @router.get("/coping/strategies", response_model=list[CopingStrategy], tags=["Mental Health"])
-async def get_coping_strategies(
-    age: int | None = None,
-    category: CopingCategory | None = None
-):
+async def get_coping_strategies(age: int | None = None, category: CopingCategory | None = None):
     """Get coping strategies, optionally filtered by age and category"""
     strategies = COPING_STRATEGIES
 
     if age is not None:
         strategies = [
-            s for s in strategies
-            if s.age_appropriate_min <= age <= s.age_appropriate_max
+            s for s in strategies if s.age_appropriate_min <= age <= s.age_appropriate_max
         ]
 
     if category is not None:
@@ -705,7 +715,9 @@ async def get_coping_strategies(
     return strategies
 
 
-@router.get("/coping/strategies/{strategy_id}", response_model=CopingStrategy, tags=["Mental Health"])
+@router.get(
+    "/coping/strategies/{strategy_id}", response_model=CopingStrategy, tags=["Mental Health"]
+)
 async def get_coping_strategy(strategy_id: str):
     """Get a specific coping strategy by ID"""
     for strategy in COPING_STRATEGIES:
@@ -722,48 +734,49 @@ async def get_coping_categories():
             "id": CopingCategory.BREATHING,
             "name": "Breathing Exercises",
             "description": "Techniques to calm your body through breath",
-            "icon": "wind"
+            "icon": "wind",
         },
         {
             "id": CopingCategory.GROUNDING,
             "name": "Grounding",
             "description": "Ways to feel present and connected",
-            "icon": "anchor"
+            "icon": "anchor",
         },
         {
             "id": CopingCategory.MOVEMENT,
             "name": "Movement",
             "description": "Physical activities to release stress",
-            "icon": "activity"
+            "icon": "activity",
         },
         {
             "id": CopingCategory.CREATIVE,
             "name": "Creative Expression",
             "description": "Art and writing for emotional release",
-            "icon": "palette"
+            "icon": "palette",
         },
         {
             "id": CopingCategory.MINDFULNESS,
             "name": "Mindfulness",
             "description": "Awareness and meditation practices",
-            "icon": "brain"
+            "icon": "brain",
         },
         {
             "id": CopingCategory.SOCIAL,
             "name": "Social Support",
             "description": "Connecting with others",
-            "icon": "users"
+            "icon": "users",
         },
         {
             "id": CopingCategory.DISTRACTION,
             "name": "Healthy Distraction",
             "description": "Ways to redirect anxious thoughts",
-            "icon": "sparkles"
-        }
+            "icon": "sparkles",
+        },
     ]
 
 
 # ----- Crisis Resources -----
+
 
 @router.get("/crisis/resources", response_model=list[CrisisResource], tags=["Mental Health"])
 async def get_crisis_resources(for_children: bool | None = None):
@@ -781,9 +794,7 @@ async def get_crisis_resources(for_children: bool | None = None):
 
 @router.get("/crisis/emergency-check", tags=["Mental Health"])
 async def emergency_check(
-    suicidal_thoughts: bool = False,
-    self_harm: bool = False,
-    immediate_danger: bool = False
+    suicidal_thoughts: bool = False, self_harm: bool = False, immediate_danger: bool = False
 ):
     """Check if immediate crisis intervention is needed"""
     if any([suicidal_thoughts, self_harm, immediate_danger]):
@@ -791,11 +802,11 @@ async def emergency_check(
             "is_crisis": True,
             "message": "Please reach out for help immediately. You are not alone.",
             "immediate_action": "Call 988 (Suicide & Crisis Lifeline) or text HOME to 741741",
-            "resources": [r for r in CRISIS_RESOURCES if r.available_24_7][:3]
+            "resources": [r for r in CRISIS_RESOURCES if r.available_24_7][:3],
         }
 
     return {
         "is_crisis": False,
         "message": "Thank you for checking in. Remember, it's always okay to ask for help.",
-        "resources": CRISIS_RESOURCES[:2]
+        "resources": CRISIS_RESOURCES[:2],
     }

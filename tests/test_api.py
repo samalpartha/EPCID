@@ -233,7 +233,9 @@ class TestChildrenEndpoints:
 
         # Update
         update_data = {"name": "Updated Name"}
-        response = client.patch(f"/api/v1/children/{child_id}", json=update_data, headers=auth_headers)
+        response = client.patch(
+            f"/api/v1/children/{child_id}", json=update_data, headers=auth_headers
+        )
 
         assert response.status_code == 200
         assert response.json()["name"] == "Updated Name"

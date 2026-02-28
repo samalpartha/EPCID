@@ -21,6 +21,7 @@ logger = logging.getLogger("epcid.core.planner")
 
 class TaskStatus(Enum):
     """Status of a task in the plan."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -31,6 +32,7 @@ class TaskStatus(Enum):
 
 class TaskPriority(Enum):
     """Priority levels for tasks."""
+
     CRITICAL = 1  # Safety-critical, must execute first
     HIGH = 2
     MEDIUM = 3
@@ -39,6 +41,7 @@ class TaskPriority(Enum):
 
 class GoalType(Enum):
     """Types of goals in the EPCID system."""
+
     RISK_ASSESSMENT = "risk_assessment"
     DATA_COLLECTION = "data_collection"
     GUIDELINE_LOOKUP = "guideline_lookup"
@@ -56,6 +59,7 @@ class Task:
     Tasks are atomic units of work that can be executed
     by agents in the system.
     """
+
     id: str
     name: str
     description: str
@@ -68,7 +72,9 @@ class Task:
     timeout_seconds: int = 30
     retries: int = 0
     max_retries: int = 3
-    created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    created_at: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
     started_at: datetime | None = None
     completed_at: datetime | None = None
     error_message: str | None = None
@@ -109,6 +115,7 @@ class Goal:
 
     Goals are decomposed into tasks by the planner.
     """
+
     id: str
     goal_type: GoalType
     description: str
@@ -117,7 +124,9 @@ class Goal:
     constraints: list[str] = field(default_factory=list)
     deadline: datetime | None = None
     priority: TaskPriority = TaskPriority.MEDIUM
-    created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    created_at: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -141,11 +150,14 @@ class Plan:
 
     Plans maintain task dependencies and execution state.
     """
+
     id: str
     goal: Goal
     tasks: list[Task]
     status: TaskStatus = TaskStatus.PENDING
-    created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    created_at: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
     started_at: datetime | None = None
     completed_at: datetime | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -159,7 +171,8 @@ class Plan:
     def pending_tasks(self) -> list[Task]:
         """Get tasks that are ready to execute."""
         return [
-            t for t in self.tasks
+            t
+            for t in self.tasks
             if t.status == TaskStatus.PENDING and t.can_execute(self.completed_tasks)
         ]
 
@@ -174,10 +187,7 @@ class Plan:
     @property
     def is_complete(self) -> bool:
         """Check if all tasks are completed."""
-        return all(
-            t.status in [TaskStatus.COMPLETED, TaskStatus.SKIPPED]
-            for t in self.tasks
-        )
+        return all(t.status in [TaskStatus.COMPLETED, TaskStatus.SKIPPED] for t in self.tasks)
 
     @property
     def has_failed(self) -> bool:
@@ -348,7 +358,9 @@ class Planner:
     def _validate_plan(self, tasks: list[Task]) -> None:
         """Validate that the plan is executable."""
         if len(tasks) > self.max_tasks_per_plan:
-            raise ValueError(f"Plan exceeds maximum tasks: {len(tasks)} > {self.max_tasks_per_plan}")
+            raise ValueError(
+                f"Plan exceeds maximum tasks: {len(tasks)} > {self.max_tasks_per_plan}"
+            )
 
         # Check all dependencies reference valid tasks
         task_ids = {t.id for t in tasks}

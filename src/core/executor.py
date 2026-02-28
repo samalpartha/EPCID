@@ -24,6 +24,7 @@ logger = logging.getLogger("epcid.core.executor")
 
 class ActionStatus(Enum):
     """Status of an action execution."""
+
     PENDING = "pending"
     VALIDATING = "validating"
     EXECUTING = "executing"
@@ -35,15 +36,16 @@ class ActionStatus(Enum):
 
 class ActionCategory(Enum):
     """Categories of actions for safety classification."""
-    READ = "read"           # Read-only operations
-    COMPUTE = "compute"     # Computational operations
-    NOTIFY = "notify"       # Notification operations
-    STORE = "store"         # Data storage operations
-    EXTERNAL = "external"   # External API calls
-    ESCALATE = "escalate"   # Escalation actions
+
+    READ = "read"  # Read-only operations
+    COMPUTE = "compute"  # Computational operations
+    NOTIFY = "notify"  # Notification operations
+    STORE = "store"  # Data storage operations
+    EXTERNAL = "external"  # External API calls
+    ESCALATE = "escalate"  # Escalation actions
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
@@ -54,6 +56,7 @@ class Action:
     Actions are the atomic units of execution in the system.
     Each action is validated, executed, and logged.
     """
+
     id: str
     name: str
     description: str
@@ -82,7 +85,9 @@ class Action:
     initiated_by: str | None = None
 
     # Timestamps
-    created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    created_at: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
 
     # Metadata
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -95,7 +100,9 @@ class Action:
             "description": self.description,
             "category": self.category.value,
             "handler": self.handler,
-            "parameters": {k: str(v)[:100] for k, v in self.parameters.items()},  # Truncate for logging
+            "parameters": {
+                k: str(v)[:100] for k, v in self.parameters.items()
+            },  # Truncate for logging
             "is_reversible": self.is_reversible,
             "timeout_seconds": self.timeout_seconds,
             "child_id": self.child_id,
@@ -111,6 +118,7 @@ class ActionResult:
 
     Contains the outcome, any output data, and execution metadata.
     """
+
     action_id: str
     status: ActionStatus
 
@@ -227,7 +235,7 @@ class AuditLogger:
             extra={
                 "event_type": "action_start",
                 "action": action.to_dict(),
-            }
+            },
         )
 
     def log_action_complete(self, action: Action, result: ActionResult) -> None:
@@ -240,7 +248,7 @@ class AuditLogger:
                 "event_type": "action_complete",
                 "action": action.to_dict(),
                 "result": result.to_dict(),
-            }
+            },
         )
 
     def log_validation_failure(self, action: Action, messages: list[str]) -> None:
@@ -251,7 +259,7 @@ class AuditLogger:
                 "event_type": "validation_failed",
                 "action": action.to_dict(),
                 "validation_messages": messages,
-            }
+            },
         )
 
     def log_rollback(self, action: Action, success: bool) -> None:
@@ -264,7 +272,7 @@ class AuditLogger:
                 "event_type": "rollback",
                 "action": action.to_dict(),
                 "success": success,
-            }
+            },
         )
 
 
@@ -350,7 +358,7 @@ class Executor:
 
                 # Execute
                 result.status = ActionStatus.EXECUTING
-                result.started_at = datetime.now(__import__('datetime').timezone.utc)
+                result.started_at = datetime.now(__import__("datetime").timezone.utc)
 
                 try:
                     output = await self._execute_with_timeout(action)
@@ -372,9 +380,9 @@ class Executor:
                         result.was_rolled_back = rollback_success
                         if rollback_success:
                             result.status = ActionStatus.ROLLED_BACK
-                            result.rollback_at = datetime.now(__import__('datetime').timezone.utc)
+                            result.rollback_at = datetime.now(__import__("datetime").timezone.utc)
 
-                result.completed_at = datetime.now(__import__('datetime').timezone.utc)
+                result.completed_at = datetime.now(__import__("datetime").timezone.utc)
                 if result.started_at:
                     delta = result.completed_at - result.started_at
                     result.duration_ms = delta.total_seconds() * 1000
@@ -412,12 +420,14 @@ class Executor:
 
             if stop_on_failure and not result.success:
                 # Mark remaining actions as cancelled
-                for remaining in actions[len(results):]:
-                    results.append(ActionResult(
-                        action_id=remaining.id,
-                        status=ActionStatus.CANCELLED,
-                        error_message="Cancelled due to previous failure",
-                    ))
+                for remaining in actions[len(results) :]:
+                    results.append(
+                        ActionResult(
+                            action_id=remaining.id,
+                            status=ActionStatus.CANCELLED,
+                            error_message="Cancelled due to previous failure",
+                        )
+                    )
                 break
 
         return results
@@ -485,6 +495,7 @@ class Executor:
 
 # Built-in handlers
 
+
 class LogActionHandler(ActionHandler):
     """Handler that logs actions (for testing and audit)."""
 
@@ -495,7 +506,7 @@ class LogActionHandler(ActionHandler):
             "action_id": action.id,
             "action_name": action.name,
             "parameters": action.parameters,
-            "executed_at": datetime.now(__import__('datetime').timezone.utc).isoformat(),
+            "executed_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
         }
 
 

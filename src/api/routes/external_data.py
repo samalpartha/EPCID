@@ -8,7 +8,6 @@ Endpoints for accessing external health data:
 - Growth charts (WHO/CDC)
 """
 
-
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
@@ -17,8 +16,10 @@ router = APIRouter(prefix="/external-data", tags=["External Data"])
 
 # ============== Request/Response Models ==============
 
+
 class DiseaseActivityResponse(BaseModel):
     """Disease activity in a region."""
+
     disease: str
     region: str
     state: str
@@ -31,6 +32,7 @@ class DiseaseActivityResponse(BaseModel):
 
 class OutbreakAlert(BaseModel):
     """Disease outbreak alert."""
+
     type: str
     disease: str
     severity: str
@@ -42,6 +44,7 @@ class OutbreakAlert(BaseModel):
 
 class VaccinationDue(BaseModel):
     """Vaccination due for a child."""
+
     vaccine_name: str
     disease: str
     recommended_age: str
@@ -52,6 +55,7 @@ class VaccinationDue(BaseModel):
 
 class GrowthPercentileRequest(BaseModel):
     """Request for growth percentile calculation."""
+
     age_months: int
     sex: str
     measurement_type: str  # weight, height, head_circumference
@@ -61,6 +65,7 @@ class GrowthPercentileRequest(BaseModel):
 
 class GrowthPercentileResponse(BaseModel):
     """Growth percentile result."""
+
     percentile: int | None
     status: str
     message: str
@@ -69,6 +74,7 @@ class GrowthPercentileResponse(BaseModel):
 
 class VitalRangeResponse(BaseModel):
     """Normal vital sign range for age."""
+
     vital_type: str
     age_months: int
     age_group: str
@@ -81,6 +87,7 @@ class VitalRangeResponse(BaseModel):
 
 class AirQualityResponse(BaseModel):
     """Air quality reading."""
+
     aqi: int
     category: str
     pollutant: str
@@ -94,6 +101,7 @@ class AirQualityResponse(BaseModel):
 
 class DrugInfoResponse(BaseModel):
     """Drug information from OpenFDA."""
+
     brand_name: str
     generic_name: str
     manufacturer: str
@@ -104,6 +112,7 @@ class DrugInfoResponse(BaseModel):
 
 
 # ============== CDC Endpoints ==============
+
 
 @router.get(
     "/disease-activity/{state}",
@@ -244,6 +253,7 @@ async def get_vital_ranges(
 
 # ============== Air Quality Endpoints ==============
 
+
 @router.get(
     "/air-quality",
     response_model=AirQualityResponse,
@@ -283,6 +293,7 @@ async def get_air_quality(
 
 
 # ============== Drug Information Endpoints ==============
+
 
 @router.get(
     "/drug-info/{drug_name}",
@@ -334,6 +345,7 @@ async def check_drug_interaction(
 
 
 # ============== Composite Endpoints ==============
+
 
 @router.get(
     "/health-context",
@@ -388,5 +400,7 @@ async def get_health_context(
         "alerts": alerts,
         "air_quality": air_quality,
         "due_vaccinations": vaccinations,
-        "generated_at": __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
+        "generated_at": __import__("datetime")
+        .datetime.now(__import__("datetime").timezone.utc)
+        .isoformat(),
     }

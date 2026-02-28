@@ -26,6 +26,7 @@ logger = logging.getLogger("epcid.agents.phenotype")
 @dataclass
 class Phenotype:
     """A derived clinical phenotype."""
+
     name: str
     value: float
     unit: str
@@ -63,7 +64,7 @@ class PhenotypeAgent(BaseAgent):
     # Severity thresholds for phenotypes
     SEVERITY_THRESHOLDS = {
         "fever_persistence": {
-            "normal": 0,      # hours
+            "normal": 0,  # hours
             "mild": 24,
             "moderate": 48,
             "severe": 72,
@@ -117,6 +118,7 @@ class PhenotypeAgent(BaseAgent):
             AgentResponse with computed phenotypes
         """
         import uuid
+
         request_id = str(uuid.uuid4())[:12]
 
         phenotypes: list[Phenotype] = []
@@ -246,8 +248,8 @@ class PhenotypeAgent(BaseAgent):
             unit="celsius",
             severity=severity,
             confidence=0.9,
-            description=f"Temperature {temp:.1f}°C" +
-                       (f", persistent for ~{persistence_hours}h" if persistence_hours > 0 else ""),
+            description=f"Temperature {temp:.1f}°C"
+            + (f", persistent for ~{persistence_hours}h" if persistence_hours > 0 else ""),
             contributing_factors=[
                 f"Current temperature: {temp:.1f}°C",
                 f"Persistence: {persistence_hours} hours",
@@ -452,8 +454,15 @@ class PhenotypeAgent(BaseAgent):
 
         # Determine trend
         if len(activity_levels) >= 2:
-            recent = sum(a.get("level", 50) for a in activity_levels[-6:]) / min(6, len(activity_levels))
-            older = sum(a.get("level", 50) for a in activity_levels[-12:-6]) / min(6, len(activity_levels) - 6) if len(activity_levels) > 6 else recent
+            recent = sum(a.get("level", 50) for a in activity_levels[-6:]) / min(
+                6, len(activity_levels)
+            )
+            older = (
+                sum(a.get("level", 50) for a in activity_levels[-12:-6])
+                / min(6, len(activity_levels) - 6)
+                if len(activity_levels) > 6
+                else recent
+            )
 
             if recent < older - 10:
                 trend = "worsening"
@@ -691,13 +700,25 @@ class PhenotypeAgent(BaseAgent):
         """Generate explanation of phenotype analysis."""
         lines = ["## Phenotype Analysis\n"]
 
-        lines.append(f"**Clinical State:** {clinical_state['overall_state'].replace('_', ' ').title()}")
+        lines.append(
+            f"**Clinical State:** {clinical_state['overall_state'].replace('_', ' ').title()}"
+        )
         lines.append(f"**Recommendation:** {clinical_state['recommendation']}")
 
         if phenotypes:
             lines.append("\n### Derived Phenotypes")
-            for p in sorted(phenotypes, key=lambda x: {"severe": 0, "moderate": 1, "mild": 2, "normal": 3}.get(x.severity, 4)):
-                severity_emoji = {"severe": "🔴", "moderate": "🟠", "mild": "🟡", "normal": "🟢"}.get(p.severity, "⚪")
+            for p in sorted(
+                phenotypes,
+                key=lambda x: {"severe": 0, "moderate": 1, "mild": 2, "normal": 3}.get(
+                    x.severity, 4
+                ),
+            ):
+                severity_emoji = {
+                    "severe": "🔴",
+                    "moderate": "🟠",
+                    "mild": "🟡",
+                    "normal": "🟢",
+                }.get(p.severity, "⚪")
                 lines.append(f"\n{severity_emoji} **{p.name.replace('_', ' ').title()}**")
                 lines.append(f"- Value: {p.value} {p.unit}")
                 lines.append(f"- Severity: {p.severity}")

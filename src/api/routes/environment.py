@@ -122,16 +122,19 @@ async def get_air_quality(
             "aqi": aqi,
             "category": get_aqi_category(aqi),
             "dominant_pollutant": data.get("dominant_pollutant", "pm25"),
-            "pollutants": data.get("pollutants", {
-                "pm25": 15.0,
-                "pm10": 25.0,
-                "o3": 30.0,
-                "no2": 10.0,
-            }),
+            "pollutants": data.get(
+                "pollutants",
+                {
+                    "pm25": 15.0,
+                    "pm10": 25.0,
+                    "o3": 30.0,
+                    "no2": 10.0,
+                },
+            ),
             "health_implications": get_aqi_health_implications(aqi),
             "recommendation": get_aqi_recommendation(aqi),
             "pediatric_advisory": get_aqi_pediatric_advisory(aqi),
-            "data_timestamp": datetime.now(__import__('datetime').timezone.utc).isoformat(),
+            "data_timestamp": datetime.now(__import__("datetime").timezone.utc).isoformat(),
             "location": f"{latitude:.4f}, {longitude:.4f}",
         }
 
@@ -150,7 +153,7 @@ async def get_air_quality(
             health_implications="Unable to retrieve air quality data.",
             recommendation="Check local air quality sources.",
             pediatric_advisory=None,
-            data_timestamp=datetime.now(__import__('datetime').timezone.utc),
+            data_timestamp=datetime.now(__import__("datetime").timezone.utc),
             location=f"{latitude:.4f}, {longitude:.4f}",
         )
 
@@ -188,22 +191,36 @@ async def get_weather(
         considerations = []
 
         if temp > 90:
-            considerations.append("High heat: Ensure children stay hydrated and limit outdoor activity during peak hours.")
+            considerations.append(
+                "High heat: Ensure children stay hydrated and limit outdoor activity during peak hours."
+            )
         elif temp > 85:
-            considerations.append("Warm weather: Encourage frequent water breaks during outdoor play.")
+            considerations.append(
+                "Warm weather: Encourage frequent water breaks during outdoor play."
+            )
         elif temp < 32:
-            considerations.append("Freezing temperatures: Dress children in layers and limit prolonged exposure.")
+            considerations.append(
+                "Freezing temperatures: Dress children in layers and limit prolonged exposure."
+            )
         elif temp < 50:
-            considerations.append("Cool weather: Ensure children are dressed appropriately for outdoor activities.")
+            considerations.append(
+                "Cool weather: Ensure children are dressed appropriately for outdoor activities."
+            )
 
         if humidity > 70:
-            considerations.append("High humidity: Heat feels more intense. Watch for signs of heat exhaustion.")
+            considerations.append(
+                "High humidity: Heat feels more intense. Watch for signs of heat exhaustion."
+            )
         elif humidity < 30:
-            considerations.append("Low humidity: Dry air may irritate airways. Consider a humidifier indoors.")
+            considerations.append(
+                "Low humidity: Dry air may irritate airways. Consider a humidifier indoors."
+            )
 
         uv_index = data.get("uv_index")
         if uv_index and uv_index > 6:
-            considerations.append("High UV index: Apply sunscreen and limit sun exposure between 10am-4pm.")
+            considerations.append(
+                "High UV index: Apply sunscreen and limit sun exposure between 10am-4pm."
+            )
 
         if not considerations:
             considerations.append("Weather conditions are favorable for outdoor activities.")
@@ -217,7 +234,7 @@ async def get_weather(
             "uv_index": uv_index,
             "alerts": data.get("alerts", []),
             "pediatric_considerations": considerations,
-            "data_timestamp": datetime.now(__import__('datetime').timezone.utc).isoformat(),
+            "data_timestamp": datetime.now(__import__("datetime").timezone.utc).isoformat(),
             "location": f"{latitude:.4f}, {longitude:.4f}",
         }
 
@@ -236,7 +253,7 @@ async def get_weather(
             uv_index=None,
             alerts=[],
             pediatric_considerations=["Unable to retrieve weather data."],
-            data_timestamp=datetime.now(__import__('datetime').timezone.utc),
+            data_timestamp=datetime.now(__import__("datetime").timezone.utc),
             location=f"{latitude:.4f}, {longitude:.4f}",
         )
 
@@ -313,9 +330,7 @@ async def get_health_risks(
     """
     Analyze environmental factors that may be contributing to symptoms.
     """
-    env_data = await get_environment(
-        LocationRequest(latitude=latitude, longitude=longitude)
-    )
+    env_data = await get_environment(LocationRequest(latitude=latitude, longitude=longitude))
 
     correlations = []
 
@@ -326,33 +341,39 @@ async def get_health_risks(
 
         if symptom in ["cough", "wheeze", "breathing", "asthma"]:
             if env_data.air_quality.aqi > 100:
-                correlations.append({
-                    "symptom": symptom,
-                    "factor": "air_quality",
-                    "correlation": "high",
-                    "explanation": f"Current AQI of {env_data.air_quality.aqi} may be contributing to respiratory symptoms.",
-                    "recommendation": env_data.air_quality.pediatric_advisory,
-                })
+                correlations.append(
+                    {
+                        "symptom": symptom,
+                        "factor": "air_quality",
+                        "correlation": "high",
+                        "explanation": f"Current AQI of {env_data.air_quality.aqi} may be contributing to respiratory symptoms.",
+                        "recommendation": env_data.air_quality.pediatric_advisory,
+                    }
+                )
 
         if symptom in ["heat", "dehydration", "fatigue"]:
             if env_data.weather.temperature > 85:
-                correlations.append({
-                    "symptom": symptom,
-                    "factor": "temperature",
-                    "correlation": "moderate",
-                    "explanation": f"Current temperature of {env_data.weather.temperature}°F may be contributing.",
-                    "recommendation": "Stay hydrated and limit outdoor activity.",
-                })
+                correlations.append(
+                    {
+                        "symptom": symptom,
+                        "factor": "temperature",
+                        "correlation": "moderate",
+                        "explanation": f"Current temperature of {env_data.weather.temperature}°F may be contributing.",
+                        "recommendation": "Stay hydrated and limit outdoor activity.",
+                    }
+                )
 
         if symptom in ["headache", "allergies", "congestion"]:
             if env_data.air_quality.aqi > 50:
-                correlations.append({
-                    "symptom": symptom,
-                    "factor": "air_quality",
-                    "correlation": "moderate",
-                    "explanation": "Air quality may be triggering allergic or sensitivity symptoms.",
-                    "recommendation": "Consider staying indoors during peak pollution hours.",
-                })
+                correlations.append(
+                    {
+                        "symptom": symptom,
+                        "factor": "air_quality",
+                        "correlation": "moderate",
+                        "explanation": "Air quality may be triggering allergic or sensitivity symptoms.",
+                        "recommendation": "Consider staying indoors during peak pollution hours.",
+                    }
+                )
 
     return {
         "location": f"{latitude}, {longitude}",

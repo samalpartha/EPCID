@@ -4,7 +4,6 @@ EPCID API Dependencies
 FastAPI dependency injection for authentication and common resources.
 """
 
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
@@ -32,6 +31,7 @@ async def get_current_user(token: str | None = Depends(oauth2_scheme)) -> dict |
         return None
 
     from .routes.auth import fake_users_db
+
     user = fake_users_db.get(email)
     return user
 
@@ -66,6 +66,7 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> dict:
         )
 
     from .routes.auth import fake_users_db
+
     user = fake_users_db.get(email)
     if not user:
         raise HTTPException(

@@ -25,6 +25,7 @@ logger = logging.getLogger("epcid.agents.geo_exposure")
 @dataclass
 class EnvironmentalConditions:
     """Current environmental conditions."""
+
     aqi: int | None = None
     aqi_category: str | None = None
     pm25: float | None = None
@@ -34,13 +35,16 @@ class EnvironmentalConditions:
     uv_index: int | None = None
     pollen_level: str | None = None
     weather_condition: str | None = None
-    timestamp: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    timestamp: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
     location: str | None = None
 
 
 @dataclass
 class ExposureAlert:
     """An environmental exposure alert."""
+
     alert_type: str
     severity: str  # low, moderate, high, severe
     title: str
@@ -61,20 +65,31 @@ class GeoExposureAgent(BaseAgent):
     AQI_CATEGORIES = {
         (0, 50): ("Good", "low", "Air quality is satisfactory"),
         (51, 100): ("Moderate", "low", "Acceptable; sensitive groups may be affected"),
-        (101, 150): ("Unhealthy for Sensitive Groups", "moderate",
-                     "Children may experience respiratory symptoms"),
-        (151, 200): ("Unhealthy", "high",
-                     "Everyone may experience health effects; children at higher risk"),
-        (201, 300): ("Very Unhealthy", "severe",
-                     "Health alert: significant risk to children"),
-        (301, 500): ("Hazardous", "severe",
-                     "Health emergency: avoid outdoor activity"),
+        (101, 150): (
+            "Unhealthy for Sensitive Groups",
+            "moderate",
+            "Children may experience respiratory symptoms",
+        ),
+        (151, 200): (
+            "Unhealthy",
+            "high",
+            "Everyone may experience health effects; children at higher risk",
+        ),
+        (201, 300): ("Very Unhealthy", "severe", "Health alert: significant risk to children"),
+        (301, 500): ("Hazardous", "severe", "Health emergency: avoid outdoor activity"),
     }
 
     # Symptoms that may be environment-related
     ENVIRONMENT_SENSITIVE_SYMPTOMS = {
-        "respiratory": ["cough", "wheezing", "difficulty_breathing", "asthma_attack",
-                       "nasal_congestion", "runny_nose", "sneezing"],
+        "respiratory": [
+            "cough",
+            "wheezing",
+            "difficulty_breathing",
+            "asthma_attack",
+            "nasal_congestion",
+            "runny_nose",
+            "sneezing",
+        ],
         "skin": ["rash", "hives", "eczema_flare", "itchy_skin"],
         "eye": ["itchy_eyes", "watery_eyes", "red_eyes"],
         "general": ["headache", "fatigue", "nausea"],
@@ -82,7 +97,7 @@ class GeoExposureAgent(BaseAgent):
 
     # Temperature thresholds for alerts
     TEMP_THRESHOLDS = {
-        "extreme_cold": 32,   # °F
+        "extreme_cold": 32,  # °F
         "cold": 45,
         "hot": 85,
         "extreme_hot": 95,
@@ -117,6 +132,7 @@ class GeoExposureAgent(BaseAgent):
             AgentResponse with exposure analysis and recommendations
         """
         import uuid
+
         request_id = str(uuid.uuid4())[:12]
 
         # Extract data
@@ -187,70 +203,86 @@ class GeoExposureAgent(BaseAgent):
 
             if aqi > 100:
                 severity = "high" if aqi > 150 else "moderate"
-                alerts.append(ExposureAlert(
-                    alert_type="air_quality",
-                    severity=severity,
-                    title=f"Air Quality Alert: {conditions.aqi_category}",
-                    description=f"Current AQI is {aqi}. " +
-                               (self._get_aqi_description(aqi)),
-                    recommendation=self._get_aqi_recommendation(aqi),
-                    related_symptoms=["cough", "wheezing", "difficulty_breathing",
-                                     "asthma_attack", "eye_irritation"],
-                ))
+                alerts.append(
+                    ExposureAlert(
+                        alert_type="air_quality",
+                        severity=severity,
+                        title=f"Air Quality Alert: {conditions.aqi_category}",
+                        description=f"Current AQI is {aqi}. " + (self._get_aqi_description(aqi)),
+                        recommendation=self._get_aqi_recommendation(aqi),
+                        related_symptoms=[
+                            "cough",
+                            "wheezing",
+                            "difficulty_breathing",
+                            "asthma_attack",
+                            "eye_irritation",
+                        ],
+                    )
+                )
 
         # Temperature alerts
         if conditions.temperature_f is not None:
             temp = conditions.temperature_f
 
             if temp >= self.TEMP_THRESHOLDS["extreme_hot"]:
-                alerts.append(ExposureAlert(
-                    alert_type="temperature",
-                    severity="high",
-                    title="Extreme Heat Alert",
-                    description=f"Temperature is {temp}°F. Risk of heat-related illness.",
-                    recommendation="Limit outdoor activity. Stay hydrated. Watch for heat exhaustion signs.",
-                    related_symptoms=["fatigue", "headache", "nausea", "dizziness"],
-                ))
+                alerts.append(
+                    ExposureAlert(
+                        alert_type="temperature",
+                        severity="high",
+                        title="Extreme Heat Alert",
+                        description=f"Temperature is {temp}°F. Risk of heat-related illness.",
+                        recommendation="Limit outdoor activity. Stay hydrated. Watch for heat exhaustion signs.",
+                        related_symptoms=["fatigue", "headache", "nausea", "dizziness"],
+                    )
+                )
             elif temp >= self.TEMP_THRESHOLDS["hot"]:
-                alerts.append(ExposureAlert(
-                    alert_type="temperature",
-                    severity="moderate",
-                    title="Heat Advisory",
-                    description=f"Temperature is {temp}°F. Take precautions.",
-                    recommendation="Limit strenuous outdoor activity. Ensure adequate hydration.",
-                    related_symptoms=["fatigue", "headache"],
-                ))
+                alerts.append(
+                    ExposureAlert(
+                        alert_type="temperature",
+                        severity="moderate",
+                        title="Heat Advisory",
+                        description=f"Temperature is {temp}°F. Take precautions.",
+                        recommendation="Limit strenuous outdoor activity. Ensure adequate hydration.",
+                        related_symptoms=["fatigue", "headache"],
+                    )
+                )
             elif temp <= self.TEMP_THRESHOLDS["extreme_cold"]:
-                alerts.append(ExposureAlert(
-                    alert_type="temperature",
-                    severity="high",
-                    title="Extreme Cold Alert",
-                    description=f"Temperature is {temp}°F. Risk of cold-related illness.",
-                    recommendation="Limit outdoor exposure. Dress in layers. Watch for hypothermia signs.",
-                    related_symptoms=["respiratory_symptoms", "skin_irritation"],
-                ))
+                alerts.append(
+                    ExposureAlert(
+                        alert_type="temperature",
+                        severity="high",
+                        title="Extreme Cold Alert",
+                        description=f"Temperature is {temp}°F. Risk of cold-related illness.",
+                        recommendation="Limit outdoor exposure. Dress in layers. Watch for hypothermia signs.",
+                        related_symptoms=["respiratory_symptoms", "skin_irritation"],
+                    )
+                )
 
         # UV alerts
         if conditions.uv_index is not None and conditions.uv_index >= 8:
-            alerts.append(ExposureAlert(
-                alert_type="uv",
-                severity="moderate" if conditions.uv_index < 11 else "high",
-                title=f"High UV Index: {conditions.uv_index}",
-                description="Elevated risk of sun damage.",
-                recommendation="Apply sunscreen. Wear protective clothing and hat. Seek shade.",
-                related_symptoms=["skin_irritation", "sunburn"],
-            ))
+            alerts.append(
+                ExposureAlert(
+                    alert_type="uv",
+                    severity="moderate" if conditions.uv_index < 11 else "high",
+                    title=f"High UV Index: {conditions.uv_index}",
+                    description="Elevated risk of sun damage.",
+                    recommendation="Apply sunscreen. Wear protective clothing and hat. Seek shade.",
+                    related_symptoms=["skin_irritation", "sunburn"],
+                )
+            )
 
         # Pollen alerts
         if conditions.pollen_level and conditions.pollen_level.lower() in ["high", "very_high"]:
-            alerts.append(ExposureAlert(
-                alert_type="pollen",
-                severity="moderate",
-                title=f"Pollen Level: {conditions.pollen_level}",
-                description="Elevated pollen may trigger allergies.",
-                recommendation="Keep windows closed. Consider allergy medication if appropriate.",
-                related_symptoms=["sneezing", "runny_nose", "itchy_eyes", "watery_eyes"],
-            ))
+            alerts.append(
+                ExposureAlert(
+                    alert_type="pollen",
+                    severity="moderate",
+                    title=f"Pollen Level: {conditions.pollen_level}",
+                    description="Elevated pollen may trigger allergies.",
+                    recommendation="Keep windows closed. Consider allergy medication if appropriate.",
+                    related_symptoms=["sneezing", "runny_nose", "itchy_eyes", "watery_eyes"],
+                )
+            )
 
         return alerts
 
@@ -272,41 +304,52 @@ class GeoExposureAgent(BaseAgent):
             # Determine environmental correlation
             if category == "respiratory":
                 if conditions.aqi and conditions.aqi > 100:
-                    correlations.append({
-                        "symptoms": matching,
-                        "factor": "air_quality",
-                        "value": conditions.aqi,
-                        "strength": "strong" if conditions.aqi > 150 else "moderate",
-                        "explanation": f"Poor air quality (AQI {conditions.aqi}) may be contributing to respiratory symptoms.",
-                    })
+                    correlations.append(
+                        {
+                            "symptoms": matching,
+                            "factor": "air_quality",
+                            "value": conditions.aqi,
+                            "strength": "strong" if conditions.aqi > 150 else "moderate",
+                            "explanation": f"Poor air quality (AQI {conditions.aqi}) may be contributing to respiratory symptoms.",
+                        }
+                    )
 
                 if conditions.temperature_f and conditions.temperature_f <= 40:
-                    correlations.append({
-                        "symptoms": matching,
-                        "factor": "cold_temperature",
-                        "value": conditions.temperature_f,
-                        "strength": "moderate",
-                        "explanation": "Cold air can irritate airways and trigger respiratory symptoms.",
-                    })
+                    correlations.append(
+                        {
+                            "symptoms": matching,
+                            "factor": "cold_temperature",
+                            "value": conditions.temperature_f,
+                            "strength": "moderate",
+                            "explanation": "Cold air can irritate airways and trigger respiratory symptoms.",
+                        }
+                    )
 
             elif category == "skin" or category == "eye":
-                if conditions.pollen_level and conditions.pollen_level.lower() in ["high", "very_high"]:
-                    correlations.append({
-                        "symptoms": matching,
-                        "factor": "pollen",
-                        "value": conditions.pollen_level,
-                        "strength": "moderate",
-                        "explanation": "High pollen levels may be triggering allergic symptoms.",
-                    })
+                if conditions.pollen_level and conditions.pollen_level.lower() in [
+                    "high",
+                    "very_high",
+                ]:
+                    correlations.append(
+                        {
+                            "symptoms": matching,
+                            "factor": "pollen",
+                            "value": conditions.pollen_level,
+                            "strength": "moderate",
+                            "explanation": "High pollen levels may be triggering allergic symptoms.",
+                        }
+                    )
 
                 if conditions.uv_index and conditions.uv_index >= 8:
-                    correlations.append({
-                        "symptoms": matching,
-                        "factor": "uv_exposure",
-                        "value": conditions.uv_index,
-                        "strength": "moderate",
-                        "explanation": "High UV exposure may be contributing to skin/eye irritation.",
-                    })
+                    correlations.append(
+                        {
+                            "symptoms": matching,
+                            "factor": "uv_exposure",
+                            "value": conditions.uv_index,
+                            "strength": "moderate",
+                            "explanation": "High UV exposure may be contributing to skin/eye irritation.",
+                        }
+                    )
 
         return correlations
 
@@ -342,7 +385,9 @@ class GeoExposureAgent(BaseAgent):
         # Symptom-specific recommendations
         respiratory_symptoms = ["cough", "wheezing", "difficulty_breathing"]
         if any(s in symptoms for s in respiratory_symptoms):
-            recommendations.append("Track when respiratory symptoms worsen relative to outdoor time")
+            recommendations.append(
+                "Track when respiratory symptoms worsen relative to outdoor time"
+            )
             recommendations.append("Consider keeping a symptom diary noting weather conditions")
 
         return recommendations
@@ -461,7 +506,9 @@ class GeoExposureAgent(BaseAgent):
         if alerts:
             lines.append("\n### Active Alerts")
             for alert in alerts:
-                emoji = {"severe": "🔴", "high": "🟠", "moderate": "🟡", "low": "🟢"}.get(alert.severity, "⚪")
+                emoji = {"severe": "🔴", "high": "🟠", "moderate": "🟡", "low": "🟢"}.get(
+                    alert.severity, "⚪"
+                )
                 lines.append(f"{emoji} **{alert.title}**")
 
         # Correlations

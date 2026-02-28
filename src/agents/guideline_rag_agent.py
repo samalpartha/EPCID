@@ -24,6 +24,7 @@ logger = logging.getLogger("epcid.agents.guideline_rag")
 @dataclass
 class GuidelineSource:
     """A source for clinical guidelines."""
+
     id: str
     name: str
     url: str
@@ -34,6 +35,7 @@ class GuidelineSource:
 @dataclass
 class GuidelineResult:
     """A retrieved guideline result."""
+
     title: str
     content: str
     source: GuidelineSource
@@ -231,11 +233,11 @@ class GuidelineRAGAgent(BaseAgent):
     # Escalation messages
     ESCALATION_MESSAGES = {
         "critical": "⚠️ **IMPORTANT**: The symptoms described may indicate a serious condition. "
-                   "Please seek emergency medical care immediately. Call 911 or go to the nearest emergency room.",
+        "Please seek emergency medical care immediately. Call 911 or go to the nearest emergency room.",
         "high": "⚠️ **ATTENTION**: These symptoms warrant prompt medical evaluation. "
-               "Please contact your pediatrician or seek urgent care within the next few hours.",
+        "Please contact your pediatrician or seek urgent care within the next few hours.",
         "moderate": "📋 We recommend consulting with your pediatrician about these symptoms. "
-                   "Schedule an appointment within the next 24-48 hours.",
+        "Schedule an appointment within the next 24-48 hours.",
     }
 
     def __init__(
@@ -273,6 +275,7 @@ class GuidelineRAGAgent(BaseAgent):
             AgentResponse with guidelines and citations
         """
         import uuid
+
         request_id = str(uuid.uuid4())[:12]
 
         # Extract query
@@ -333,7 +336,7 @@ class GuidelineRAGAgent(BaseAgent):
         # Extract keywords from query
         if query:
             # Simple keyword extraction
-            words = re.findall(r'\b\w+\b', query.lower())
+            words = re.findall(r"\b\w+\b", query.lower())
             medical_terms = [w for w in words if len(w) > 3]
             terms.extend(medical_terms[:5])
 
@@ -443,12 +446,14 @@ class GuidelineRAGAgent(BaseAgent):
 
         for result in results:
             if result.citation not in seen:
-                citations.append({
-                    "source": result.source.name,
-                    "title": result.title,
-                    "url": result.url or "",
-                    "trust_level": result.source.trust_level,
-                })
+                citations.append(
+                    {
+                        "source": result.source.name,
+                        "title": result.title,
+                        "url": result.url or "",
+                        "trust_level": result.source.trust_level,
+                    }
+                )
                 seen.add(result.citation)
 
         return citations
@@ -457,7 +462,9 @@ class GuidelineRAGAgent(BaseAgent):
         """Convert GuidelineResult to dictionary."""
         return {
             "title": result.title,
-            "content": result.content[:300] + "..." if len(result.content) > 300 else result.content,
+            "content": (
+                result.content[:300] + "..." if len(result.content) > 300 else result.content
+            ),
             "source": result.source.name,
             "relevance_score": result.relevance_score,
             "citation": result.citation,
@@ -493,6 +500,7 @@ class GuidelineRAGAgent(BaseAgent):
 
 
 # Query preprocessing utilities
+
 
 def normalize_symptom_query(symptom: str) -> str:
     """Normalize a symptom for searching."""

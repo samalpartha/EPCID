@@ -24,6 +24,7 @@ logger = logging.getLogger("epcid.core.memory")
 
 class MemoryType(Enum):
     """Types of memory in the hierarchical system."""
+
     SHORT_TERM = "short_term"
     EPISODIC = "episodic"
     SEMANTIC = "semantic"
@@ -32,6 +33,7 @@ class MemoryType(Enum):
 @dataclass
 class MemoryItem:
     """A single item stored in memory."""
+
     id: str
     content: Any
     timestamp: datetime
@@ -63,13 +65,16 @@ class MemoryItem:
             metadata=data.get("metadata", {}),
             importance=data.get("importance", 0.5),
             access_count=data.get("access_count", 0),
-            last_accessed=datetime.fromisoformat(data["last_accessed"]) if data.get("last_accessed") else None,
+            last_accessed=(
+                datetime.fromisoformat(data["last_accessed"]) if data.get("last_accessed") else None
+            ),
         )
 
 
 @dataclass
 class Episode:
     """An episode capturing a specific health event or interaction."""
+
     id: str
     child_id: str
     event_type: str
@@ -156,7 +161,7 @@ class ShortTermMemory(MemoryStore):
             if idx < len(self._items):
                 item = self._items[idx]
                 item.access_count += 1
-                item.last_accessed = datetime.now(__import__('datetime').timezone.utc)
+                item.last_accessed = datetime.now(__import__("datetime").timezone.utc)
                 return item
         return None
 
@@ -182,7 +187,7 @@ class ShortTermMemory(MemoryStore):
 
     def get_context_window(self, minutes: int = 30) -> list[MemoryItem]:
         """Get items from the last N minutes."""
-        cutoff = datetime.now(__import__('datetime').timezone.utc) - timedelta(minutes=minutes)
+        cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(minutes=minutes)
         return [item for item in self._items if item.timestamp > cutoff]
 
     def delete(self, item_id: str) -> bool:
@@ -191,8 +196,7 @@ class ShortTermMemory(MemoryStore):
             idx = self._index[item_id]
             if idx < len(self._items):
                 self._items = deque(
-                    [item for i, item in enumerate(self._items) if i != idx],
-                    maxlen=self.max_items
+                    [item for i, item in enumerate(self._items) if i != idx], maxlen=self.max_items
                 )
                 self._rebuild_index()
                 return True
@@ -206,12 +210,13 @@ class ShortTermMemory(MemoryStore):
 
     def _expire_old_items(self) -> None:
         """Remove items older than TTL."""
-        cutoff = datetime.now(__import__('datetime').timezone.utc) - timedelta(minutes=self.ttl_minutes)
+        cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(
+            minutes=self.ttl_minutes
+        )
         original_count = len(self._items)
 
         self._items = deque(
-            [item for item in self._items if item.timestamp > cutoff],
-            maxlen=self.max_items
+            [item for item in self._items if item.timestamp > cutoff], maxlen=self.max_items
         )
 
         expired_count = original_count - len(self._items)
@@ -350,14 +355,12 @@ class EpisodicMemory(MemoryStore):
             # Remove from child index
             if episode.child_id in self._child_episodes:
                 self._child_episodes[episode.child_id] = [
-                    eid for eid in self._child_episodes[episode.child_id]
-                    if eid != episode_id
+                    eid for eid in self._child_episodes[episode.child_id] if eid != episode_id
                 ]
 
             # Remove from temporal index
             self._temporal_index = [
-                (ts, eid) for ts, eid in self._temporal_index
-                if eid != episode_id
+                (ts, eid) for ts, eid in self._temporal_index if eid != episode_id
             ]
 
             del self._episodes[episode_id]
@@ -425,7 +428,7 @@ class SemanticMemory(MemoryStore):
         item = self._items.get(item_id)
         if item:
             item.access_count += 1
-            item.last_accessed = datetime.now(__import__('datetime').timezone.utc)
+            item.last_accessed = datetime.now(__import__("datetime").timezone.utc)
         return item
 
     def search(self, query: str, limit: int = 10) -> list[MemoryItem]:
@@ -462,10 +465,7 @@ class SemanticMemory(MemoryStore):
         similarities = []
         for item_id in candidate_ids:
             if item_id in self._embeddings:
-                similarity = self._cosine_similarity(
-                    query_embedding,
-                    self._embeddings[item_id]
-                )
+                similarity = self._cosine_similarity(query_embedding, self._embeddings[item_id])
                 if similarity >= self.similarity_threshold:
                     similarities.append((item_id, similarity))
 
@@ -564,7 +564,7 @@ class Memory:
         item = MemoryItem(
             id=self._generate_id(content),
             content=content,
-            timestamp=datetime.now(__import__('datetime').timezone.utc),
+            timestamp=datetime.now(__import__("datetime").timezone.utc),
             metadata=metadata or {},
             embedding=embedding,
             importance=importance,
@@ -643,7 +643,7 @@ class Memory:
     @staticmethod
     def _generate_id(content: Any) -> str:
         """Generate a unique ID for content."""
-        timestamp = datetime.now(__import__('datetime').timezone.utc).isoformat()
+        timestamp = datetime.now(__import__("datetime").timezone.utc).isoformat()
         content_str = json.dumps(content, default=str)
         hash_input = f"{timestamp}:{content_str}"
         return hashlib.sha256(hash_input.encode()).hexdigest()[:16]

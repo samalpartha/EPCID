@@ -24,6 +24,7 @@ logger = logging.getLogger("epcid.services.cdc")
 
 class DiseaseType(StrEnum):
     """Trackable disease types."""
+
     INFLUENZA = "influenza"
     RSV = "rsv"
     COVID = "covid"
@@ -33,6 +34,7 @@ class DiseaseType(StrEnum):
 
 class ActivityLevel(StrEnum):
     """CDC activity levels."""
+
     MINIMAL = "minimal"
     LOW = "low"
     MODERATE = "moderate"
@@ -43,6 +45,7 @@ class ActivityLevel(StrEnum):
 @dataclass
 class DiseaseActivity:
     """Disease activity in a region."""
+
     disease: DiseaseType
     region: str
     state: str
@@ -69,6 +72,7 @@ class DiseaseActivity:
 @dataclass
 class VaccinationSchedule:
     """Recommended vaccination."""
+
     vaccine_name: str
     disease: str
     recommended_age: str
@@ -91,6 +95,7 @@ class VaccinationSchedule:
 @dataclass
 class GrowthPercentile:
     """Growth percentile data."""
+
     age_months: int
     sex: str
     measurement_type: str  # weight, height, head_circumference, bmi
@@ -180,15 +185,19 @@ class CDCService:
         alerts = []
         for activity in activities:
             if activity.activity_level in [ActivityLevel.HIGH, ActivityLevel.VERY_HIGH]:
-                alerts.append({
-                    "type": "outbreak_alert",
-                    "disease": activity.disease.value,
-                    "severity": "high" if activity.activity_level == ActivityLevel.HIGH else "critical",
-                    "title": f"{activity.disease.value.upper()} Activity Alert",
-                    "message": f"{activity.disease.value.title()} activity is {activity.activity_level.value.replace('_', ' ')} in {activity.state}. {activity.recommendation}",
-                    "pediatric_impact": activity.pediatric_impact,
-                    "trend": activity.trend,
-                })
+                alerts.append(
+                    {
+                        "type": "outbreak_alert",
+                        "disease": activity.disease.value,
+                        "severity": (
+                            "high" if activity.activity_level == ActivityLevel.HIGH else "critical"
+                        ),
+                        "title": f"{activity.disease.value.upper()} Activity Alert",
+                        "message": f"{activity.disease.value.title()} activity is {activity.activity_level.value.replace('_', ' ')} in {activity.state}. {activity.recommendation}",
+                        "pediatric_impact": activity.pediatric_impact,
+                        "trend": activity.trend,
+                    }
+                )
 
         return alerts
 
@@ -277,7 +286,7 @@ class CDCService:
                 "p5": chart.p5,
                 "p50": chart.p50,
                 "p95": chart.p95,
-            }
+            },
         }
 
     def get_vital_sign_reference(
@@ -322,13 +331,17 @@ class CDCService:
 
         activity_data = {
             DiseaseType.INFLUENZA: {
-                "activity_level": ActivityLevel.HIGH if is_respiratory_season else ActivityLevel.LOW,
+                "activity_level": (
+                    ActivityLevel.HIGH if is_respiratory_season else ActivityLevel.LOW
+                ),
                 "trend": "increasing" if 40 <= current_week <= 52 else "decreasing",
                 "pediatric_impact": "Children under 5 at highest risk for complications",
                 "recommendation": "Ensure flu vaccination is current. Wash hands frequently.",
             },
             DiseaseType.RSV: {
-                "activity_level": ActivityLevel.MODERATE if is_respiratory_season else ActivityLevel.MINIMAL,
+                "activity_level": (
+                    ActivityLevel.MODERATE if is_respiratory_season else ActivityLevel.MINIMAL
+                ),
                 "trend": "stable",
                 "pediatric_impact": "Infants under 6 months at highest risk",
                 "recommendation": "Limit exposure to sick contacts. Practice good hygiene.",
@@ -394,52 +407,95 @@ class CDCService:
         # Based on CDC 2024 schedule
         return [
             # Birth
-            VaccinationSchedule("Hepatitis B", "Hepatitis B", "0 months", 1, 3, "0-18 years", "First dose at birth"),
-
+            VaccinationSchedule(
+                "Hepatitis B", "Hepatitis B", "0 months", 1, 3, "0-18 years", "First dose at birth"
+            ),
             # 2 months
-            VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "2 months", 1, 5, None, ""),
+            VaccinationSchedule(
+                "DTaP", "Diphtheria, Tetanus, Pertussis", "2 months", 1, 5, None, ""
+            ),
             VaccinationSchedule("Hib", "Haemophilus influenzae type b", "2 months", 1, 4, None, ""),
             VaccinationSchedule("IPV", "Polio", "2 months", 1, 4, None, ""),
             VaccinationSchedule("PCV15/PCV20", "Pneumococcal", "2 months", 1, 4, None, ""),
-            VaccinationSchedule("RV", "Rotavirus", "2 months", 1, 3, None, "Must start by 15 weeks"),
+            VaccinationSchedule(
+                "RV", "Rotavirus", "2 months", 1, 3, None, "Must start by 15 weeks"
+            ),
             VaccinationSchedule("Hepatitis B", "Hepatitis B", "2 months", 2, 3, None, ""),
-
             # 4 months
-            VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "4 months", 2, 5, None, ""),
+            VaccinationSchedule(
+                "DTaP", "Diphtheria, Tetanus, Pertussis", "4 months", 2, 5, None, ""
+            ),
             VaccinationSchedule("Hib", "Haemophilus influenzae type b", "4 months", 2, 4, None, ""),
             VaccinationSchedule("IPV", "Polio", "4 months", 2, 4, None, ""),
             VaccinationSchedule("PCV15/PCV20", "Pneumococcal", "4 months", 2, 4, None, ""),
             VaccinationSchedule("RV", "Rotavirus", "4 months", 2, 3, None, ""),
-
             # 6 months
-            VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "6 months", 3, 5, None, ""),
-            VaccinationSchedule("Hib", "Haemophilus influenzae type b", "6 months", 3, 4, None, "Depending on brand"),
+            VaccinationSchedule(
+                "DTaP", "Diphtheria, Tetanus, Pertussis", "6 months", 3, 5, None, ""
+            ),
+            VaccinationSchedule(
+                "Hib", "Haemophilus influenzae type b", "6 months", 3, 4, None, "Depending on brand"
+            ),
             VaccinationSchedule("PCV15/PCV20", "Pneumococcal", "6 months", 3, 4, None, ""),
             VaccinationSchedule("RV", "Rotavirus", "6 months", 3, 3, None, "If using RotaTeq"),
             VaccinationSchedule("Hepatitis B", "Hepatitis B", "6-18 months", 3, 3, None, ""),
             VaccinationSchedule("IPV", "Polio", "6-18 months", 3, 4, None, ""),
-            VaccinationSchedule("Influenza", "Influenza", "6 months+", 1, 2, None, "Annual; 2 doses first year"),
-
+            VaccinationSchedule(
+                "Influenza", "Influenza", "6 months+", 1, 2, None, "Annual; 2 doses first year"
+            ),
             # 12-15 months
-            VaccinationSchedule("MMR", "Measles, Mumps, Rubella", "12-15 months", 1, 2, "13 months-12 years", ""),
-            VaccinationSchedule("Varicella", "Chickenpox", "12-15 months", 1, 2, "13 months-12 years", ""),
-            VaccinationSchedule("Hib", "Haemophilus influenzae type b", "12-15 months", 4, 4, None, ""),
+            VaccinationSchedule(
+                "MMR", "Measles, Mumps, Rubella", "12-15 months", 1, 2, "13 months-12 years", ""
+            ),
+            VaccinationSchedule(
+                "Varicella", "Chickenpox", "12-15 months", 1, 2, "13 months-12 years", ""
+            ),
+            VaccinationSchedule(
+                "Hib", "Haemophilus influenzae type b", "12-15 months", 4, 4, None, ""
+            ),
             VaccinationSchedule("PCV15/PCV20", "Pneumococcal", "12-15 months", 4, 4, None, ""),
-            VaccinationSchedule("Hepatitis A", "Hepatitis A", "12-23 months", 1, 2, "2-18 years", "2 doses 6 months apart"),
-
+            VaccinationSchedule(
+                "Hepatitis A",
+                "Hepatitis A",
+                "12-23 months",
+                1,
+                2,
+                "2-18 years",
+                "2 doses 6 months apart",
+            ),
             # 15-18 months
-            VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "15-18 months", 4, 5, None, ""),
-
+            VaccinationSchedule(
+                "DTaP", "Diphtheria, Tetanus, Pertussis", "15-18 months", 4, 5, None, ""
+            ),
             # 4-6 years
-            VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "4-6 years", 5, 5, None, ""),
+            VaccinationSchedule(
+                "DTaP", "Diphtheria, Tetanus, Pertussis", "4-6 years", 5, 5, None, ""
+            ),
             VaccinationSchedule("IPV", "Polio", "4-6 years", 4, 4, None, ""),
             VaccinationSchedule("MMR", "Measles, Mumps, Rubella", "4-6 years", 2, 2, None, ""),
             VaccinationSchedule("Varicella", "Chickenpox", "4-6 years", 2, 2, None, ""),
-
             # 11-12 years
-            VaccinationSchedule("Tdap", "Tetanus, Diphtheria, Pertussis", "11-12 years", 1, 1, "13-18 years", "Booster"),
-            VaccinationSchedule("HPV", "Human Papillomavirus", "11-12 years", 1, 2, "13-26 years", "2-3 doses based on age"),
-            VaccinationSchedule("MenACWY", "Meningococcal", "11-12 years", 1, 2, "13-18 years", "Booster at 16"),
+            VaccinationSchedule(
+                "Tdap",
+                "Tetanus, Diphtheria, Pertussis",
+                "11-12 years",
+                1,
+                1,
+                "13-18 years",
+                "Booster",
+            ),
+            VaccinationSchedule(
+                "HPV",
+                "Human Papillomavirus",
+                "11-12 years",
+                1,
+                2,
+                "13-26 years",
+                "2-3 doses based on age",
+            ),
+            VaccinationSchedule(
+                "MenACWY", "Meningococcal", "11-12 years", 1, 2, "13-18 years", "Booster at 16"
+            ),
         ]
 
     def _load_growth_charts(self) -> dict[str, list[GrowthPercentile]]:
@@ -469,13 +525,20 @@ class CDCService:
         ]
 
         for row in weight_male_data:
-            charts["weight_male"].append(GrowthPercentile(
-                age_months=row[0],
-                sex="male",
-                measurement_type="weight",
-                p5=row[1], p10=row[2], p25=row[3], p50=row[4],
-                p75=row[5], p90=row[6], p95=row[7],
-            ))
+            charts["weight_male"].append(
+                GrowthPercentile(
+                    age_months=row[0],
+                    sex="male",
+                    measurement_type="weight",
+                    p5=row[1],
+                    p10=row[2],
+                    p25=row[3],
+                    p50=row[4],
+                    p75=row[5],
+                    p90=row[6],
+                    p95=row[7],
+                )
+            )
 
         return charts
 
@@ -491,7 +554,7 @@ class CDCService:
 
         # Find closest age
         closest = None
-        min_diff = float('inf')
+        min_diff = float("inf")
 
         for chart in charts:
             diff = abs(chart.age_months - age_months)
@@ -555,46 +618,136 @@ class CDCService:
         age_str = age_str.lower()
 
         if "year" in age_str:
-            years = int(''.join(filter(str.isdigit, age_str)) or 0)
+            years = int("".join(filter(str.isdigit, age_str)) or 0)
             return years * 12
         elif "month" in age_str:
-            return int(''.join(filter(str.isdigit, age_str)) or 0)
+            return int("".join(filter(str.isdigit, age_str)) or 0)
         else:
             # Assume months
-            return int(''.join(filter(str.isdigit, age_str)) or 0)
+            return int("".join(filter(str.isdigit, age_str)) or 0)
 
     def _get_vital_ranges_for_age(self, age_months: int) -> dict[str, Any]:
         """Get normal vital sign ranges for age."""
         # Based on PALS guidelines
         if age_months < 1:  # Newborn
             return {
-                "heart_rate": {"low": 100, "normal_low": 120, "normal_high": 160, "high": 180, "unit": "bpm"},
-                "respiratory_rate": {"low": 30, "normal_low": 40, "normal_high": 60, "high": 70, "unit": "/min"},
-                "temperature": {"low": 97.7, "normal_low": 98.0, "normal_high": 99.5, "high": 100.4, "unit": "°F"},
+                "heart_rate": {
+                    "low": 100,
+                    "normal_low": 120,
+                    "normal_high": 160,
+                    "high": 180,
+                    "unit": "bpm",
+                },
+                "respiratory_rate": {
+                    "low": 30,
+                    "normal_low": 40,
+                    "normal_high": 60,
+                    "high": 70,
+                    "unit": "/min",
+                },
+                "temperature": {
+                    "low": 97.7,
+                    "normal_low": 98.0,
+                    "normal_high": 99.5,
+                    "high": 100.4,
+                    "unit": "°F",
+                },
             }
         elif age_months < 12:  # Infant
             return {
-                "heart_rate": {"low": 80, "normal_low": 100, "normal_high": 150, "high": 170, "unit": "bpm"},
-                "respiratory_rate": {"low": 25, "normal_low": 30, "normal_high": 50, "high": 60, "unit": "/min"},
-                "temperature": {"low": 97.7, "normal_low": 98.0, "normal_high": 99.5, "high": 100.4, "unit": "°F"},
+                "heart_rate": {
+                    "low": 80,
+                    "normal_low": 100,
+                    "normal_high": 150,
+                    "high": 170,
+                    "unit": "bpm",
+                },
+                "respiratory_rate": {
+                    "low": 25,
+                    "normal_low": 30,
+                    "normal_high": 50,
+                    "high": 60,
+                    "unit": "/min",
+                },
+                "temperature": {
+                    "low": 97.7,
+                    "normal_low": 98.0,
+                    "normal_high": 99.5,
+                    "high": 100.4,
+                    "unit": "°F",
+                },
             }
         elif age_months < 36:  # Toddler
             return {
-                "heart_rate": {"low": 70, "normal_low": 90, "normal_high": 140, "high": 160, "unit": "bpm"},
-                "respiratory_rate": {"low": 20, "normal_low": 24, "normal_high": 40, "high": 50, "unit": "/min"},
-                "temperature": {"low": 97.5, "normal_low": 98.0, "normal_high": 99.5, "high": 100.4, "unit": "°F"},
+                "heart_rate": {
+                    "low": 70,
+                    "normal_low": 90,
+                    "normal_high": 140,
+                    "high": 160,
+                    "unit": "bpm",
+                },
+                "respiratory_rate": {
+                    "low": 20,
+                    "normal_low": 24,
+                    "normal_high": 40,
+                    "high": 50,
+                    "unit": "/min",
+                },
+                "temperature": {
+                    "low": 97.5,
+                    "normal_low": 98.0,
+                    "normal_high": 99.5,
+                    "high": 100.4,
+                    "unit": "°F",
+                },
             }
         elif age_months < 72:  # Preschool
             return {
-                "heart_rate": {"low": 65, "normal_low": 80, "normal_high": 120, "high": 140, "unit": "bpm"},
-                "respiratory_rate": {"low": 18, "normal_low": 22, "normal_high": 34, "high": 40, "unit": "/min"},
-                "temperature": {"low": 97.5, "normal_low": 98.0, "normal_high": 99.5, "high": 100.4, "unit": "°F"},
+                "heart_rate": {
+                    "low": 65,
+                    "normal_low": 80,
+                    "normal_high": 120,
+                    "high": 140,
+                    "unit": "bpm",
+                },
+                "respiratory_rate": {
+                    "low": 18,
+                    "normal_low": 22,
+                    "normal_high": 34,
+                    "high": 40,
+                    "unit": "/min",
+                },
+                "temperature": {
+                    "low": 97.5,
+                    "normal_low": 98.0,
+                    "normal_high": 99.5,
+                    "high": 100.4,
+                    "unit": "°F",
+                },
             }
         else:  # School age
             return {
-                "heart_rate": {"low": 55, "normal_low": 70, "normal_high": 110, "high": 130, "unit": "bpm"},
-                "respiratory_rate": {"low": 14, "normal_low": 18, "normal_high": 30, "high": 35, "unit": "/min"},
-                "temperature": {"low": 97.5, "normal_low": 98.0, "normal_high": 99.5, "high": 100.4, "unit": "°F"},
+                "heart_rate": {
+                    "low": 55,
+                    "normal_low": 70,
+                    "normal_high": 110,
+                    "high": 130,
+                    "unit": "bpm",
+                },
+                "respiratory_rate": {
+                    "low": 14,
+                    "normal_low": 18,
+                    "normal_high": 30,
+                    "high": 35,
+                    "unit": "/min",
+                },
+                "temperature": {
+                    "low": 97.5,
+                    "normal_low": 98.0,
+                    "normal_high": 99.5,
+                    "high": 100.4,
+                    "unit": "°F",
+                },
             }
 
     def _get_age_group(self, age_months: int) -> str:
@@ -616,11 +769,13 @@ class CDCService:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]
-            if datetime.now(__import__('datetime').timezone.utc) - timestamp < timedelta(hours=self.cache_ttl_hours):
+            if datetime.now(__import__("datetime").timezone.utc) - timestamp < timedelta(
+                hours=self.cache_ttl_hours
+            ):
                 return result
             del self._cache[key]
         return None
 
     def _set_cached(self, key: str, value: Any) -> None:
         """Set cached result."""
-        self._cache[key] = (value, datetime.now(__import__('datetime').timezone.utc))
+        self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))

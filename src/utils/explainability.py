@@ -21,6 +21,7 @@ logger = logging.getLogger("epcid.utils.explainability")
 @dataclass
 class ExplanationSection:
     """A section of an explanation."""
+
     title: str
     content: str
     importance: str = "medium"  # high, medium, low
@@ -30,11 +31,14 @@ class ExplanationSection:
 @dataclass
 class Explanation:
     """A complete explanation."""
+
     summary: str
     sections: list[ExplanationSection]
     confidence_statement: str
     disclaimers: list[str]
-    generated_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    generated_at: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
 
     def to_markdown(self) -> str:
         """Convert explanation to Markdown format."""
@@ -43,7 +47,11 @@ class Explanation:
         ]
 
         for section in self.sections:
-            importance_marker = "🔴" if section.importance == "high" else "🟡" if section.importance == "medium" else "🟢"
+            importance_marker = (
+                "🔴"
+                if section.importance == "high"
+                else "🟡" if section.importance == "medium" else "🟢"
+            )
             lines.append(f"## {importance_marker} {section.title}")
             lines.append(section.content)
 
@@ -137,56 +145,68 @@ class ExplanationGenerator:
             "LOW": "Home monitoring is appropriate. Continue to watch for changes.",
         }
 
-        sections.append(ExplanationSection(
-            title=f"Risk Level: {risk_tier}",
-            content=tier_explanations.get(risk_tier, "Assessment complete."),
-            importance="high" if risk_tier in ["CRITICAL", "HIGH"] else "medium",
-        ))
+        sections.append(
+            ExplanationSection(
+                title=f"Risk Level: {risk_tier}",
+                content=tier_explanations.get(risk_tier, "Assessment complete."),
+                importance="high" if risk_tier in ["CRITICAL", "HIGH"] else "medium",
+            )
+        )
 
         # Safety alerts
         if triggered_rules:
-            sections.append(ExplanationSection(
-                title="⚠️ Safety Alerts",
-                content="The following safety rules were triggered:",
-                importance="high",
-                evidence=triggered_rules,
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="⚠️ Safety Alerts",
+                    content="The following safety rules were triggered:",
+                    importance="high",
+                    evidence=triggered_rules,
+                )
+            )
 
         # Risk factors
         if risk_factors:
-            sections.append(ExplanationSection(
-                title="Why This Risk Level?",
-                content="The following factors contributed to this assessment:",
-                importance="high",
-                evidence=risk_factors[:5],
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="Why This Risk Level?",
+                    content="The following factors contributed to this assessment:",
+                    importance="high",
+                    evidence=risk_factors[:5],
+                )
+            )
 
         # Protective factors
         if protective_factors:
-            sections.append(ExplanationSection(
-                title="Positive Signs",
-                content="The following factors are reassuring:",
-                importance="low",
-                evidence=protective_factors[:3],
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="Positive Signs",
+                    content="The following factors are reassuring:",
+                    importance="low",
+                    evidence=protective_factors[:3],
+                )
+            )
 
         # Uncertainty
         if uncertainty_factors:
-            sections.append(ExplanationSection(
-                title="Uncertainty",
-                content="The following factors add uncertainty to this assessment:",
-                importance="medium",
-                evidence=uncertainty_factors[:3],
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="Uncertainty",
+                    content="The following factors add uncertainty to this assessment:",
+                    importance="medium",
+                    evidence=uncertainty_factors[:3],
+                )
+            )
 
         # Missing data
         if missing_data:
-            sections.append(ExplanationSection(
-                title="Additional Data Would Help",
-                content="Providing the following information would improve the accuracy:",
-                importance="low",
-                evidence=missing_data[:3],
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="Additional Data Would Help",
+                    content="Providing the following information would improve the accuracy:",
+                    importance="low",
+                    evidence=missing_data[:3],
+                )
+            )
 
         # Model contributions
         if model_scores:
@@ -194,11 +214,13 @@ class ExplanationGenerator:
             for model, score in model_scores.items():
                 model_content += f"- {model.replace('_', ' ').title()}: {score:.0%}\n"
 
-            sections.append(ExplanationSection(
-                title="How This Was Calculated",
-                content=model_content,
-                importance="low",
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="How This Was Calculated",
+                    content=model_content,
+                    importance="low",
+                )
+            )
 
         # Confidence statement
         confidence_statement = self._generate_confidence_statement(
@@ -225,21 +247,25 @@ class ExplanationGenerator:
         sections = []
 
         # Main recommendation
-        sections.append(ExplanationSection(
-            title="Recommended Action",
-            content=primary_action,
-            importance="high",
-            evidence=[f"Timeline: {timeline}"],
-        ))
+        sections.append(
+            ExplanationSection(
+                title="Recommended Action",
+                content=primary_action,
+                importance="high",
+                evidence=[f"Timeline: {timeline}"],
+            )
+        )
 
         # Reasons
         if reasons:
-            sections.append(ExplanationSection(
-                title="Why This Recommendation",
-                content="Based on the following observations:",
-                importance="medium",
-                evidence=reasons[:5],
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="Why This Recommendation",
+                    content="Based on the following observations:",
+                    importance="medium",
+                    evidence=reasons[:5],
+                )
+            )
 
         return Explanation(
             summary=f"Care Guidance: {urgency.title()} - {escalation_type.replace('_', ' ').title()}",
@@ -266,27 +292,33 @@ class ExplanationGenerator:
             "normal": "This is within normal range.",
         }
 
-        sections.append(ExplanationSection(
-            title=f"{phenotype_name.replace('_', ' ').title()}",
-            content=severity_descriptions.get(severity, "Assessment complete."),
-            importance="high" if severity == "severe" else "medium",
-            evidence=[f"Value: {value}", f"Severity: {severity}"],
-        ))
+        sections.append(
+            ExplanationSection(
+                title=f"{phenotype_name.replace('_', ' ').title()}",
+                content=severity_descriptions.get(severity, "Assessment complete."),
+                importance="high" if severity == "severe" else "medium",
+                evidence=[f"Value: {value}", f"Severity: {severity}"],
+            )
+        )
 
         if contributing_factors:
-            sections.append(ExplanationSection(
-                title="Contributing Factors",
-                content="This assessment considers:",
-                importance="low",
-                evidence=contributing_factors[:3],
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="Contributing Factors",
+                    content="This assessment considers:",
+                    importance="low",
+                    evidence=contributing_factors[:3],
+                )
+            )
 
         if trend:
-            sections.append(ExplanationSection(
-                title="Trend",
-                content=f"The trend appears to be: {trend}",
-                importance="medium" if trend == "worsening" else "low",
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="Trend",
+                    content=f"The trend appears to be: {trend}",
+                    importance="medium" if trend == "worsening" else "low",
+                )
+            )
 
         return Explanation(
             summary=f"Clinical Signal: {phenotype_name.replace('_', ' ').title()}",
@@ -304,21 +336,25 @@ class ExplanationGenerator:
         """Generate explanation for guideline retrieval."""
         sections = []
 
-        sections.append(ExplanationSection(
-            title="Information Sources",
-            content="This information comes from trusted medical sources:",
-            importance="medium",
-            evidence=sources[:5],
-        ))
+        sections.append(
+            ExplanationSection(
+                title="Information Sources",
+                content="This information comes from trusted medical sources:",
+                importance="medium",
+                evidence=sources[:5],
+            )
+        )
 
         if citations:
             citation_list = [f"{c['source']}: {c['title']}" for c in citations[:3]]
-            sections.append(ExplanationSection(
-                title="Citations",
-                content="Full references:",
-                importance="low",
-                evidence=citation_list,
-            ))
+            sections.append(
+                ExplanationSection(
+                    title="Citations",
+                    content="Full references:",
+                    importance="low",
+                    evidence=citation_list,
+                )
+            )
 
         return Explanation(
             summary=f"Educational Information: {query}",

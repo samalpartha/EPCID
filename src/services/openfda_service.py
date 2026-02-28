@@ -26,6 +26,7 @@ logger = logging.getLogger("epcid.services.openfda")
 @dataclass
 class DrugLabel:
     """Drug label information from OpenFDA."""
+
     brand_name: str
     generic_name: str
     manufacturer: str
@@ -52,6 +53,7 @@ class DrugLabel:
 @dataclass
 class AdverseEvent:
     """An adverse event report from OpenFDA."""
+
     drug_name: str
     reaction: str
     outcome: str | None
@@ -73,6 +75,7 @@ class AdverseEvent:
 @dataclass
 class AdverseEventSummary:
     """Summary of adverse events for a drug."""
+
     drug_name: str
     total_reports: int
     reactions: dict[str, int]  # reaction -> count
@@ -194,7 +197,7 @@ class OpenFDAService:
             search = f'patient.drug.medicinalproduct:"{drug_name}"'
 
             if pediatric_only:
-                search += ' AND patient.patientonsetage:[0 TO 18]'
+                search += " AND patient.patientonsetage:[0 TO 18]"
 
             params = {
                 "search": search,
@@ -255,10 +258,7 @@ class OpenFDAService:
             response = await self._make_request(url)
 
             if response and response.get("results"):
-                reactions = {
-                    r["term"].lower(): r["count"]
-                    for r in response["results"][:50]
-                }
+                reactions = {r["term"].lower(): r["count"] for r in response["results"][:50]}
                 total = sum(reactions.values())
 
                 summary = AdverseEventSummary(
@@ -496,11 +496,13 @@ class OpenFDAService:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]
-            if datetime.now(__import__('datetime').timezone.utc) - timestamp < timedelta(hours=self.cache_ttl_hours):
+            if datetime.now(__import__("datetime").timezone.utc) - timestamp < timedelta(
+                hours=self.cache_ttl_hours
+            ):
                 return result
             del self._cache[key]
         return None
 
     def _set_cached(self, key: str, value: Any) -> None:
         """Set cached result."""
-        self._cache[key] = (value, datetime.now(__import__('datetime').timezone.utc))
+        self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))

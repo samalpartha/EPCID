@@ -21,6 +21,7 @@ logger = logging.getLogger("epcid.core.reasoning")
 
 class ReasoningType(Enum):
     """Types of reasoning strategies."""
+
     CHAIN_OF_THOUGHT = "chain_of_thought"
     SELF_CONSISTENCY = "self_consistency"
     TREE_OF_THOUGHT = "tree_of_thought"
@@ -29,11 +30,12 @@ class ReasoningType(Enum):
 
 class ConfidenceLevel(Enum):
     """Confidence levels for reasoning outcomes."""
+
     VERY_HIGH = "very_high"  # >0.95
-    HIGH = "high"            # 0.85-0.95
-    MODERATE = "moderate"    # 0.70-0.85
-    LOW = "low"              # 0.50-0.70
-    VERY_LOW = "very_low"    # <0.50
+    HIGH = "high"  # 0.85-0.95
+    MODERATE = "moderate"  # 0.70-0.85
+    LOW = "low"  # 0.50-0.70
+    VERY_LOW = "very_low"  # <0.50
 
     @classmethod
     def from_score(cls, score: float) -> "ConfidenceLevel":
@@ -53,13 +55,16 @@ class ConfidenceLevel(Enum):
 @dataclass
 class ReasoningStep:
     """A single step in the reasoning process."""
+
     step_number: int
     description: str
     input_data: dict[str, Any]
     output_data: dict[str, Any]
     rationale: str
     confidence: float
-    timestamp: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    timestamp: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
     warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -79,6 +84,7 @@ class ReasoningStep:
 @dataclass
 class ReasoningChain:
     """A complete chain of reasoning steps."""
+
     id: str
     reasoning_type: ReasoningType
     steps: list[ReasoningStep]
@@ -87,7 +93,9 @@ class ReasoningChain:
     uncertainty_factors: list[str]
     supporting_evidence: list[str]
     contradicting_evidence: list[str]
-    created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    created_at: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def get_explanation(self) -> str:
@@ -229,7 +237,9 @@ class ChainOfThought(ReasoningStrategy):
             metadata={"goal": goal},
         )
 
-        logger.info(f"Completed chain-of-thought reasoning: {chain.id}, confidence={overall_confidence:.2f}")
+        logger.info(
+            f"Completed chain-of-thought reasoning: {chain.id}, confidence={overall_confidence:.2f}"
+        )
         return chain
 
     def _analyze_data(self, context: dict[str, Any]) -> ReasoningStep:
@@ -379,7 +389,9 @@ class ChainOfThought(ReasoningStrategy):
         if step2:
             patterns = step2.output_data.get("patterns_found", [])
             if len(patterns) > 2:
-                uncertainty_factors.append("Multiple concurrent patterns may indicate complex condition")
+                uncertainty_factors.append(
+                    "Multiple concurrent patterns may indicate complex condition"
+                )
 
         # Check temporal context
         if "symptom_duration" not in context:
@@ -433,7 +445,9 @@ class ChainOfThought(ReasoningStrategy):
 
         # Calculate confidence based on data quality and rule clarity
         confidence_scores = [step.confidence for step in previous_steps]
-        avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
+        avg_confidence = (
+            sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
+        )
 
         return ReasoningStep(
             step_number=5,
@@ -512,7 +526,9 @@ class ChainOfThought(ReasoningStrategy):
 
         # Check confidence threshold
         if chain.overall_confidence < self.min_confidence_threshold:
-            issues.append(f"Overall confidence {chain.overall_confidence:.2f} below threshold {self.min_confidence_threshold}")
+            issues.append(
+                f"Overall confidence {chain.overall_confidence:.2f} below threshold {self.min_confidence_threshold}"
+            )
 
         # Check for conclusion
         if not chain.final_conclusion:

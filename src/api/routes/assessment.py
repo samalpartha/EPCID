@@ -53,66 +53,84 @@ async def run_assessment_pipeline(
         # Step 1: Ingest and normalize symptoms
         normalized_symptoms = []
         for symptom in request.symptoms:
-            result = await ingestion_agent.process({
-                "event_type": "symptom",
-                "data": symptom.model_dump(),
-                "child_id": request.child_id,
-            })
+            result = await ingestion_agent.process(
+                {
+                    "event_type": "symptom",
+                    "data": symptom.model_dump(),
+                    "child_id": request.child_id,
+                }
+            )
             if result.get("status") == "success":
                 normalized_symptoms.append(result.get("normalized_event"))
 
         # Step 2: Extract phenotype signals
-        phenotype_result = await phenotype_agent.process({
-            "symptoms": normalized_symptoms,
-            "child_id": request.child_id,
-        })
+        phenotype_result = await phenotype_agent.process(
+            {
+                "symptoms": normalized_symptoms,
+                "child_id": request.child_id,
+            }
+        )
 
         # Step 3: Risk stratification
-        risk_result = await risk_agent.process({
-            "phenotype": phenotype_result.get("phenotype", {}),
-            "symptoms": normalized_symptoms,
-            "child_id": request.child_id,
-        })
+        risk_result = await risk_agent.process(
+            {
+                "phenotype": phenotype_result.get("phenotype", {}),
+                "symptoms": normalized_symptoms,
+                "child_id": request.child_id,
+            }
+        )
 
         # Step 4: Get guideline recommendations (if requested)
         guidelines_content = []
         if request.include_guidelines:
-            guideline_result = await guideline_agent.process({
-                "symptoms": [s.symptom_type for s in request.symptoms],
-                "risk_level": risk_result.get("risk_level", "low"),
-            })
+            guideline_result = await guideline_agent.process(
+                {
+                    "symptoms": [s.symptom_type for s in request.symptoms],
+                    "risk_level": risk_result.get("risk_level", "low"),
+                }
+            )
             guidelines_content = guideline_result.get("recommendations", [])
 
         # Step 5: Check environmental factors (if requested)
         environmental_context = None
         if request.include_environmental and request.location:
             geo_agent = GeoExposureAgent(agent_id="geo-001")
-            env_result = await geo_agent.process({
-                "latitude": request.location.get("lat"),
-                "longitude": request.location.get("lng"),
-                "symptoms": [s.symptom_type for s in request.symptoms],
-            })
+            env_result = await geo_agent.process(
+                {
+                    "latitude": request.location.get("lat"),
+                    "longitude": request.location.get("lng"),
+                    "symptoms": [s.symptom_type for s in request.symptoms],
+                }
+            )
             environmental_context = env_result
 
         # Step 6: Generate escalation recommendations
-        escalation_result = await escalation_agent.process({
-            "risk_level": risk_result.get("risk_level", "low"),
-            "risk_score": risk_result.get("risk_score", 0.0),
-            "symptoms": [s.symptom_type for s in request.symptoms],
-        })
+        escalation_result = await escalation_agent.process(
+            {
+                "risk_level": risk_result.get("risk_level", "low"),
+                "risk_score": risk_result.get("risk_score", 0.0),
+                "symptoms": [s.symptom_type for s in request.symptoms],
+            }
+        )
 
         # Step 7: Generate explanation
-        explanation = explainer.generate_explanation({
-            "risk_result": risk_result,
-            "phenotype_result": phenotype_result,
-            "guidelines": guidelines_content,
-            "environmental": environmental_context,
-        })
+        explanation = explainer.generate_explanation(
+            {
+                "risk_result": risk_result,
+                "phenotype_result": phenotype_result,
+                "guidelines": guidelines_content,
+                "environmental": environmental_context,
+            }
+        )
 
         # Build risk factors
         risk_factors = []
         for symptom in request.symptoms:
-            contribution = 0.2 if symptom.severity.value == "mild" else 0.4 if symptom.severity.value == "moderate" else 0.6
+            contribution = (
+                0.2
+                if symptom.severity.value == "mild"
+                else 0.4 if symptom.severity.value == "moderate" else 0.6
+            )
             risk_factors.append(
                 RiskFactor(
                     name=symptom.symptom_type,
@@ -137,18 +155,16 @@ async def run_assessment_pipeline(
         response = AssessmentResponse(
             id=assessment_id,
             child_id=request.child_id,
-            timestamp=datetime.now(__import__('datetime').timezone.utc),
+            timestamp=datetime.now(__import__("datetime").timezone.utc),
             risk_level=risk_level,
             risk_score=risk_score,
             confidence=risk_result.get("confidence", 0.8),
             risk_factors=risk_factors,
             primary_recommendation=escalation_result.get(
-                "primary_action",
-                "Monitor symptoms and maintain hydration"
+                "primary_action", "Monitor symptoms and maintain hydration"
             ),
             secondary_recommendations=escalation_result.get(
-                "secondary_actions",
-                ["Rest", "Track symptom progression"]
+                "secondary_actions", ["Rest", "Track symptom progression"]
             ),
             red_flags=risk_result.get("red_flags", []),
             warning_signs=risk_result.get("warning_signs", []),
@@ -156,8 +172,7 @@ async def run_assessment_pipeline(
             clinical_reasoning=explanation.get("clinical_reasoning", ""),
             suggested_actions=escalation_result.get("suggested_actions", []),
             when_to_seek_care=escalation_result.get(
-                "when_to_seek_care",
-                "If symptoms worsen or new symptoms develop"
+                "when_to_seek_care", "If symptoms worsen or new symptoms develop"
             ),
             disclaimers=[
                 "This assessment is for informational purposes only and is NOT a medical diagnosis.",
@@ -171,7 +186,7 @@ async def run_assessment_pipeline(
             "assessment": response.model_dump(),
             "user_id": user_id,
             "request": request.model_dump(),
-            "created_at": datetime.now(__import__('datetime').timezone.utc),
+            "created_at": datetime.now(__import__("datetime").timezone.utc),
         }
 
         return response
@@ -181,7 +196,7 @@ async def run_assessment_pipeline(
         return AssessmentResponse(
             id=assessment_id,
             child_id=request.child_id,
-            timestamp=datetime.now(__import__('datetime').timezone.utc),
+            timestamp=datetime.now(__import__("datetime").timezone.utc),
             risk_level=RiskLevel.MODERATE,
             risk_score=0.5,
             confidence=0.5,
@@ -350,7 +365,7 @@ async def get_child_assessment_history(
     """Get assessment history for a child."""
     from datetime import timedelta
 
-    since = datetime.now(__import__('datetime').timezone.utc) - timedelta(days=days)
+    since = datetime.now(__import__("datetime").timezone.utc) - timedelta(days=days)
 
     assessments = [
         AssessmentResponse(**stored["assessment"])

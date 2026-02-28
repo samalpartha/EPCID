@@ -14,6 +14,7 @@ from pydantic import BaseModel, EmailStr, Field, validator
 # Enums
 class RiskLevel(StrEnum):
     """Risk level classification."""
+
     LOW = "low"
     MODERATE = "moderate"
     HIGH = "high"
@@ -22,6 +23,7 @@ class RiskLevel(StrEnum):
 
 class SymptomSeverity(StrEnum):
     """Symptom severity levels."""
+
     MILD = "mild"
     MODERATE = "moderate"
     SEVERE = "severe"
@@ -29,6 +31,7 @@ class SymptomSeverity(StrEnum):
 
 class Gender(StrEnum):
     """Gender options."""
+
     MALE = "male"
     FEMALE = "female"
     OTHER = "other"
@@ -37,12 +40,14 @@ class Gender(StrEnum):
 # Authentication Schemas
 class Token(BaseModel):
     """JWT token model."""
+
     access_token: str
     token_type: str = "bearer"
 
 
 class TokenData(BaseModel):
     """Token payload data."""
+
     email: str | None = None
     user_id: str | None = None
     scopes: list[str] = []
@@ -50,17 +55,20 @@ class TokenData(BaseModel):
 
 class UserBase(BaseModel):
     """Base user model."""
+
     email: EmailStr
     full_name: str
 
 
 class UserCreate(UserBase):
     """User creation model."""
+
     password: str = Field(..., min_length=8)
 
 
 class UserResponse(BaseModel):
     """User response model."""
+
     id: str
     email: EmailStr
     full_name: str
@@ -75,6 +83,7 @@ class UserResponse(BaseModel):
 # Child Schemas
 class ChildBase(BaseModel):
     """Base child model."""
+
     name: str = Field(..., min_length=1, max_length=100)
     date_of_birth: datetime
     gender: Gender
@@ -88,6 +97,7 @@ class ChildBase(BaseModel):
 
 class ChildCreate(ChildBase):
     """Child creation model."""
+
     medical_conditions: list[str] = []
     allergies: list[str] = []
     medications: list[str] = []
@@ -95,6 +105,7 @@ class ChildCreate(ChildBase):
 
 class ChildUpdate(BaseModel):
     """Child update model."""
+
     name: str | None = None
     medical_conditions: list[str] | None = None
     allergies: list[str] | None = None
@@ -103,6 +114,7 @@ class ChildUpdate(BaseModel):
 
 class ChildResponse(ChildBase):
     """Child response model."""
+
     id: str
     age_months: int
     medical_conditions: list[str] = []
@@ -118,6 +130,7 @@ class ChildResponse(ChildBase):
 # Symptom Schemas
 class SymptomBase(BaseModel):
     """Base symptom model."""
+
     symptom_type: str = Field(..., description="Type of symptom (e.g., fever, cough)")
     severity: SymptomSeverity
     notes: str | None = None
@@ -125,6 +138,7 @@ class SymptomBase(BaseModel):
 
 class SymptomCreate(SymptomBase):
     """Symptom creation model."""
+
     child_id: str
     onset_time: datetime | None = None
     measurements: dict[str, Any] | None = Field(
@@ -139,17 +153,15 @@ class SymptomCreate(SymptomBase):
                 "symptom_type": "fever",
                 "severity": "moderate",
                 "onset_time": "2024-01-15T08:00:00Z",
-                "measurements": {
-                    "temperature": 101.5,
-                    "unit": "fahrenheit"
-                },
-                "notes": "Started this morning, seems uncomfortable"
+                "measurements": {"temperature": 101.5, "unit": "fahrenheit"},
+                "notes": "Started this morning, seems uncomfortable",
             }
         }
 
 
 class SymptomResponse(SymptomBase):
     """Symptom response model."""
+
     id: str
     child_id: str
     recorded_at: datetime
@@ -162,6 +174,7 @@ class SymptomResponse(SymptomBase):
 
 class SymptomHistory(BaseModel):
     """Symptom history response."""
+
     child_id: str
     symptoms: list[SymptomResponse]
     total_count: int
@@ -171,6 +184,7 @@ class SymptomHistory(BaseModel):
 # Assessment Schemas
 class AssessmentRequest(BaseModel):
     """Risk assessment request."""
+
     child_id: str
     symptoms: list[SymptomCreate]
     location: dict[str, float] | None = Field(
@@ -189,23 +203,20 @@ class AssessmentRequest(BaseModel):
                         "child_id": "child-001",
                         "symptom_type": "fever",
                         "severity": "moderate",
-                        "measurements": {"temperature": 102.0}
+                        "measurements": {"temperature": 102.0},
                     },
-                    {
-                        "child_id": "child-001",
-                        "symptom_type": "cough",
-                        "severity": "mild"
-                    }
+                    {"child_id": "child-001", "symptom_type": "cough", "severity": "mild"},
                 ],
                 "location": {"lat": 40.7128, "lng": -74.0060},
                 "include_guidelines": True,
-                "include_environmental": True
+                "include_environmental": True,
             }
         }
 
 
 class RiskFactor(BaseModel):
     """Individual risk factor."""
+
     name: str
     contribution: float = Field(..., ge=0, le=1)
     description: str
@@ -214,6 +225,7 @@ class RiskFactor(BaseModel):
 
 class AssessmentResponse(BaseModel):
     """Risk assessment response."""
+
     id: str
     child_id: str
     timestamp: datetime
@@ -257,13 +269,13 @@ class AssessmentResponse(BaseModel):
                         "name": "fever",
                         "contribution": 0.3,
                         "description": "Temperature of 102°F is elevated",
-                        "source": "symptom_input"
+                        "source": "symptom_input",
                     }
                 ],
                 "primary_recommendation": "Monitor symptoms closely",
                 "secondary_recommendations": [
                     "Ensure adequate hydration",
-                    "Check temperature every 4 hours"
+                    "Check temperature every 4 hours",
                 ],
                 "red_flags": [],
                 "warning_signs": ["Fever lasting more than 3 days"],
@@ -273,8 +285,8 @@ class AssessmentResponse(BaseModel):
                 "when_to_seek_care": "If fever exceeds 104°F or lasts more than 3 days",
                 "disclaimers": [
                     "This is not a medical diagnosis",
-                    "Consult a healthcare provider for medical advice"
-                ]
+                    "Consult a healthcare provider for medical advice",
+                ],
             }
         }
 
@@ -282,6 +294,7 @@ class AssessmentResponse(BaseModel):
 # Guideline Schemas
 class GuidelineRequest(BaseModel):
     """Guideline query request."""
+
     query: str = Field(..., description="Search query for guidelines")
     symptoms: list[str] | None = None
     age_months: int | None = None
@@ -290,6 +303,7 @@ class GuidelineRequest(BaseModel):
 
 class GuidelineSource(BaseModel):
     """Guideline source information."""
+
     name: str
     url: str | None
     organization: str
@@ -298,6 +312,7 @@ class GuidelineSource(BaseModel):
 
 class GuidelineResponse(BaseModel):
     """Guideline response."""
+
     id: str
     title: str
     content: str
@@ -310,6 +325,7 @@ class GuidelineResponse(BaseModel):
 
 class GuidelinesResponse(BaseModel):
     """Multiple guidelines response."""
+
     query: str
     results: list[GuidelineResponse]
     total_found: int
@@ -318,20 +334,17 @@ class GuidelinesResponse(BaseModel):
 # Environment Schemas
 class LocationRequest(BaseModel):
     """Location for environmental data."""
+
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
 
     class Config:
-        json_schema_extra = {
-            "example": {
-                "latitude": 40.7128,
-                "longitude": -74.0060
-            }
-        }
+        json_schema_extra = {"example": {"latitude": 40.7128, "longitude": -74.0060}}
 
 
 class AirQualityResponse(BaseModel):
     """Air quality data response."""
+
     aqi: int = Field(..., ge=0)
     category: str
     dominant_pollutant: str
@@ -345,6 +358,7 @@ class AirQualityResponse(BaseModel):
 
 class WeatherResponse(BaseModel):
     """Weather data response."""
+
     temperature: float
     feels_like: float
     humidity: int
@@ -359,6 +373,7 @@ class WeatherResponse(BaseModel):
 
 class EnvironmentResponse(BaseModel):
     """Combined environmental data."""
+
     air_quality: AirQualityResponse
     weather: WeatherResponse
     health_impact_summary: str
@@ -368,12 +383,14 @@ class EnvironmentResponse(BaseModel):
 # Generic Schemas
 class PaginationParams(BaseModel):
     """Pagination parameters."""
+
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)
 
 
 class PaginatedResponse(BaseModel):
     """Generic paginated response."""
+
     items: list[Any]
     total: int
     page: int
@@ -383,13 +400,17 @@ class PaginatedResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Error response model."""
+
     error: str
     message: str
     detail: str | None = None
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
 
 
 class SuccessResponse(BaseModel):
     """Generic success response."""
+
     message: str
     data: dict[str, Any] | None = None

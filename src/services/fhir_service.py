@@ -27,6 +27,7 @@ logger = logging.getLogger("epcid.services.fhir")
 @dataclass
 class FHIRPatient:
     """Patient resource from FHIR."""
+
     id: str
     name: str
     birth_date: str | None
@@ -46,6 +47,7 @@ class FHIRPatient:
 @dataclass
 class FHIRObservation:
     """Observation resource from FHIR."""
+
     id: str
     code: str
     display: str
@@ -68,6 +70,7 @@ class FHIRObservation:
 @dataclass
 class FHIRCondition:
     """Condition resource from FHIR."""
+
     id: str
     code: str
     display: str
@@ -87,6 +90,7 @@ class FHIRCondition:
 @dataclass
 class FHIRMedication:
     """MedicationRequest resource from FHIR."""
+
     id: str
     medication_code: str
     medication_display: str
@@ -106,6 +110,7 @@ class FHIRMedication:
 @dataclass
 class FHIRImmunization:
     """Immunization resource from FHIR."""
+
     id: str
     vaccine_code: str
     vaccine_display: str
@@ -423,7 +428,7 @@ class FHIRService:
             "conditions": [c.to_dict() for c in conditions],
             "medications": [m.to_dict() for m in medications],
             "immunizations": [i.to_dict() for i in immunizations],
-            "retrieved_at": datetime.now(__import__('datetime').timezone.utc).isoformat(),
+            "retrieved_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
         }
 
     async def _make_request(self, url: str) -> dict[str, Any] | None:
@@ -453,7 +458,7 @@ class FHIRService:
         if birth_date:
             try:
                 dob = datetime.fromisoformat(birth_date)
-                age_days = (datetime.now(__import__('datetime').timezone.utc) - dob).days
+                age_days = (datetime.now(__import__("datetime").timezone.utc) - dob).days
                 age_months = age_days // 30
             except Exception:
                 pass

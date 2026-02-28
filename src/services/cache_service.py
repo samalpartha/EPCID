@@ -101,12 +101,7 @@ class CacheService:
         # Fallback to memory cache
         return self._memory_cache.get(key)
 
-    def set(
-        self,
-        key: str,
-        value: Any,
-        ttl: int = TTL_MEDIUM
-    ) -> bool:
+    def set(self, key: str, value: Any, ttl: int = TTL_MEDIUM) -> bool:
         """
         Set value in cache with TTL.
 
@@ -196,10 +191,7 @@ class CacheService:
     # =========================================================================
 
     def check_rate_limit(
-        self,
-        identifier: str,
-        limit: int = 100,
-        window: int = 60
+        self, identifier: str, limit: int = 100, window: int = 60
     ) -> tuple[bool, int]:
         """
         Check if request is within rate limit.

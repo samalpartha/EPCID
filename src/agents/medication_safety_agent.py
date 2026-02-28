@@ -25,6 +25,7 @@ logger = logging.getLogger("epcid.agents.medication_safety")
 @dataclass
 class DrugInfo:
     """Information about a drug from FDA sources."""
+
     name: str
     brand_names: list[str]
     generic_name: str
@@ -38,6 +39,7 @@ class DrugInfo:
 @dataclass
 class AdverseEventMatch:
     """A match between a symptom and an adverse event report."""
+
     drug_name: str
     symptom: str
     report_percentage: float  # Percentage of reports mentioning this
@@ -186,6 +188,7 @@ class MedicationSafetyAgent(BaseAgent):
             AgentResponse with medication safety information
         """
         import uuid
+
         request_id = str(uuid.uuid4())[:12]
 
         medications = input_data.get("medications", [])
@@ -285,15 +288,17 @@ class MedicationSafetyAgent(BaseAgent):
                     event_lower = event_name.lower().replace("_", " ")
 
                     if symptom_lower == event_lower or event_lower in symptom_lower:
-                        matches.append(AdverseEventMatch(
-                            drug_name=drug.name,
-                            symptom=symptom,
-                            report_percentage=event["percentage"],
-                            total_reports=1000,  # Would come from FDA data
-                            severity=event["severity"],
-                            source="OpenFDA",
-                            caveat=self.CAVEATS["reporting_basis"],
-                        ))
+                        matches.append(
+                            AdverseEventMatch(
+                                drug_name=drug.name,
+                                symptom=symptom,
+                                report_percentage=event["percentage"],
+                                total_reports=1000,  # Would come from FDA data
+                                severity=event["severity"],
+                                source="OpenFDA",
+                                caveat=self.CAVEATS["reporting_basis"],
+                            )
+                        )
 
         return matches
 
@@ -332,9 +337,7 @@ class MedicationSafetyAgent(BaseAgent):
         for drug in drugs:
             for interaction in drug.interactions:
                 if interaction.lower() in drug_names:
-                    interactions.append(
-                        f"Potential interaction: {drug.name} and {interaction}"
-                    )
+                    interactions.append(f"Potential interaction: {drug.name} and {interaction}")
 
         return interactions
 

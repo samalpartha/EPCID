@@ -17,8 +17,10 @@ router = APIRouter(prefix="/care-advice", tags=["Care Advice"])
 
 # ============== Schemas ==============
 
+
 class CareGuide(BaseModel):
     """Care guide for a specific condition."""
+
     id: str
     title: str
     summary: str
@@ -31,6 +33,7 @@ class CareGuide(BaseModel):
 
 class CareGuideListItem(BaseModel):
     """Summary item for listing care guides."""
+
     id: str
     title: str
     summary: str
@@ -38,18 +41,21 @@ class CareGuideListItem(BaseModel):
 
 class CareGuidesResponse(BaseModel):
     """Response with list of available care guides."""
+
     guides: list[CareGuideListItem]
     total: int
 
 
 class EmergencySignsResponse(BaseModel):
     """Emergency warning signs response."""
+
     title: str
     always_call_911: list[str]
     infants_under_3_months: list[str]
 
 
 # ============== Load Care Guides Data ==============
+
 
 def load_care_guides() -> dict[str, Any]:
     """Load care guides from JSON file."""
@@ -61,14 +67,12 @@ def load_care_guides() -> dict[str, Any]:
         # Return default data if file not found
         return {
             "guides": {},
-            "emergency_signs": {
-                "always_call_911": [],
-                "infants_under_3_months": []
-            }
+            "emergency_signs": {"always_call_911": [], "infants_under_3_months": []},
         }
 
 
 # ============== Endpoints ==============
+
 
 @router.get("/", response_model=CareGuidesResponse)
 async def list_care_guides():
@@ -128,7 +132,7 @@ async def get_care_guide(condition_id: str):
     if not guide:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Care guide not found for condition: {condition_id}"
+            detail=f"Care guide not found for condition: {condition_id}",
         )
 
     return CareGuide(

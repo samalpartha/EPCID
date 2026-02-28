@@ -25,6 +25,7 @@ logger = logging.getLogger("epcid.agents.escalation")
 
 class EscalationType(Enum):
     """Types of escalation actions."""
+
     EMERGENCY_911 = "emergency_911"
     EMERGENCY_ROOM = "emergency_room"
     URGENT_CARE = "urgent_care"
@@ -35,6 +36,7 @@ class EscalationType(Enum):
 
 class NotificationChannel(Enum):
     """Notification channels."""
+
     SMS = "sms"
     EMAIL = "email"
     PUSH = "push"
@@ -44,6 +46,7 @@ class NotificationChannel(Enum):
 @dataclass
 class EscalationPath:
     """An escalation path with actions and timeline."""
+
     escalation_type: EscalationType
     urgency: str  # immediate, urgent, soon, routine
     primary_action: str
@@ -56,18 +59,22 @@ class EscalationPath:
 @dataclass
 class VisitPacket:
     """Prepared packet for healthcare visit."""
+
     summary: str
     symptoms_timeline: list[dict[str, Any]]
     vital_signs: dict[str, Any]
     medications: list[str]
     questions_for_provider: list[str]
     attachments: list[dict[str, str]]
-    generated_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    generated_at: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
 
 
 @dataclass
 class Reminder:
     """A reminder for follow-up actions."""
+
     id: str
     title: str
     description: str
@@ -183,6 +190,7 @@ class EscalationAgent(BaseAgent):
             AgentResponse with escalation path and materials
         """
         import uuid
+
         request_id = str(uuid.uuid4())[:12]
 
         # Extract data
@@ -260,21 +268,25 @@ class EscalationAgent(BaseAgent):
         # Build symptoms timeline
         symptoms_timeline = []
         for symptom in symptoms:
-            symptoms_timeline.append({
-                "symptom": symptom,
-                "noted_at": datetime.now(__import__('datetime').timezone.utc).isoformat(),
-                "severity": "reported",
-            })
+            symptoms_timeline.append(
+                {
+                    "symptom": symptom,
+                    "noted_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
+                    "severity": "reported",
+                }
+            )
 
         # Add historical symptoms from context
         if context and "observation_history" in context:
             for obs in context["observation_history"][-5:]:
                 for s in obs.get("symptoms", []):
-                    symptoms_timeline.append({
-                        "symptom": s,
-                        "noted_at": obs.get("timestamp", ""),
-                        "severity": "historical",
-                    })
+                    symptoms_timeline.append(
+                        {
+                            "symptom": s,
+                            "noted_at": obs.get("timestamp", ""),
+                            "severity": "historical",
+                        }
+                    )
 
         # Generate questions for provider
         questions = self._generate_provider_questions(symptoms, vitals)
@@ -353,52 +365,60 @@ class EscalationAgent(BaseAgent):
     ) -> list[Reminder]:
         """Generate follow-up reminders."""
         reminders = []
-        now = datetime.now(__import__('datetime').timezone.utc)
+        now = datetime.now(__import__("datetime").timezone.utc)
 
         if path.urgency == "immediate":
             # No reminders for emergencies
             return []
 
         if path.urgency == "urgent":
-            reminders.append(Reminder(
-                id="remind_1",
-                title="Check on symptoms",
-                description="Re-evaluate symptoms and decide if urgent care is needed",
-                due_at=now + timedelta(hours=2),
-                priority="high",
-                channels=[NotificationChannel.PUSH, NotificationChannel.SMS],
-            ))
+            reminders.append(
+                Reminder(
+                    id="remind_1",
+                    title="Check on symptoms",
+                    description="Re-evaluate symptoms and decide if urgent care is needed",
+                    due_at=now + timedelta(hours=2),
+                    priority="high",
+                    channels=[NotificationChannel.PUSH, NotificationChannel.SMS],
+                )
+            )
 
         if path.urgency in ["urgent", "soon"]:
-            reminders.append(Reminder(
-                id="remind_2",
-                title="Follow up with pediatrician",
-                description="Call or schedule appointment with pediatrician",
-                due_at=now + timedelta(hours=24),
-                priority="medium",
-                channels=[NotificationChannel.PUSH],
-            ))
+            reminders.append(
+                Reminder(
+                    id="remind_2",
+                    title="Follow up with pediatrician",
+                    description="Call or schedule appointment with pediatrician",
+                    due_at=now + timedelta(hours=24),
+                    priority="medium",
+                    channels=[NotificationChannel.PUSH],
+                )
+            )
 
         # Symptom check reminders
-        reminders.append(Reminder(
-            id="remind_3",
-            title="Log symptoms",
-            description="Record current symptoms and any changes",
-            due_at=now + timedelta(hours=6),
-            priority="medium",
-            channels=[NotificationChannel.PUSH],
-        ))
+        reminders.append(
+            Reminder(
+                id="remind_3",
+                title="Log symptoms",
+                description="Record current symptoms and any changes",
+                due_at=now + timedelta(hours=6),
+                priority="medium",
+                channels=[NotificationChannel.PUSH],
+            )
+        )
 
         # Temperature check for fever
         if risk_tier in [RISK_HIGH, RISK_MODERATE]:
-            reminders.append(Reminder(
-                id="remind_temp",
-                title="Check temperature",
-                description="Take and record temperature",
-                due_at=now + timedelta(hours=4),
-                priority="medium",
-                channels=[NotificationChannel.PUSH],
-            ))
+            reminders.append(
+                Reminder(
+                    id="remind_temp",
+                    title="Check temperature",
+                    description="Take and record temperature",
+                    due_at=now + timedelta(hours=4),
+                    priority="medium",
+                    channels=[NotificationChannel.PUSH],
+                )
+            )
 
         return reminders
 
@@ -411,21 +431,25 @@ class EscalationAgent(BaseAgent):
         checklist = []
 
         # Primary action
-        checklist.append({
-            "item": path.primary_action,
-            "priority": "high",
-            "category": "action",
-            "completed": False,
-        })
+        checklist.append(
+            {
+                "item": path.primary_action,
+                "priority": "high",
+                "category": "action",
+                "completed": False,
+            }
+        )
 
         # Preparation steps
         for step in path.preparation_steps:
-            checklist.append({
-                "item": step,
-                "priority": "medium",
-                "category": "preparation",
-                "completed": False,
-            })
+            checklist.append(
+                {
+                    "item": step,
+                    "priority": "medium",
+                    "category": "preparation",
+                    "completed": False,
+                }
+            )
 
         # Monitoring tasks
         monitoring_tasks = [
@@ -436,12 +460,14 @@ class EscalationAgent(BaseAgent):
         ]
 
         for task in monitoring_tasks[:3]:
-            checklist.append({
-                "item": task,
-                "priority": "medium",
-                "category": "monitoring",
-                "completed": False,
-            })
+            checklist.append(
+                {
+                    "item": task,
+                    "priority": "medium",
+                    "category": "monitoring",
+                    "completed": False,
+                }
+            )
 
         return checklist
 
@@ -450,23 +476,27 @@ class EscalationAgent(BaseAgent):
         criteria = []
 
         # Universal criteria
-        criteria.extend([
-            "Difficulty breathing or rapid breathing",
-            "Blue color around lips or fingernails",
-            "Unable to wake child or unusually difficult to arouse",
-            "Severe or worsening headache with stiff neck",
-            "Seizure",
-        ])
+        criteria.extend(
+            [
+                "Difficulty breathing or rapid breathing",
+                "Blue color around lips or fingernails",
+                "Unable to wake child or unusually difficult to arouse",
+                "Severe or worsening headache with stiff neck",
+                "Seizure",
+            ]
+        )
 
         # Risk-tier specific
         if risk_tier in [RISK_MODERATE, RISK_LOW]:
-            criteria.extend([
-                "Fever persists more than 3 days",
-                "Unable to keep any fluids down for 8+ hours",
-                "No wet diapers for 8+ hours (or no urination)",
-                "Rash that doesn't fade when pressed (petechiae)",
-                "Child appears much sicker than expected",
-            ])
+            criteria.extend(
+                [
+                    "Fever persists more than 3 days",
+                    "Unable to keep any fluids down for 8+ hours",
+                    "No wet diapers for 8+ hours (or no urination)",
+                    "Rash that doesn't fade when pressed (petechiae)",
+                    "Child appears much sicker than expected",
+                ]
+            )
 
         return criteria
 
@@ -522,8 +552,10 @@ class EscalationAgent(BaseAgent):
 
         # Disclaimer
         lines.append("\n---")
-        lines.append("*This guidance is not a substitute for professional medical advice. "
-                    "When in doubt, seek medical evaluation.*")
+        lines.append(
+            "*This guidance is not a substitute for professional medical advice. "
+            "When in doubt, seek medical evaluation.*"
+        )
 
         return "\n".join(lines)
 
@@ -565,8 +597,10 @@ class EscalationAgent(BaseAgent):
         lines.append(f"**Timeline:** {path.timeline}")
 
         lines.append("\n### Rationale")
-        lines.append(f"Based on the {risk_tier} risk assessment, the recommended "
-                    f"course of action is to {path.primary_action.lower()}.")
+        lines.append(
+            f"Based on the {risk_tier} risk assessment, the recommended "
+            f"course of action is to {path.primary_action.lower()}."
+        )
 
         if path.urgency == "immediate":
             lines.append("\n⚠️ **This situation requires immediate emergency response.**")

@@ -93,19 +93,23 @@ Authorization: Bearer <your_token>
     # In production, these should be set via environment variables
     import os
 
-    allowed_origins = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [
-        "http://localhost:3000",
-        "http://localhost:3002",
-        "http://localhost:3008",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3002",
-        "http://127.0.0.1:3008",
-        "https://epcid.app",
-        "https://www.epcid.app",
-        "https://*.vercel.app",
-        "https://epcid-frontend-365415503294.us-central1.run.app",
-        "https://epcid-frontend-lqgrtavcha-uc.a.run.app",
-    ]
+    allowed_origins = (
+        os.getenv("CORS_ORIGINS", "").split(",")
+        if os.getenv("CORS_ORIGINS")
+        else [
+            "http://localhost:3000",
+            "http://localhost:3002",
+            "http://localhost:3008",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3002",
+            "http://127.0.0.1:3008",
+            "https://epcid.app",
+            "https://www.epcid.app",
+            "https://*.vercel.app",
+            "https://epcid-frontend-365415503294.us-central1.run.app",
+            "https://epcid-frontend-lqgrtavcha-uc.a.run.app",
+        ]
+    )
 
     # Filter out empty strings
     allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
@@ -169,7 +173,7 @@ Authorization: Bearer <your_token>
                 "path": request.url.path,
                 "status_code": response.status_code,
                 "duration_ms": duration_ms,
-            }
+            },
         )
 
         # Record metrics
@@ -381,4 +385,5 @@ app.openapi = custom_openapi
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8081)

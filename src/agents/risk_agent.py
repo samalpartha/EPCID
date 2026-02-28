@@ -36,6 +36,7 @@ try:
         SkinPerfusion,
     )
     from ..clinical.vital_signs import VitalSignNormalizer
+
     CLINICAL_SCORING_AVAILABLE = True
 except ImportError:
     CLINICAL_SCORING_AVAILABLE = False
@@ -45,14 +46,16 @@ logger = logging.getLogger("epcid.agents.risk")
 
 class RuleType(Enum):
     """Types of risk rules."""
-    SAFETY = "safety"       # Hard override rules
-    CLINICAL = "clinical"   # Clinical guideline rules
-    HEURISTIC = "heuristic" # Experience-based rules
+
+    SAFETY = "safety"  # Hard override rules
+    CLINICAL = "clinical"  # Clinical guideline rules
+    HEURISTIC = "heuristic"  # Experience-based rules
 
 
 @dataclass
 class RiskRule:
     """A risk assessment rule."""
+
     id: str
     name: str
     rule_type: RuleType
@@ -73,6 +76,7 @@ class RiskRule:
 @dataclass
 class RiskScore:
     """Risk score from a single model or rule set."""
+
     source: str  # "rules", "ml_tabular", "ml_temporal", etc.
     score: float  # 0-1
     risk_tier: str
@@ -146,6 +150,7 @@ class RiskAgent(BaseAgent):
             AgentResponse with risk tier and explanation
         """
         import uuid
+
         request_id = str(uuid.uuid4())[:12]
 
         # Merge input with context
@@ -346,7 +351,9 @@ class RiskAgent(BaseAgent):
                     result["contributing_factors"].append(
                         f"Phoenix Septic Shock Criteria met (Score: {phoenix_score.total_score})"
                     )
-                    result["recommendations"].append("URGENT: Septic shock - immediate intervention required")
+                    result["recommendations"].append(
+                        "URGENT: Septic shock - immediate intervention required"
+                    )
                 elif phoenix_score.meets_sepsis_criteria:
                     result["risk_level"] = "high"
                     result["contributing_factors"].append(
@@ -462,9 +469,7 @@ class RiskAgent(BaseAgent):
                     capillary_refill_seconds=physical_exam.get("capillary_refill_seconds"),
                     skin_perfusion=skin_perfusion,
                     has_fever=vitals.get("temperature", 37) >= 38.0,
-                    has_tachycardia=self._has_tachycardia(
-                        vitals.get("heart_rate"), age_months
-                    ),
+                    has_tachycardia=self._has_tachycardia(vitals.get("heart_rate"), age_months),
                 )
 
                 result["physical_exam_signs_count"] = exam_assessment.signs_present_count
@@ -487,9 +492,7 @@ class RiskAgent(BaseAgent):
                 elif exam_assessment.signs_present_count == 1:
                     if result["risk_level"] not in ["critical", "high"]:
                         result["risk_level"] = "moderate"
-                    result["contributing_factors"].append(
-                        "Physical exam: 1 sign present (RR 2.71)"
-                    )
+                    result["contributing_factors"].append("Physical exam: 1 sign present (RR 2.71)")
 
             except Exception as e:
                 logger.error(f"Physical exam assessment error: {e}")
@@ -499,9 +502,14 @@ class RiskAgent(BaseAgent):
     def _is_vasoactive(self, medication: str) -> bool:
         """Check if a medication is a vasoactive agent."""
         vasoactives = {
-            "dobutamine", "dopamine", "epinephrine",
-            "milrinone", "norepinephrine", "vasopressin",
-            "phenylephrine", "levophed"
+            "dobutamine",
+            "dopamine",
+            "epinephrine",
+            "milrinone",
+            "norepinephrine",
+            "vasopressin",
+            "phenylephrine",
+            "levophed",
         }
         return any(v in medication.lower() for v in vasoactives)
 
@@ -549,7 +557,9 @@ class RiskAgent(BaseAgent):
             explanation_parts.append(
                 f"\n### Physical Exam: {clinical_result['physical_exam_signs_count']} warning signs"
             )
-            explanation_parts.append(f"Relative Risk for Organ Dysfunction: {clinical_result['physical_exam_rr']:.1f}")
+            explanation_parts.append(
+                f"Relative Risk for Organ Dysfunction: {clinical_result['physical_exam_rr']:.1f}"
+            )
 
         explanation_parts.append("\n### Contributing Factors")
         for factor in clinical_result.get("contributing_factors", []):
@@ -601,7 +611,9 @@ class RiskAgent(BaseAgent):
                     messages.append(message)
 
                 # Track highest risk
-                if max_risk is None or self._risk_priority(rule.risk_tier) < self._risk_priority(max_risk):
+                if max_risk is None or self._risk_priority(rule.risk_tier) < self._risk_priority(
+                    max_risk
+                ):
                     max_risk = rule.risk_tier
 
         return {
@@ -652,14 +664,16 @@ class RiskAgent(BaseAgent):
         else:
             tier = RISK_LOW
 
-        scores.append(RiskScore(
-            source="clinical_rules",
-            score=score,
-            risk_tier=tier,
-            confidence=0.85,
-            explanation=f"Clinical rules: {len(triggered_rules)} triggered",
-            contributing_factors=risk_factors[:5],
-        ))
+        scores.append(
+            RiskScore(
+                source="clinical_rules",
+                score=score,
+                risk_tier=tier,
+                confidence=0.85,
+                explanation=f"Clinical rules: {len(triggered_rules)} triggered",
+                contributing_factors=risk_factors[:5],
+            )
+        )
 
         return scores
 
@@ -878,7 +892,9 @@ class RiskAgent(BaseAgent):
         confidences = [s.confidence for s in all_scores]
         if clinical_scoring_result:
             # Clinical scoring confidence based on data completeness
-            clinical_confidence = 0.85 if clinical_scoring_result.get("phoenix_total", 0) > 0 else 0.7
+            clinical_confidence = (
+                0.85 if clinical_scoring_result.get("phoenix_total", 0) > 0 else 0.7
+            )
             confidences.append(clinical_confidence)
 
         avg_confidence = sum(confidences) / len(confidences) if confidences else 0.5
@@ -1185,15 +1201,17 @@ Please seek medical evaluation immediately.
                 return True, f"Critical symptom: {', '.join(found)}"
             return False, None
 
-        rules.append(RiskRule(
-            id="SAFETY_CRITICAL_SYMPTOM",
-            name="Critical Symptom",
-            rule_type=RuleType.SAFETY,
-            description="Critical symptoms requiring immediate attention",
-            condition=check_critical_symptoms,
-            risk_tier=RISK_CRITICAL,
-            priority=1,
-        ))
+        rules.append(
+            RiskRule(
+                id="SAFETY_CRITICAL_SYMPTOM",
+                name="Critical Symptom",
+                rule_type=RuleType.SAFETY,
+                description="Critical symptoms requiring immediate attention",
+                condition=check_critical_symptoms,
+                risk_tier=RISK_CRITICAL,
+                priority=1,
+            )
+        )
 
         # Infant fever (<3 months with ANY fever)
         def check_infant_fever(ctx):
@@ -1203,35 +1221,45 @@ Please seek medical evaluation immediately.
                 return True, f"Fever ({temp}°C) in infant <3 months - requires immediate evaluation"
             return False, None
 
-        rules.append(RiskRule(
-            id="SAFETY_INFANT_FEVER",
-            name="Infant Fever",
-            rule_type=RuleType.SAFETY,
-            description="Fever in infant under 3 months",
-            condition=check_infant_fever,
-            risk_tier=RISK_CRITICAL,
-            priority=2,
-        ))
+        rules.append(
+            RiskRule(
+                id="SAFETY_INFANT_FEVER",
+                name="Infant Fever",
+                rule_type=RuleType.SAFETY,
+                description="Fever in infant under 3 months",
+                condition=check_infant_fever,
+                risk_tier=RISK_CRITICAL,
+                priority=2,
+            )
+        )
 
         # Severe respiratory distress
         def check_respiratory_distress(ctx):
             symptoms = ctx.get("symptoms", [])
             spo2 = ctx.get("vitals", {}).get("oxygen_saturation", 100)
 
-            severe_resp = ["severe_difficulty_breathing", "stridor", "apnea", "grunting", "head_bobbing"]
+            severe_resp = [
+                "severe_difficulty_breathing",
+                "stridor",
+                "apnea",
+                "grunting",
+                "head_bobbing",
+            ]
             if any(s in symptoms for s in severe_resp) or spo2 < 92:
                 return True, "Severe respiratory distress or hypoxia (SpO2 <92%)"
             return False, None
 
-        rules.append(RiskRule(
-            id="SAFETY_RESPIRATORY",
-            name="Respiratory Distress",
-            rule_type=RuleType.SAFETY,
-            description="Severe respiratory distress",
-            condition=check_respiratory_distress,
-            risk_tier=RISK_CRITICAL,
-            priority=3,
-        ))
+        rules.append(
+            RiskRule(
+                id="SAFETY_RESPIRATORY",
+                name="Respiratory Distress",
+                rule_type=RuleType.SAFETY,
+                description="Severe respiratory distress",
+                condition=check_respiratory_distress,
+                risk_tier=RISK_CRITICAL,
+                priority=3,
+            )
+        )
 
         # Shock signs (based on physical exam research)
         def check_shock_signs(ctx):
@@ -1272,15 +1300,17 @@ Please seek medical evaluation immediately.
                 return True, f"Multiple shock signs: {', '.join(details)}"
             return False, None
 
-        rules.append(RiskRule(
-            id="SAFETY_SHOCK_SIGNS",
-            name="Shock Signs",
-            rule_type=RuleType.SAFETY,
-            description="Multiple signs of shock/poor perfusion",
-            condition=check_shock_signs,
-            risk_tier=RISK_CRITICAL,
-            priority=4,
-        ))
+        rules.append(
+            RiskRule(
+                id="SAFETY_SHOCK_SIGNS",
+                name="Shock Signs",
+                rule_type=RuleType.SAFETY,
+                description="Multiple signs of shock/poor perfusion",
+                condition=check_shock_signs,
+                risk_tier=RISK_CRITICAL,
+                priority=4,
+            )
+        )
 
         # Severe dehydration
         def check_severe_dehydration(ctx):
@@ -1298,15 +1328,17 @@ Please seek medical evaluation immediately.
                 return True, f"Severe dehydration ({count} signs present)"
             return False, None
 
-        rules.append(RiskRule(
-            id="SAFETY_SEVERE_DEHYDRATION",
-            name="Severe Dehydration",
-            rule_type=RuleType.SAFETY,
-            description="Signs of severe dehydration",
-            condition=check_severe_dehydration,
-            risk_tier=RISK_CRITICAL,
-            priority=5,
-        ))
+        rules.append(
+            RiskRule(
+                id="SAFETY_SEVERE_DEHYDRATION",
+                name="Severe Dehydration",
+                rule_type=RuleType.SAFETY,
+                description="Signs of severe dehydration",
+                condition=check_severe_dehydration,
+                risk_tier=RISK_CRITICAL,
+                priority=5,
+            )
+        )
 
         # ===== CLINICAL RULES =====
 
@@ -1317,15 +1349,17 @@ Please seek medical evaluation immediately.
                 return True, f"Very high fever: {temp}°C"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_HIGH_FEVER",
-            name="High Fever",
-            rule_type=RuleType.CLINICAL,
-            description="Temperature ≥40°C",
-            condition=check_high_fever,
-            risk_tier=RISK_HIGH,
-            priority=10,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_HIGH_FEVER",
+                name="High Fever",
+                rule_type=RuleType.CLINICAL,
+                description="Temperature ≥40°C",
+                condition=check_high_fever,
+                risk_tier=RISK_HIGH,
+                priority=10,
+            )
+        )
 
         # Prolonged fever
         def check_prolonged_fever(ctx):
@@ -1335,15 +1369,17 @@ Please seek medical evaluation immediately.
                 return True, "Fever persisting >72 hours"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_PROLONGED_FEVER",
-            name="Prolonged Fever",
-            rule_type=RuleType.CLINICAL,
-            description="Fever >72 hours",
-            condition=check_prolonged_fever,
-            risk_tier=RISK_MODERATE,
-            priority=15,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_PROLONGED_FEVER",
+                name="Prolonged Fever",
+                rule_type=RuleType.CLINICAL,
+                description="Fever >72 hours",
+                condition=check_prolonged_fever,
+                risk_tier=RISK_MODERATE,
+                priority=15,
+            )
+        )
 
         # Fever in 3-6 month infant (elevated concern but not critical)
         def check_young_infant_fever(ctx):
@@ -1353,15 +1389,17 @@ Please seek medical evaluation immediately.
                 return True, f"Fever ({temp}°C) in infant 3-6 months"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_YOUNG_INFANT_FEVER",
-            name="Young Infant Fever",
-            rule_type=RuleType.CLINICAL,
-            description="Fever in 3-6 month infant",
-            condition=check_young_infant_fever,
-            risk_tier=RISK_HIGH,
-            priority=11,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_YOUNG_INFANT_FEVER",
+                name="Young Infant Fever",
+                rule_type=RuleType.CLINICAL,
+                description="Fever in 3-6 month infant",
+                condition=check_young_infant_fever,
+                risk_tier=RISK_HIGH,
+                priority=11,
+            )
+        )
 
         # Dehydration signs
         def check_dehydration(ctx):
@@ -1372,15 +1410,17 @@ Please seek medical evaluation immediately.
                 return True, f"Multiple dehydration signs ({count})"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_DEHYDRATION",
-            name="Dehydration",
-            rule_type=RuleType.CLINICAL,
-            description="Signs of dehydration",
-            condition=check_dehydration,
-            risk_tier=RISK_MODERATE,
-            priority=12,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_DEHYDRATION",
+                name="Dehydration",
+                rule_type=RuleType.CLINICAL,
+                description="Signs of dehydration",
+                condition=check_dehydration,
+                risk_tier=RISK_MODERATE,
+                priority=12,
+            )
+        )
 
         # Young age with illness
         def check_young_age(ctx):
@@ -1390,15 +1430,17 @@ Please seek medical evaluation immediately.
                 return True, "Infant <6 months with multiple symptoms"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_YOUNG_AGE",
-            name="Young Age Risk",
-            rule_type=RuleType.CLINICAL,
-            description="Young infant with illness",
-            condition=check_young_age,
-            risk_tier=RISK_MODERATE,
-            priority=14,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_YOUNG_AGE",
+                name="Young Age Risk",
+                rule_type=RuleType.CLINICAL,
+                description="Young infant with illness",
+                condition=check_young_age,
+                risk_tier=RISK_MODERATE,
+                priority=14,
+            )
+        )
 
         # Multiple symptoms
         def check_symptom_count(ctx):
@@ -1407,15 +1449,17 @@ Please seek medical evaluation immediately.
                 return True, f"Multiple symptoms ({len(symptoms)})"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_SYMPTOM_COUNT",
-            name="Symptom Count",
-            rule_type=RuleType.CLINICAL,
-            description="Multiple concurrent symptoms",
-            condition=check_symptom_count,
-            risk_tier=RISK_MODERATE,
-            priority=16,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_SYMPTOM_COUNT",
+                name="Symptom Count",
+                rule_type=RuleType.CLINICAL,
+                description="Multiple concurrent symptoms",
+                condition=check_symptom_count,
+                risk_tier=RISK_MODERATE,
+                priority=16,
+            )
+        )
 
         # Tachycardia (age-adjusted)
         def check_tachycardia(ctx):
@@ -1425,15 +1469,17 @@ Please seek medical evaluation immediately.
                 return True, f"Tachycardia (HR {hr}) for age"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_TACHYCARDIA",
-            name="Tachycardia",
-            rule_type=RuleType.CLINICAL,
-            description="Age-adjusted tachycardia",
-            condition=check_tachycardia,
-            risk_tier=RISK_MODERATE,
-            priority=17,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_TACHYCARDIA",
+                name="Tachycardia",
+                rule_type=RuleType.CLINICAL,
+                description="Age-adjusted tachycardia",
+                condition=check_tachycardia,
+                risk_tier=RISK_MODERATE,
+                priority=17,
+            )
+        )
 
         # Respiratory distress (moderate)
         def check_moderate_respiratory(ctx):
@@ -1448,15 +1494,17 @@ Please seek medical evaluation immediately.
                 return True, "Moderate respiratory distress"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_MODERATE_RESPIRATORY",
-            name="Moderate Respiratory Distress",
-            rule_type=RuleType.CLINICAL,
-            description="Signs of moderate respiratory distress",
-            condition=check_moderate_respiratory,
-            risk_tier=RISK_MODERATE,
-            priority=13,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_MODERATE_RESPIRATORY",
+                name="Moderate Respiratory Distress",
+                rule_type=RuleType.CLINICAL,
+                description="Signs of moderate respiratory distress",
+                condition=check_moderate_respiratory,
+                risk_tier=RISK_MODERATE,
+                priority=13,
+            )
+        )
 
         # Petechial or purpuric rash with fever (concern for meningococcemia)
         def check_petechial_rash(ctx):
@@ -1467,18 +1515,23 @@ Please seek medical evaluation immediately.
             has_rash = any(s in symptoms for s in rash_signs)
 
             if has_rash and temp >= 38.0:
-                return True, "Petechial/purpuric rash with fever - concern for serious bacterial infection"
+                return (
+                    True,
+                    "Petechial/purpuric rash with fever - concern for serious bacterial infection",
+                )
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_PETECHIAL_RASH",
-            name="Petechial Rash with Fever",
-            rule_type=RuleType.CLINICAL,
-            description="Non-blanching rash with fever",
-            condition=check_petechial_rash,
-            risk_tier=RISK_HIGH,
-            priority=9,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_PETECHIAL_RASH",
+                name="Petechial Rash with Fever",
+                rule_type=RuleType.CLINICAL,
+                description="Non-blanching rash with fever",
+                condition=check_petechial_rash,
+                risk_tier=RISK_HIGH,
+                priority=9,
+            )
+        )
 
         # Neck stiffness with fever (concern for meningitis)
         def check_meningeal_signs(ctx):
@@ -1492,15 +1545,17 @@ Please seek medical evaluation immediately.
                 return True, "Meningeal signs with fever - concern for meningitis"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_MENINGEAL_SIGNS",
-            name="Meningeal Signs",
-            rule_type=RuleType.CLINICAL,
-            description="Signs of possible meningitis",
-            condition=check_meningeal_signs,
-            risk_tier=RISK_HIGH,
-            priority=8,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_MENINGEAL_SIGNS",
+                name="Meningeal Signs",
+                rule_type=RuleType.CLINICAL,
+                description="Signs of possible meningitis",
+                condition=check_meningeal_signs,
+                risk_tier=RISK_HIGH,
+                priority=8,
+            )
+        )
 
         # Single physical exam warning sign (RR 2.71)
         def check_single_exam_sign(ctx):
@@ -1534,14 +1589,16 @@ Please seek medical evaluation immediately.
                 return True, "Physical exam warning sign present (RR 2.71 for organ dysfunction)"
             return False, None
 
-        rules.append(RiskRule(
-            id="CLINICAL_SINGLE_EXAM_SIGN",
-            name="Single Physical Exam Sign",
-            rule_type=RuleType.CLINICAL,
-            description="One physical exam warning sign (validated)",
-            condition=check_single_exam_sign,
-            risk_tier=RISK_MODERATE,
-            priority=18,
-        ))
+        rules.append(
+            RiskRule(
+                id="CLINICAL_SINGLE_EXAM_SIGN",
+                name="Single Physical Exam Sign",
+                rule_type=RuleType.CLINICAL,
+                description="One physical exam warning sign (validated)",
+                condition=check_single_exam_sign,
+                risk_tier=RISK_MODERATE,
+                priority=18,
+            )
+        )
 
         return rules

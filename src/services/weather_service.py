@@ -25,6 +25,7 @@ logger = logging.getLogger("epcid.services.weather")
 @dataclass
 class WeatherConditions:
     """Current weather conditions."""
+
     temperature_f: float
     feels_like_f: float
     humidity_percent: int
@@ -55,6 +56,7 @@ class WeatherConditions:
 @dataclass
 class WeatherAlert:
     """A weather alert/warning."""
+
     event: str
     severity: str
     headline: str
@@ -75,6 +77,7 @@ class WeatherAlert:
 @dataclass
 class WeatherForecast:
     """Weather forecast for a specific time period."""
+
     date: str
     high_f: float
     low_f: float
@@ -252,31 +255,45 @@ class WeatherService:
         # Temperature-based recommendations
         if weather.temperature_f >= 90:
             guidance["overall_risk"] = "high"
-            guidance["recommendations"].extend([
-                "Keep children indoors during peak heat (10am-4pm)",
-                "Ensure frequent hydration",
-                "Watch for signs of heat exhaustion",
-            ])
-            guidance["symptoms_to_watch"].extend([
-                "Excessive sweating or lack of sweating",
-                "Headache", "Dizziness", "Nausea",
-            ])
+            guidance["recommendations"].extend(
+                [
+                    "Keep children indoors during peak heat (10am-4pm)",
+                    "Ensure frequent hydration",
+                    "Watch for signs of heat exhaustion",
+                ]
+            )
+            guidance["symptoms_to_watch"].extend(
+                [
+                    "Excessive sweating or lack of sweating",
+                    "Headache",
+                    "Dizziness",
+                    "Nausea",
+                ]
+            )
         elif weather.temperature_f >= 85:
             guidance["overall_risk"] = "moderate"
-            guidance["recommendations"].extend([
-                "Limit strenuous outdoor activity",
-                "Encourage water breaks every 15-20 minutes",
-            ])
+            guidance["recommendations"].extend(
+                [
+                    "Limit strenuous outdoor activity",
+                    "Encourage water breaks every 15-20 minutes",
+                ]
+            )
         elif weather.temperature_f <= 32:
             guidance["overall_risk"] = "high"
-            guidance["recommendations"].extend([
-                "Dress in warm layers",
-                "Limit outdoor exposure",
-                "Watch for signs of hypothermia",
-            ])
-            guidance["symptoms_to_watch"].extend([
-                "Shivering", "Confusion", "Slurred speech",
-            ])
+            guidance["recommendations"].extend(
+                [
+                    "Dress in warm layers",
+                    "Limit outdoor exposure",
+                    "Watch for signs of hypothermia",
+                ]
+            )
+            guidance["symptoms_to_watch"].extend(
+                [
+                    "Shivering",
+                    "Confusion",
+                    "Slurred speech",
+                ]
+            )
 
         # Humidity considerations
         if weather.humidity_percent > 80:
@@ -290,11 +307,13 @@ class WeatherService:
 
         # UV considerations
         if weather.uv_index and weather.uv_index >= 8:
-            guidance["recommendations"].extend([
-                f"High UV index ({weather.uv_index}) - apply sunscreen",
-                "Wear protective clothing and hat",
-                "Seek shade during midday hours",
-            ])
+            guidance["recommendations"].extend(
+                [
+                    f"High UV index ({weather.uv_index}) - apply sunscreen",
+                    "Wear protective clothing and hat",
+                    "Seek shade during midday hours",
+                ]
+            )
 
         return guidance
 
@@ -406,7 +425,7 @@ class WeatherService:
                 visibility_miles=response.get("visibility", 0) / 1609,
                 pressure_hpa=main.get("pressure"),
                 location=response.get("name", ""),
-                timestamp=datetime.now(__import__('datetime').timezone.utc),
+                timestamp=datetime.now(__import__("datetime").timezone.utc),
                 source="OpenWeatherMap",
             )
 
@@ -455,14 +474,16 @@ class WeatherService:
 
             forecasts = []
             for date, data in list(daily.items())[:7]:
-                forecasts.append(WeatherForecast(
-                    date=date,
-                    high_f=max(data["temps"]),
-                    low_f=min(data["temps"]),
-                    condition=max(set(data["conditions"]), key=data["conditions"].count),
-                    precipitation_chance=int(max(data["pop"])),
-                    humidity_percent=int(sum(data["humidity"]) / len(data["humidity"])),
-                ))
+                forecasts.append(
+                    WeatherForecast(
+                        date=date,
+                        high_f=max(data["temps"]),
+                        low_f=min(data["temps"]),
+                        condition=max(set(data["conditions"]), key=data["conditions"].count),
+                        precipitation_chance=int(max(data["pop"])),
+                        humidity_percent=int(sum(data["humidity"]) / len(data["humidity"])),
+                    )
+                )
 
             return forecasts
 
@@ -482,14 +503,25 @@ class WeatherService:
         if response and response.get("features"):
             for feature in response["features"]:
                 props = feature.get("properties", {})
-                alerts.append(WeatherAlert(
-                    event=props.get("event", "Unknown"),
-                    severity=props.get("severity", "Unknown"),
-                    headline=props.get("headline", ""),
-                    description=props.get("description", ""),
-                    start=datetime.fromisoformat(props.get("onset", datetime.now(__import__('datetime').timezone.utc).isoformat()).replace("Z", "+00:00")),
-                    end=datetime.fromisoformat(props.get("ends").replace("Z", "+00:00")) if props.get("ends") else None,
-                ))
+                alerts.append(
+                    WeatherAlert(
+                        event=props.get("event", "Unknown"),
+                        severity=props.get("severity", "Unknown"),
+                        headline=props.get("headline", ""),
+                        description=props.get("description", ""),
+                        start=datetime.fromisoformat(
+                            props.get(
+                                "onset",
+                                datetime.now(__import__("datetime").timezone.utc).isoformat(),
+                            ).replace("Z", "+00:00")
+                        ),
+                        end=(
+                            datetime.fromisoformat(props.get("ends").replace("Z", "+00:00"))
+                            if props.get("ends")
+                            else None
+                        ),
+                    )
+                )
 
         return alerts
 
@@ -512,13 +544,13 @@ class WeatherService:
             visibility_miles=10,
             pressure_hpa=1015,
             location=location,
-            timestamp=datetime.now(__import__('datetime').timezone.utc),
+            timestamp=datetime.now(__import__("datetime").timezone.utc),
             source="Simulated",
         )
 
     def _get_simulated_forecast(self) -> list[WeatherForecast]:
         """Get simulated forecast for testing."""
-        today = datetime.now(__import__('datetime').timezone.utc)
+        today = datetime.now(__import__("datetime").timezone.utc)
         return [
             WeatherForecast(
                 date=(today + timedelta(days=i)).strftime("%Y-%m-%d"),
@@ -535,11 +567,13 @@ class WeatherService:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]
-            if datetime.now(__import__('datetime').timezone.utc) - timestamp < timedelta(minutes=self.cache_ttl_minutes):
+            if datetime.now(__import__("datetime").timezone.utc) - timestamp < timedelta(
+                minutes=self.cache_ttl_minutes
+            ):
                 return result
             del self._cache[key]
         return None
 
     def _set_cached(self, key: str, value: Any) -> None:
         """Set cached result."""
-        self._cache[key] = (value, datetime.now(__import__('datetime').timezone.utc))
+        self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))

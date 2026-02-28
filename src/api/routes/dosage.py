@@ -17,8 +17,10 @@ router = APIRouter(prefix="/dosage", tags=["Dosage Calculator"])
 
 # ============== Schemas ==============
 
+
 class MedicationInfo(BaseModel):
     """Information about a medication."""
+
     id: str
     name: str
     brand_names: list[str]
@@ -33,6 +35,7 @@ class MedicationInfo(BaseModel):
 
 class MedicationListItem(BaseModel):
     """Summary item for listing medications."""
+
     id: str
     name: str
     brand_names: list[str]
@@ -42,12 +45,14 @@ class MedicationListItem(BaseModel):
 
 class MedicationsResponse(BaseModel):
     """Response with list of available medications."""
+
     medications: list[MedicationListItem]
     disclaimer: str
 
 
 class DoseCalculationRequest(BaseModel):
     """Request for dose calculation."""
+
     medication_id: str
     weight_kg: float = Field(..., gt=0, le=100)
     formulation_index: int = 0
@@ -55,6 +60,7 @@ class DoseCalculationRequest(BaseModel):
 
 class DoseCalculationResponse(BaseModel):
     """Response with calculated dose."""
+
     medication: str
     weight_kg: float
     formulation: str
@@ -75,6 +81,7 @@ class DoseCalculationResponse(BaseModel):
 
 # ============== Load Dosage Data ==============
 
+
 def load_dosage_data() -> dict[str, Any]:
     """Load dosage data from JSON file."""
     try:
@@ -86,6 +93,7 @@ def load_dosage_data() -> dict[str, Any]:
 
 
 # ============== Endpoints ==============
+
 
 @router.get("/medications", response_model=MedicationsResponse)
 async def list_medications():
@@ -101,17 +109,18 @@ async def list_medications():
     for med_id, med in meds.items():
         age_restrictions = med.get("age_restrictions", {})
         restriction = age_restrictions.get(
-            "under_6_months",
-            age_restrictions.get("under_2_years", "Check with doctor")
+            "under_6_months", age_restrictions.get("under_2_years", "Check with doctor")
         )
 
-        items.append(MedicationListItem(
-            id=med_id,
-            name=med.get("brand_names", [med_id])[0] if med.get("brand_names") else med_id,
-            brand_names=med.get("brand_names", []),
-            uses=med.get("uses", []),
-            age_restriction=restriction,
-        ))
+        items.append(
+            MedicationListItem(
+                id=med_id,
+                name=med.get("brand_names", [med_id])[0] if med.get("brand_names") else med_id,
+                brand_names=med.get("brand_names", []),
+                uses=med.get("uses", []),
+                age_restriction=restriction,
+            )
+        )
 
     return MedicationsResponse(
         medications=items,
@@ -136,8 +145,7 @@ async def get_medication_info(medication_id: str):
     med = meds.get(medication_id)
     if not med:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Medication not found: {medication_id}"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Medication not found: {medication_id}"
         )
 
     dose_per_kg = med.get("dose_per_kg", "")
@@ -148,7 +156,9 @@ async def get_medication_info(medication_id: str):
 
     return MedicationInfo(
         id=medication_id,
-        name=med.get("brand_names", [medication_id])[0] if med.get("brand_names") else medication_id,
+        name=(
+            med.get("brand_names", [medication_id])[0] if med.get("brand_names") else medication_id
+        ),
         brand_names=med.get("brand_names", []),
         uses=med.get("uses", []),
         dose_per_kg=dose_per_kg,
@@ -178,7 +188,7 @@ async def calculate_dose(request: DoseCalculationRequest):
     if not med:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Medication not found: {request.medication_id}"
+            detail=f"Medication not found: {request.medication_id}",
         )
 
     # Parse dose per kg

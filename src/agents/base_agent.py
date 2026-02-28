@@ -27,6 +27,7 @@ logger = logging.getLogger("epcid.agents")
 
 class AgentStatus(Enum):
     """Agent execution status."""
+
     IDLE = "idle"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -37,6 +38,7 @@ class AgentStatus(Enum):
 @dataclass
 class AgentConfig:
     """Configuration for an agent."""
+
     name: str
     description: str
     enabled: bool = True
@@ -79,6 +81,7 @@ class AgentResponse:
     All agents return this structure to ensure consistency
     and explainability across the platform.
     """
+
     agent_name: str
     request_id: str
     status: AgentStatus
@@ -100,7 +103,9 @@ class AgentResponse:
     error_message: str | None = None
 
     # Timing
-    started_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
+    started_at: datetime = field(
+        default_factory=lambda: datetime.now(__import__("datetime").timezone.utc)
+    )
     completed_at: datetime | None = None
     duration_ms: float | None = None
 
@@ -132,14 +137,14 @@ class AgentResponse:
 
     def finalize(self) -> "AgentResponse":
         """Mark the response as complete and calculate duration."""
-        self.completed_at = datetime.now(__import__('datetime').timezone.utc)
+        self.completed_at = datetime.now(__import__("datetime").timezone.utc)
         if self.started_at:
             delta = self.completed_at - self.started_at
             self.duration_ms = delta.total_seconds() * 1000
         return self
 
 
-T = TypeVar('T', bound='BaseAgent')
+T = TypeVar("T", bound="BaseAgent")
 
 
 class BaseAgent(ABC):
@@ -278,8 +283,7 @@ class BaseAgent(ABC):
             episodes = self.memory.episodic.get_child_episodes(child_id, limit=5)
             if episodes:
                 context["recent_episodes"] = [
-                    {"type": ep.event_type, "outcome": ep.outcome}
-                    for ep in episodes
+                    {"type": ep.event_type, "outcome": ep.outcome} for ep in episodes
                 ]
 
         return context
@@ -295,7 +299,7 @@ class BaseAgent(ABC):
             memory_type=MemoryType.SHORT_TERM,
             metadata={
                 "request_id": response.request_id,
-                "timestamp": datetime.now(__import__('datetime').timezone.utc).isoformat(),
+                "timestamp": datetime.now(__import__("datetime").timezone.utc).isoformat(),
             },
             importance=response.confidence,
         )
@@ -308,7 +312,7 @@ class BaseAgent(ABC):
             f"Request {response.request_id} completed: "
             f"status={response.status.value}, "
             f"confidence={response.confidence:.2f}, "
-            f"duration={response.duration_ms:.0f}ms"
+            f"duration={response.duration_ms:.0f}ms",
         )
 
     def reason(

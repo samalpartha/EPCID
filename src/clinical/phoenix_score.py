@@ -31,6 +31,7 @@ logger = logging.getLogger("epcid.clinical.phoenix")
 
 class VentilationType(Enum):
     """Type of respiratory support."""
+
     NONE = "none"
     SUPPLEMENTAL_O2 = "supplemental_o2"  # Nasal cannula, face mask
     NON_INVASIVE = "non_invasive"  # CPAP, BiPAP, HFNC
@@ -40,6 +41,7 @@ class VentilationType(Enum):
 @dataclass
 class RespiratoryAssessment:
     """Respiratory system assessment for Phoenix Score."""
+
     # Oxygenation metrics
     pao2: float | None = None  # mmHg
     fio2: float | None = None  # Fraction (0-1)
@@ -61,6 +63,7 @@ class RespiratoryAssessment:
 @dataclass
 class CardiovascularAssessment:
     """Cardiovascular system assessment for Phoenix Score."""
+
     # Vital signs
     systolic_bp: int | None = None
     diastolic_bp: int | None = None
@@ -91,6 +94,7 @@ class CardiovascularAssessment:
 @dataclass
 class CoagulationAssessment:
     """Coagulation system assessment for Phoenix Score."""
+
     platelet_count: int | None = None  # x10^9/L (thousands)
     inr: float | None = None
     d_dimer: float | None = None  # mg/L FEU
@@ -104,6 +108,7 @@ class CoagulationAssessment:
 @dataclass
 class NeurologicalAssessment:
     """Neurological system assessment for Phoenix Score."""
+
     # Glasgow Coma Scale components
     gcs_total: int | None = None
     gcs_eye: int | None = None  # 1-4
@@ -125,6 +130,7 @@ class NeurologicalAssessment:
 @dataclass
 class PhoenixScore:
     """Complete Phoenix Sepsis Score assessment."""
+
     # Component scores
     respiratory: RespiratoryAssessment = field(default_factory=RespiratoryAssessment)
     cardiovascular: CardiovascularAssessment = field(default_factory=CardiovascularAssessment)
@@ -180,11 +186,11 @@ class PhoenixScoreCalculator:
 
     # MAP thresholds by age (months) from Phoenix criteria
     MAP_THRESHOLDS = [
-        (0, 1, 31),      # 0-<1 month: MAP >= 31
-        (1, 12, 32),     # 1-<12 months: MAP >= 32
-        (12, 24, 34),    # 1-<2 years: MAP >= 34
-        (24, 60, 36),    # 2-<5 years: MAP >= 36
-        (60, 144, 40),   # 5-<12 years: MAP >= 40
+        (0, 1, 31),  # 0-<1 month: MAP >= 31
+        (1, 12, 32),  # 1-<12 months: MAP >= 32
+        (12, 24, 34),  # 1-<2 years: MAP >= 34
+        (24, 60, 36),  # 2-<5 years: MAP >= 36
+        (60, 144, 40),  # 5-<12 years: MAP >= 40
         (144, 216, 46),  # 12-<18 years: MAP >= 46
     ]
 
@@ -280,10 +286,10 @@ class PhoenixScoreCalculator:
 
         # Calculate total score
         result.total_score = (
-            result.respiratory.score +
-            result.cardiovascular.score +
-            result.coagulation.score +
-            result.neurological.score
+            result.respiratory.score
+            + result.cardiovascular.score
+            + result.coagulation.score
+            + result.neurological.score
         )
 
         # Determine sepsis criteria
@@ -302,10 +308,16 @@ class PhoenixScoreCalculator:
 
         # Identify missing data
         result.missing_data = self._identify_missing_data(
-            pao2=pao2, fio2=fio2, spo2=spo2,
-            systolic_bp=systolic_bp, diastolic_bp=diastolic_bp,
-            lactate=lactate, platelet_count=platelet_count,
-            inr=inr, gcs_total=gcs_total, avpu=avpu,
+            pao2=pao2,
+            fio2=fio2,
+            spo2=spo2,
+            systolic_bp=systolic_bp,
+            diastolic_bp=diastolic_bp,
+            lactate=lactate,
+            platelet_count=platelet_count,
+            inr=inr,
+            gcs_total=gcs_total,
+            avpu=avpu,
         )
 
         # Calculate confidence
@@ -455,8 +467,12 @@ class PhoenixScoreCalculator:
 
         # Known vasoactive medications for Phoenix criteria
         known_vasoactives = {
-            "dobutamine", "dopamine", "epinephrine",
-            "milrinone", "norepinephrine", "vasopressin"
+            "dobutamine",
+            "dopamine",
+            "epinephrine",
+            "milrinone",
+            "norepinephrine",
+            "vasopressin",
         }
 
         # Count vasoactive medications
@@ -512,7 +528,9 @@ class PhoenixScoreCalculator:
                 deficit = map_threshold - map_value
                 if deficit >= 10:
                     score += 2
-                    components.append(f"MAP {map_value:.0f} mmHg (severely below threshold {map_threshold})")
+                    components.append(
+                        f"MAP {map_value:.0f} mmHg (severely below threshold {map_threshold})"
+                    )
                 else:
                     score += 1
                     components.append(f"MAP {map_value:.0f} mmHg (below threshold {map_threshold})")
@@ -700,12 +718,12 @@ class PhoenixScoreCalculator:
 
         # Increase based on available data
         has_respiratory = (
-            result.respiratory.pao2_fio2_ratio is not None or
-            result.respiratory.spo2_fio2_ratio is not None
+            result.respiratory.pao2_fio2_ratio is not None
+            or result.respiratory.spo2_fio2_ratio is not None
         )
         has_cv = (
-            result.cardiovascular.mean_arterial_pressure is not None or
-            result.cardiovascular.lactate is not None
+            result.cardiovascular.mean_arterial_pressure is not None
+            or result.cardiovascular.lactate is not None
         )
         has_coag = result.coagulation.platelet_count is not None
         has_neuro = result.neurological.gcs_total is not None
