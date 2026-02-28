@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/opt/anaconda3/bin/mypy", line 7, in <module>
+    from mypy.__main__ import console_entry
+  File "/opt/anaconda3/lib/python3.12/site-packages/mypy/__main__.py", line 9, in <module>
+    from mypy.main import main, process_options
+  File "mypy/main.py", line 14, in <module>
+  File "mypy/build.py", line 45, in <module>
+  File "mypy/semanal_main.py", line 35, in <module>
+  File "mypy/checker.py", line 28, in <module>
+  File "mypy/checkexpr.py", line 17, in <module>
+  File "mypy/checkmember.py", line 7, in <module>
+  File "<frozen importlib._bootstrap>", line 1390, in _handle_fromlist
+KeyboardInterrupt

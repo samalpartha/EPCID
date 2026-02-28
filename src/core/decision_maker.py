@@ -11,6 +11,7 @@ This is NOT a diagnostic system - it supports, not replaces, clinical judgment.
 """
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -212,7 +213,7 @@ class SafetyRule:
         self,
         name: str,
         description: str,
-        check_function: callable,
+        check_function: Callable,
         override_to_risk: str = RISK_CRITICAL,
         urgency: UrgencyLevel = UrgencyLevel.EMERGENCY,
     ):

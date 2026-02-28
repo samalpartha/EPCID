@@ -78,7 +78,7 @@ ALLOWED_SOURCES = [
     GuidelineSource(
         id="internal_playbook",
         name="EPCID Clinical Playbook",
-        url=None,
+        url="",
         trust_level="verified",
         category="internal",
     ),

@@ -34,9 +34,9 @@ class Phenotype:
     confidence: float
     trend: str | None = None  # improving, stable, worsening
     description: str | None = None
-    contributing_factors: list[str] = None
+    contributing_factors: list[str] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.contributing_factors is None:
             self.contributing_factors = []
 

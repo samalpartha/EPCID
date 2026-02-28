@@ -60,67 +60,73 @@ async def run_assessment_pipeline(
                     "child_id": request.child_id,
                 }
             )
-            if result.get("status") == "success":
-                normalized_symptoms.append(result.get("normalized_event"))
+            if result.success:
+                normalized_symptoms.append(result.data.get("normalized_event"))
 
         # Step 2: Extract phenotype signals
-        phenotype_result = await phenotype_agent.process(
+        phenotype_res = await phenotype_agent.process(
             {
                 "symptoms": normalized_symptoms,
                 "child_id": request.child_id,
             }
         )
+        phenotype_result = phenotype_res.data
 
         # Step 3: Risk stratification
-        risk_result = await risk_agent.process(
+        risk_res = await risk_agent.process(
             {
                 "phenotype": phenotype_result.get("phenotype", {}),
                 "symptoms": normalized_symptoms,
                 "child_id": request.child_id,
             }
         )
+        risk_result = risk_res.data
+        risk_confidence = risk_res.confidence
 
         # Step 4: Get guideline recommendations (if requested)
         guidelines_content = []
         if request.include_guidelines:
-            guideline_result = await guideline_agent.process(
+            guideline_res = await guideline_agent.process(
                 {
                     "symptoms": [s.symptom_type for s in request.symptoms],
                     "risk_level": risk_result.get("risk_level", "low"),
                 }
             )
-            guidelines_content = guideline_result.get("recommendations", [])
+            guidelines_content = guideline_res.data.get("recommendations", [])
 
         # Step 5: Check environmental factors (if requested)
         environmental_context = None
         if request.include_environmental and request.location:
             geo_agent = GeoExposureAgent(agent_id="geo-001")
-            env_result = await geo_agent.process(
+            env_res = await geo_agent.process(
                 {
                     "latitude": request.location.get("lat"),
                     "longitude": request.location.get("lng"),
                     "symptoms": [s.symptom_type for s in request.symptoms],
                 }
             )
-            environmental_context = env_result
+            environmental_context = env_res.data
 
         # Step 6: Generate escalation recommendations
-        escalation_result = await escalation_agent.process(
+        escalation_res = await escalation_agent.process(
             {
                 "risk_level": risk_result.get("risk_level", "low"),
                 "risk_score": risk_result.get("risk_score", 0.0),
                 "symptoms": [s.symptom_type for s in request.symptoms],
             }
         )
+        escalation_result = escalation_res.data
 
         # Step 7: Generate explanation
-        explanation = explainer.generate_explanation(
-            {
-                "risk_result": risk_result,
-                "phenotype_result": phenotype_result,
-                "guidelines": guidelines_content,
-                "environmental": environmental_context,
-            }
+        explanation = explainer.explain_risk_assessment(
+            risk_tier=risk_result.get("risk_level", "UNKNOWN"),
+            confidence=risk_confidence,
+            risk_factors=[s.symptom_type for s in request.symptoms],
+            protective_factors=[],
+            uncertainty_factors=[],
+            triggered_rules=[r.get("name", "") for r in risk_result.get("triggered_rules", [])],
+            model_scores=risk_result.get("model_scores", {}),
+            missing_data=[],
         )
 
         # Build risk factors
@@ -158,7 +164,7 @@ async def run_assessment_pipeline(
             timestamp=datetime.now(__import__("datetime").timezone.utc),
             risk_level=risk_level,
             risk_score=risk_score,
-            confidence=risk_result.get("confidence", 0.8),
+            confidence=risk_confidence,
             risk_factors=risk_factors,
             primary_recommendation=escalation_result.get(
                 "primary_action", "Monitor symptoms and maintain hydration"
@@ -168,8 +174,8 @@ async def run_assessment_pipeline(
             ),
             red_flags=risk_result.get("red_flags", []),
             warning_signs=risk_result.get("warning_signs", []),
-            explanation=explanation.get("summary", "Based on the reported symptoms..."),
-            clinical_reasoning=explanation.get("clinical_reasoning", ""),
+            explanation=getattr(explanation, "summary", "Based on the reported symptoms..."),
+            clinical_reasoning=explanation.to_markdown() if hasattr(explanation, "to_markdown") else "",
             suggested_actions=escalation_result.get("suggested_actions", []),
             when_to_seek_care=escalation_result.get(
                 "when_to_seek_care", "If symptoms worsen or new symptoms develop"

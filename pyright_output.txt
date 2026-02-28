@@ -1,0 +1,101 @@
+/Users/psama0214/Hackathon-New/EPCID/src/agents/escalation_agent.py
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/escalation_agent.py:202:9 - warning: Expression value is unused (reportUnusedExpression)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/escalation_agent.py:320:41 - error: "get" is not a known attribute of "None" (reportOptionalMemberAccess)
+/Users/psama0214/Hackathon-New/EPCID/src/agents/guideline_rag_agent.py
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/guideline_rag_agent.py:81:13 - error: Argument of type "None" cannot be assigned to parameter "url" of type "str" in function "__init__"
+    "None" is not assignable to "str" (reportArgumentType)
+/Users/psama0214/Hackathon-New/EPCID/src/agents/ingestion_agent.py
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/ingestion_agent.py:550:34 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/ingestion_agent.py:552:54 - error: Argument of type "Any | None" cannot be assigned to parameter "obj" of type "Sized" in function "len"
+    Type "Any | None" is not assignable to type "Sized"
+      "None" is incompatible with protocol "Sized"
+        "__len__" is not present (reportArgumentType)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/ingestion_agent.py:603:50 - error: Argument of type "Any | None" cannot be assigned to parameter "obj" of type "Sized" in function "len"
+    Type "Any | None" is not assignable to type "Sized"
+      "None" is incompatible with protocol "Sized"
+        "__len__" is not present (reportArgumentType)
+/Users/psama0214/Hackathon-New/EPCID/src/agents/phenotype_agent.py
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/phenotype_agent.py:37:39 - error: Type "None" is not assignable to declared type "list[str]"
+    "None" is not assignable to "list[str]" (reportAssignmentType)
+/Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:63:16 - error: Expected class but received "(obj: object, /) -> TypeIs[(...) -> object]" (reportGeneralTypeIssues)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:124:39 - error: "PhoenixScoreCalculator" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:125:36 - error: "PEWSCalculator" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:126:43 - error: "PhysicalExamAssessor" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:127:37 - error: "VitalSignNormalizer" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:371:23 - error: "WorkOfBreathing" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:373:27 - error: "WorkOfBreathing" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:375:27 - error: "WorkOfBreathing" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:377:27 - error: "WorkOfBreathing" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:381:24 - error: "AVPU" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:383:28 - error: "AVPU" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:385:28 - error: "AVPU" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:387:28 - error: "AVPU" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:440:33 - error: "MentalStatus" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:442:37 - error: "MentalStatus" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:444:37 - error: "MentalStatus" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:446:37 - error: "MentalStatus" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:448:37 - error: "MentalStatus" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:451:33 - error: "PulseQuality" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:453:37 - error: "PulseQuality" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:455:37 - error: "PulseQuality" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:458:34 - error: "SkinPerfusion" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:460:38 - error: "SkinPerfusion" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:462:38 - error: "SkinPerfusion" is possibly unbound (reportPossiblyUnboundVariable)
+  /Users/psama0214/Hackathon-New/EPCID/src/agents/risk_agent.py:464:38 - error: "SkinPerfusion" is possibly unbound (reportPossiblyUnboundVariable)
+/Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:63:23 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:64:51 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:77:47 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:89:47 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:92:51 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:110:43 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:111:43 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:117:33 - error: Cannot access attribute "generate_explanation" for class "ExplanationGenerator"
+    Attribute "generate_explanation" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:144:34 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:161:36 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:163:54 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:166:57 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:169:35 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:170:39 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:173:49 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/assessment.py:174:49 - error: Cannot access attribute "get" for class "AgentResponse"
+    Attribute "get" is unknown (reportAttributeAccessIssue)
+/Users/psama0214/Hackathon-New/EPCID/src/api/routes/auth.py
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/auth.py:18:28 - error: Type "type[src.api.schemas.UserResponse]" is not assignable to declared type "type[src.api.routes.auth.UserResponse]"
+    "src.api.schemas.UserResponse" is not assignable to "src.api.routes.auth.UserResponse"
+    Type "type[src.api.schemas.UserResponse]" is not assignable to type "type[src.api.routes.auth.UserResponse]" (reportAssignmentType)
+/Users/psama0214/Hackathon-New/EPCID/src/api/routes/environment.py
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/environment.py:117:42 - error: Cannot access attribute "get_air_quality" for class "AirQualityService"
+    Attribute "get_air_quality" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/api/routes/environment.py:185:38 - error: Cannot access attribute "get_weather" for class "WeatherService"
+    Attribute "get_weather" is unknown (reportAttributeAccessIssue)
+/Users/psama0214/Hackathon-New/EPCID/src/core/decision_maker.py
+  /Users/psama0214/Hackathon-New/EPCID/src/core/decision_maker.py:215:25 - error: Expected class but received "(obj: object, /) -> TypeIs[(...) -> object]" (reportGeneralTypeIssues)
+/Users/psama0214/Hackathon-New/EPCID/src/services/cache_service.py
+  /Users/psama0214/Hackathon-New/EPCID/src/services/cache_service.py:30:16 - error: Import "redis" could not be resolved (reportMissingImports)
+/Users/psama0214/Hackathon-New/EPCID/src/utils/logger.py
+  /Users/psama0214/Hackathon-New/EPCID/src/utils/logger.py:35:45 - error: Cannot access attribute "request_id" for class "LogRecord"
+    Attribute "request_id" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/utils/logger.py:37:43 - error: Cannot access attribute "child_id" for class "LogRecord"
+    Attribute "child_id" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/utils/logger.py:39:40 - error: Cannot access attribute "agent" for class "LogRecord"
+    Attribute "agent" is unknown (reportAttributeAccessIssue)
+  /Users/psama0214/Hackathon-New/EPCID/src/utils/logger.py:41:36 - error: Cannot access attribute "extra_data" for class "LogRecord"
+    Attribute "extra_data" is unknown (reportAttributeAccessIssue)
+56 errors, 1 warning, 0 informations

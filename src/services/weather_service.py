@@ -244,25 +244,27 @@ class WeatherService:
         Returns:
             Dict with health guidance
         """
-        guidance = {
+        recs: list[str] = []
+        symps: list[str] = []
+        guidance: dict[str, Any] = {
             "temperature_guidance": self._get_temperature_guidance(weather.temperature_f),
             "humidity_guidance": self._get_humidity_guidance(weather.humidity_percent),
             "overall_risk": "low",
-            "recommendations": [],
-            "symptoms_to_watch": [],
+            "recommendations": recs,
+            "symptoms_to_watch": symps,
         }
 
         # Temperature-based recommendations
         if weather.temperature_f >= 90:
             guidance["overall_risk"] = "high"
-            guidance["recommendations"].extend(
+            recs.extend(
                 [
                     "Keep children indoors during peak heat (10am-4pm)",
                     "Ensure frequent hydration",
                     "Watch for signs of heat exhaustion",
                 ]
             )
-            guidance["symptoms_to_watch"].extend(
+            symps.extend(
                 [
                     "Excessive sweating or lack of sweating",
                     "Headache",
@@ -272,7 +274,7 @@ class WeatherService:
             )
         elif weather.temperature_f >= 85:
             guidance["overall_risk"] = "moderate"
-            guidance["recommendations"].extend(
+            recs.extend(
                 [
                     "Limit strenuous outdoor activity",
                     "Encourage water breaks every 15-20 minutes",
@@ -280,14 +282,14 @@ class WeatherService:
             )
         elif weather.temperature_f <= 32:
             guidance["overall_risk"] = "high"
-            guidance["recommendations"].extend(
+            recs.extend(
                 [
                     "Dress in warm layers",
                     "Limit outdoor exposure",
                     "Watch for signs of hypothermia",
                 ]
             )
-            guidance["symptoms_to_watch"].extend(
+            symps.extend(
                 [
                     "Shivering",
                     "Confusion",
@@ -297,17 +299,17 @@ class WeatherService:
 
         # Humidity considerations
         if weather.humidity_percent > 80:
-            guidance["recommendations"].append(
+            recs.append(
                 "High humidity - take extra breaks during physical activity"
             )
         elif weather.humidity_percent < 30:
-            guidance["recommendations"].append(
+            recs.append(
                 "Low humidity - ensure good hydration and consider using a humidifier indoors"
             )
 
         # UV considerations
         if weather.uv_index and weather.uv_index >= 8:
-            guidance["recommendations"].extend(
+            recs.extend(
                 [
                     f"High UV index ({weather.uv_index}) - apply sunscreen",
                     "Wear protective clothing and hat",
@@ -457,7 +459,7 @@ class WeatherService:
 
         if response and response.get("list"):
             # Group by day
-            daily = {}
+            daily: dict[str, dict[str, list[Any]]] = {}
             for item in response["list"]:
                 date = item["dt_txt"].split()[0]
                 if date not in daily:

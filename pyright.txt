@@ -1,0 +1,4 @@
+Need to install the following packages:
+pyright@1.1.408
+Ok to proceed? (y) npm error canceled
+npm error A complete log of this run can be found in: /Users/psama0214/.npm/_logs/2026-02-28T03_19_42_215Z-debug-0.log

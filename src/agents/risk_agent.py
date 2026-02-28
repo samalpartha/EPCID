@@ -18,6 +18,7 @@ Clinical References:
 """
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -40,6 +41,15 @@ try:
     CLINICAL_SCORING_AVAILABLE = True
 except ImportError:
     CLINICAL_SCORING_AVAILABLE = False
+    PhoenixScoreCalculator = Any  # type: ignore
+    PEWSCalculator = Any  # type: ignore
+    PhysicalExamAssessor = Any  # type: ignore
+    VitalSignNormalizer = Any  # type: ignore
+    AVPU = Any  # type: ignore
+    WorkOfBreathing = Any  # type: ignore
+    MentalStatus = Any  # type: ignore
+    PulseQuality = Any  # type: ignore
+    SkinPerfusion = Any  # type: ignore
 
 logger = logging.getLogger("epcid.agents.risk")
 
@@ -60,7 +70,7 @@ class RiskRule:
     name: str
     rule_type: RuleType
     description: str
-    condition: callable  # Function that takes context and returns (triggered, message)
+    condition: Callable  # Function that takes context and returns (triggered, message)
     risk_tier: str
     priority: int  # Lower = higher priority
 

@@ -311,8 +311,8 @@ class IngestionAgent(BaseAgent):
 
     def _normalize_symptoms(self, symptoms: list[str] | str) -> dict[str, Any]:
         """Normalize symptom input."""
-        validations = []
-        warnings = []
+        validations: list[ValidationResult] = []
+        warnings: list[str] = []
 
         # Handle string input
         if isinstance(symptoms, str):
@@ -373,9 +373,9 @@ class IngestionAgent(BaseAgent):
         age_months: int | None = None,
     ) -> dict[str, Any]:
         """Normalize vital signs and check ranges."""
-        validations = []
-        warnings = []
-        normalized = {}
+        validations: list[ValidationResult] = []
+        warnings: list[str] = []
+        normalized: dict[str, Any] = {}
 
         # Get appropriate ranges for age
         ranges = self._get_vital_ranges(age_months)
@@ -474,9 +474,9 @@ class IngestionAgent(BaseAgent):
 
     def _normalize_demographics(self, demographics: dict[str, Any]) -> dict[str, Any]:
         """Normalize demographic data."""
-        validations = []
-        warnings = []
-        normalized = {}
+        validations: list[ValidationResult] = []
+        warnings: list[str] = []
+        normalized: dict[str, Any] = {}
 
         # Age
         if "age_months" in demographics:
@@ -536,13 +536,13 @@ class IngestionAgent(BaseAgent):
 
     def _validate_image(self, image_data: dict[str, Any]) -> dict[str, Any]:
         """Validate image input."""
-        validations = []
-        warnings = []
-        normalized = {}
+        validations: list[ValidationResult] = []
+        warnings: list[str] = []
+        normalized: dict[str, Any] = {}
 
         # Check for required fields
         if "data" in image_data or "base64" in image_data:
-            data = image_data.get("data") or image_data.get("base64")
+            data = image_data.get("data") or image_data.get("base64") or ""
 
             # Validate base64
             try:
@@ -592,13 +592,13 @@ class IngestionAgent(BaseAgent):
 
     def _validate_voice(self, voice_data: dict[str, Any]) -> dict[str, Any]:
         """Validate voice/audio input."""
-        validations = []
-        warnings = []
-        normalized = {}
+        validations: list[ValidationResult] = []
+        warnings: list[str] = []
+        normalized: dict[str, Any] = {}
 
         # Check for audio data
         if "data" in voice_data or "base64" in voice_data:
-            data = voice_data.get("data") or voice_data.get("base64")
+            data = voice_data.get("data") or voice_data.get("base64") or ""
             normalized["has_audio_data"] = True
             normalized["audio_size_bytes"] = len(data) * 3 // 4
 
@@ -644,9 +644,9 @@ class IngestionAgent(BaseAgent):
 
     def _normalize_environmental(self, env_data: dict[str, Any]) -> dict[str, Any]:
         """Normalize environmental data."""
-        validations = []
-        warnings = []
-        normalized = {}
+        validations: list[ValidationResult] = []
+        warnings: list[str] = []
+        normalized: dict[str, Any] = {}
 
         # Location
         if "zip_code" in env_data:
@@ -690,8 +690,8 @@ class IngestionAgent(BaseAgent):
 
     def _normalize_medications(self, medications: list | dict) -> dict[str, Any]:
         """Normalize medication data."""
-        validations = []
-        warnings = []
+        validations: list[ValidationResult] = []
+        warnings: list[str] = []
         normalized = []
 
         if isinstance(medications, dict):

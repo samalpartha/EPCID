@@ -199,7 +199,7 @@ class EscalationAgent(BaseAgent):
         vitals = input_data.get("vitals", {})
         medications = input_data.get("medications", [])
         demographics = input_data.get("demographics", {})
-        input_data.get("has_image") or input_data.get("has_audio")
+        _ = input_data.get("has_image") or input_data.get("has_audio")
 
         # Determine escalation path
         escalation_path = self._get_escalation_path(risk_tier)
@@ -265,6 +265,7 @@ class EscalationAgent(BaseAgent):
         context: dict[str, Any] | None,
     ) -> VisitPacket:
         """Generate a visit preparation packet."""
+        context = context or {}
         # Build symptoms timeline
         symptoms_timeline = []
         for symptom in symptoms:
