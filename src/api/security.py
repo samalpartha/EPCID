@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from typing import Any, cast
 
 import bcrypt
-from jose import JWTError, jwt
+import jwt
 
 # Configuration
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "epcid-development-secret-key-change-in-production")
@@ -112,7 +112,7 @@ def decode_token(token: str) -> dict[str, Any]:
         Decoded payload
 
     Raises:
-        JWTError: If token is invalid or expired
+        PyJWTError: If token is invalid or expired
     """
     return cast(dict[str, Any], jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]))
 
@@ -137,7 +137,7 @@ def verify_token(token: str, token_type: str = "access") -> dict[str, Any] | Non
 
         return payload
 
-    except JWTError:
+    except jwt.PyJWTError:
         return None
 
 
