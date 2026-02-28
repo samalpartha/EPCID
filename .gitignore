@@ -41,3 +41,15 @@ test*.ts
 
 # Ignore logs
 *.log
+
+# Unnecessary Markdown & Images
+*.md
+!README.md
+!LICENSE
+tests/ignore/
+docs/
+temp/
+*.svg
+!frontend/public/icons/*.svg
+*.jpg
+*.jpeg

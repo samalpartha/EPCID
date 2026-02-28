@@ -63,7 +63,7 @@ class VisitPacket:
     medications: List[str]
     questions_for_provider: List[str]
     attachments: List[Dict[str, str]]
-    generated_at: datetime = field(default_factory=datetime.utcnow)
+    generated_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
 
 
 @dataclass
@@ -263,7 +263,7 @@ class EscalationAgent(BaseAgent):
         for symptom in symptoms:
             symptoms_timeline.append({
                 "symptom": symptom,
-                "noted_at": datetime.utcnow().isoformat(),
+                "noted_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
                 "severity": "reported",
             })
         
@@ -354,7 +354,7 @@ class EscalationAgent(BaseAgent):
     ) -> List[Reminder]:
         """Generate follow-up reminders."""
         reminders = []
-        now = datetime.utcnow()
+        now = datetime.now(__import__("datetime").timezone.utc)
         
         if path.urgency == "immediate":
             # No reminders for emergencies

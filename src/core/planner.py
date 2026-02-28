@@ -68,7 +68,7 @@ class Task:
     timeout_seconds: int = 30
     retries: int = 0
     max_retries: int = 3
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     error_message: Optional[str] = None
@@ -117,7 +117,7 @@ class Goal:
     constraints: List[str] = field(default_factory=list)
     deadline: Optional[datetime] = None
     priority: TaskPriority = TaskPriority.MEDIUM
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def to_dict(self) -> Dict[str, Any]:
@@ -145,7 +145,7 @@ class Plan:
     goal: Goal
     tasks: List[Task]
     status: TaskStatus = TaskStatus.PENDING
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     metadata: Dict[str, Any] = field(default_factory=dict)

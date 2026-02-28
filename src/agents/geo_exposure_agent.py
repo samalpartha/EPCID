@@ -34,7 +34,7 @@ class EnvironmentalConditions:
     uv_index: Optional[int] = None
     pollen_level: Optional[str] = None
     weather_condition: Optional[str] = None
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     location: Optional[str] = None
 
 

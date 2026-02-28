@@ -389,5 +389,5 @@ async def get_health_context(
         "alerts": alerts,
         "air_quality": air_quality,
         "due_vaccinations": vaccinations,
-        "generated_at": __import__("datetime").datetime.utcnow().isoformat(),
+        "generated_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
     }

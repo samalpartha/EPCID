@@ -1,9 +1,8 @@
 """
 EPCID Test Suite
 
-Comprehensive tests for the EPCID platform:
-- Unit tests for agents
-- Integration tests for pipelines
-- Safety rule tests
-- Performance tests
+Contains unit and integration tests for the EPCID platform.
 """
+
+import os
+os.environ["RATE_LIMIT_ENABLED"] = "false"

@@ -100,7 +100,7 @@ class AgentResponse:
     error_message: Optional[str] = None
     
     # Timing
-    started_at: datetime = field(default_factory=datetime.utcnow)
+    started_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     completed_at: Optional[datetime] = None
     duration_ms: Optional[float] = None
     
@@ -132,7 +132,7 @@ class AgentResponse:
     
     def finalize(self) -> "AgentResponse":
         """Mark the response as complete and calculate duration."""
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(__import__("datetime").timezone.utc)
         if self.started_at:
             delta = self.completed_at - self.started_at
             self.duration_ms = delta.total_seconds() * 1000
@@ -295,7 +295,7 @@ class BaseAgent(ABC):
             memory_type=MemoryType.SHORT_TERM,
             metadata={
                 "request_id": response.request_id,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(__import__("datetime").timezone.utc).isoformat(),
             },
             importance=response.confidence,
         )

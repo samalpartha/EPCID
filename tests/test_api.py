@@ -40,6 +40,7 @@ def auth_headers(client: TestClient) -> Dict[str, str]:
     }
     
     response = client.post("/api/v1/auth/register", json=register_data)
+    print(f"\nREGISTER RESPONSE: {response.status_code} {response.text}")
     
     if response.status_code == 201:
         token = response.json()["access_token"]
@@ -50,6 +51,7 @@ def auth_headers(client: TestClient) -> Dict[str, str]:
             "password": "secret",
         }
         response = client.post("/api/v1/auth/login", json=login_data)
+        print(f"\nLOGIN RESPONSE: {response.status_code} {response.text}")
         token = response.json().get("access_token", "test-token")
     
     return {"Authorization": f"Bearer {token}"}
@@ -144,6 +146,7 @@ class TestAuthEndpoints:
             "password": "testpassword123",
         }
         response = client.post("/api/v1/auth/login", json=login_data)
+        print(f"\nLOGIN RESPONSE: {response.status_code} {response.text}")
         
         assert response.status_code == 200
         result = response.json()

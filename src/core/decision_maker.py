@@ -79,7 +79,7 @@ class RiskAssessment:
     trend_confidence: float
     
     # Metadata
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     assessment_version: str = "1.0"
     
     def get_explanation(self) -> str:
@@ -173,7 +173,7 @@ class Decision:
     escalation_criteria: List[str]
     
     # Metadata
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def to_dict(self) -> Dict[str, Any]:

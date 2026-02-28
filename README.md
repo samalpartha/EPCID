@@ -33,11 +33,52 @@
 
 ```mermaid
 graph TD
-    Client[Web/Mobile Client] -->|HTTP/REST| Frontend[Next.js Frontend]
-    Frontend -->|API Calls| Backend[FastAPI Backend]
-    Backend <-->|SQLAlchemy| DB[(PostgreSQL/SQLite)]
-    Backend <-->|Inference| LLM[Google Gemini 2.5]
-    Backend <-->|External APIs| External[AQI, Weather, Health Data]
+    %% User Interfaces
+    subgraph Clients["📱 Client Interfaces"]
+        Web[Next.js PWA Client]
+        Mobile[Mobile Browser]
+    end
+
+    %% Edge
+    subgraph Edge["🌍 Delivery & Security"]
+        CDN[Cloud CDN]
+        WAF[Google Cloud Armor]
+    end
+
+    %% Core Platform
+    subgraph Core["⚙️ EPCID Core Platform"]
+        Gateway[FastAPI Gateway]
+        
+        subgraph Services["Microservices & Agents"]
+            Auth[Auth Service]
+            Clinical[Clinical Evaluation]
+            Agents[AI Agent Swarm]
+            Symptom[Symptom Triage]
+        end
+    end
+
+    %% Data & External
+    subgraph Data["💾 Storage & Intelligence"]
+        DB[(PostgreSQL)]
+        LLM{Google Gemini 2.5}
+        Ext[FDA/CDC/Weather APIs]
+    end
+
+    # Flows
+    Web & Mobile --> WAF --> CDN --> Gateway
+    Gateway --> Auth & Clinical & Symptom & Agents
+    Auth & Clinical & Symptom & Agents <--> DB
+    Symptom & Agents <--> LLM
+    Agents <--> Ext
+
+    %% Styling
+    classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px
+    classDef core fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef data fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    
+    class Web,Mobile client
+    class Gateway,Auth,Clinical,Agents,Symptom core
+    class DB,LLM,Ext data
 ```
 
 ## ✨ Features
@@ -261,46 +302,98 @@ Any Page → 911 button (always visible in top bar)
 
 ```mermaid
 graph TD
-    subgraph Frontend [Next.js Application]
-        UI[UI Components] --> State[Zustand Store]
-        State --> API_Client[API Client lib/api.ts]
-        API_Client -->|Fetch| Backend_API
-        
-        subgraph Features
-            Dashboard
-            SymptomChecker
-            AIChat
-            Telehealth
-        end
-        
-        UI --> Features
+    %% Frontend Core
+    UI[Next.js 14 App Router]
+    ClientComponents[React Client Components]
+    ServerComponents[React Server Components]
+    
+    %% State Management
+    subgraph StateStore["🧠 Zustand State Management"]
+        AuthStore[Auth Session]
+        ChildStore[Child Profiles]
+        SymptomStore[Active Symptoms]
+        EventStore[Clinical Events]
     end
+
+    %% API Layer
+    subgraph Communication["🌐 Networking Layer"]
+        GraphQLClient[REST Client / Axios]
+        WebSocket[Real-time Event Bus]
+    end
+
+    %% Connections
+    UI --> ClientComponents & ServerComponents
+    ServerComponents --> Communication
+    ClientComponents <--> StateStore
+    ClientComponents --> Communication
+    Communication -->|HTTPS Requests| Backend[Backend Gateway]
+    
+    %% UI Features
+    subgraph UILayer["🎨 User Interface Features"]
+        Dash[Clinical Dashboard]
+        Calc[Dosage Calculator]
+        Chat[AI Triage Chat]
+        Reports[Telehealth Reports]
+    end
+    
+    ClientComponents --> UILayer
+
+    classDef ui fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef state fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    
+    class UI,ClientComponents,ServerComponents,UILayer ui
+    class StateStore,AuthStore,ChildStore,SymptomStore,EventStore state
 ```
 
 ### Backend Architecture
 
 ```mermaid
 graph TD
-    subgraph Backend [FastAPI Server]
-        Router[API Routes] --> Services[Business Logic Services]
-        
-        subgraph Agent Orchestrator
-            Services --> Intake[Symptom Intake Agent]
-            Services --> Clinical[Clinical Risk Agent]
-            Services --> RAG[Guideline RAG Agent]
-            Services --> Geo[Geo-Exposure Agent]
-            Intake & Clinical & RAG & Geo --> LLM_Integration[Groq/Gemini Inference Engine]
-        end
-        
-        Services --> DB_Layer[Database Layer]
+    %% Entry Layer
+    subgraph RequestLayer["🚪 Routing & Auth"]
+        Request(Client Request) --> Middleware[Auth & Rate Limiter]
+        Middleware --> Router[FastAPI Routers]
     end
+
+    %% Business Services
+    subgraph BusinessLayer["🧠 Orchestration & Agents"]
+        Router --> Symptom_Processor(Intake Processor)
+        Router --> PEWS_Calculator(Clinical Risk Agent)
+        Router --> Explainability(Guideline RAG Agent)
+        Router --> Env_Monitor(Geo-Exposure Agent)
+        
+        %% Agents Intercommunication
+        Symptom_Processor <--> PEWS_Calculator
+        PEWS_Calculator <--> Explainability
+        Env_Monitor --> PEWS_Calculator
+    end
+
+    %% Data Sources
+    subgraph KnowledgeLayer["📚 External & DB"]
+        Gemini[Groq/Gemini Inference Engine]
+        Database[(PostgreSQL Health Records)]
+        APIs(CDC/OpenFDA/Weather APIs)
+    end
+
+    %% Links
+    Symptom_Processor & PEWS_Calculator & Explainability & Env_Monitor <--> Gemini
+    Symptom_Processor & PEWS_Calculator <--> Database
+    Env_Monitor & Explainability <--> APIs
+
+    classDef route fill:#e0f7fa,stroke:#006064,stroke-width:2px
+    classDef biz fill:#fff8e1,stroke:#ff8f00,stroke-width:2px
+    classDef know fill:#eceff1,stroke:#37474f,stroke-width:2px
+
+    class RequestLayer,Middleware,Router route
+    class BusinessLayer,Symptom_Processor,PEWS_Calculator,Explainability,Env_Monitor biz
+    class KnowledgeLayer,Gemini,Database,APIs know
 ```
 
 ### AI Agents
 
 EPCID utilizes a sophisticated multi-agent system to process clinical data, cross-reference guidelines, and generate explainable risk scores.
 
-### AI Agents
+### Agent Roles
 
 | Agent | Responsibility | Model |
 |-------|----------------|-------|

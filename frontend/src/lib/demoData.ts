@@ -63,7 +63,7 @@ export const DEMO_VITAL_READINGS: VitalReading[] = [
   { id: 'vr-2', child_id: 'demo-child-1', type: 'heart_rate', value: 112, unit: 'bpm', timestamp: hoursAgo(1), source: 'device', status: 'elevated' },
   { id: 'vr-3', child_id: 'demo-child-1', type: 'oxygen', value: 97, unit: '%', timestamp: hoursAgo(1), source: 'device', status: 'normal' },
   { id: 'vr-4', child_id: 'demo-child-1', type: 'respiratory_rate', value: 28, unit: '/min', timestamp: hoursAgo(1), source: 'manual', status: 'elevated' },
-  { id: 'vr-5', child_id: 'demo-child-1', type: 'temperature', value: 102.1, unit: '°F', timestamp: hoursAgo(4), source: 'manual', status: 'high' },
+  { id: 'vr-5', child_id: 'demo-child-1', type: 'temperature', value: 102.1, unit: '°F', timestamp: hoursAgo(4), source: 'manual', status: 'critical' },
   { id: 'vr-6', child_id: 'demo-child-1', type: 'heart_rate', value: 118, unit: 'bpm', timestamp: hoursAgo(4), source: 'device', status: 'elevated' },
   { id: 'vr-7', child_id: 'demo-child-1', type: 'temperature', value: 100.8, unit: '°F', timestamp: hoursAgo(8), source: 'manual', status: 'elevated' },
   { id: 'vr-8', child_id: 'demo-child-1', type: 'temperature', value: 99.2, unit: '°F', timestamp: hoursAgo(14), source: 'manual', status: 'normal' },
@@ -204,13 +204,12 @@ export const DEMO_DETECTED_EVENTS: DetectedEvent[] = [
     timestamp: hoursAgo(4),
     source: 'manual',
     device_source: undefined,
-    status: 'active',
+    status: 'pending',
     threshold_exceeded: true,
-    risk_impact: { delta: 15, new_score: 62, previous_score: 47, factors: ['High fever >102°F', 'Rapid onset'] },
+    risk_impact: { current_score: 47, predicted_score_if_confirmed: 62, severity: 'high' },
     suggested_action: {
-      action: 'Give antipyretic medication and monitor',
-      urgency: 'moderate',
-      auto_actions: ['Temperature logged', 'Risk score updated'],
+      title: 'Action',
+      message: 'Give antipyretic medication and monitor',
     },
   },
   {
@@ -221,13 +220,12 @@ export const DEMO_DETECTED_EVENTS: DetectedEvent[] = [
     unit: 'bpm',
     timestamp: hoursAgo(4),
     source: 'device',
-    status: 'resolved',
+    status: 'pending',
     threshold_exceeded: true,
-    risk_impact: { delta: 5, new_score: 62, previous_score: 57, factors: ['Tachycardia — likely fever-related'] },
+    risk_impact: { current_score: 57, predicted_score_if_confirmed: 62, severity: 'moderate' },
     suggested_action: {
-      action: 'Monitor — likely secondary to fever',
-      urgency: 'low',
-      auto_actions: ['Heart rate logged'],
+      title: 'Action',
+      message: 'Monitor — likely secondary to fever',
     },
   },
 ]
@@ -332,7 +330,7 @@ export const DEMO_ANXIETY_ASSESSMENTS: AnxietyAssessmentResult[] = [
       'Read stories together',
       'Practice simple breathing exercises',
     ],
-    completed_at: daysAgo(1),
+    timestamp: daysAgo(1),
   },
 ]
 

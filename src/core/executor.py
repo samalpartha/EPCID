@@ -82,7 +82,7 @@ class Action:
     initiated_by: Optional[str] = None
     
     # Timestamps
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     
     # Metadata
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -350,7 +350,7 @@ class Executor:
                 
                 # Execute
                 result.status = ActionStatus.EXECUTING
-                result.started_at = datetime.utcnow()
+                result.started_at = datetime.now(__import__("datetime").timezone.utc)
                 
                 try:
                     output = await self._execute_with_timeout(action)
@@ -372,9 +372,9 @@ class Executor:
                         result.was_rolled_back = rollback_success
                         if rollback_success:
                             result.status = ActionStatus.ROLLED_BACK
-                            result.rollback_at = datetime.utcnow()
+                            result.rollback_at = datetime.now(__import__("datetime").timezone.utc)
                 
-                result.completed_at = datetime.utcnow()
+                result.completed_at = datetime.now(__import__("datetime").timezone.utc)
                 if result.started_at:
                     delta = result.completed_at - result.started_at
                     result.duration_ms = delta.total_seconds() * 1000
@@ -495,7 +495,7 @@ class LogActionHandler(ActionHandler):
             "action_id": action.id,
             "action_name": action.name,
             "parameters": action.parameters,
-            "executed_at": datetime.utcnow().isoformat(),
+            "executed_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
         }
 
 

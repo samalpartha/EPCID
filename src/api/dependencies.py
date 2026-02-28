@@ -15,20 +15,6 @@ from .security import verify_token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login/form", auto_error=False)
 
 
-# Simulated user database (shared with auth routes)
-fake_users_db = {
-    "demo@epcid.health": {
-        "id": "user-001",
-        "email": "demo@epcid.health",
-        "full_name": "Demo User",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-        "is_active": True,
-        "is_verified": True,
-        "created_at": "2024-01-01T00:00:00Z",
-    }
-}
-
-
 async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[dict]:
     """
     Get the current user from the JWT token.
@@ -46,6 +32,7 @@ async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> Opt
     if not email:
         return None
     
+    from .routes.auth import fake_users_db
     user = fake_users_db.get(email)
     return user
 
@@ -79,6 +66,7 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    from .routes.auth import fake_users_db
     user = fake_users_db.get(email)
     if not user:
         raise HTTPException(

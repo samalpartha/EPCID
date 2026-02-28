@@ -85,8 +85,8 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), onupdate=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False)
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
     # Preferences
@@ -122,8 +122,8 @@ class Child(Base):
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), onupdate=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False)
     
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="children")
@@ -173,7 +173,7 @@ class Symptom(Base):
     
     # Timing
     onset_time: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    recorded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False, index=True)
     resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
     # Relationships
@@ -225,7 +225,7 @@ class Assessment(Base):
     environmental_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False, index=True)
     
     # Model versioning
     model_version: Mapped[str] = mapped_column(String(20), default="1.0.0", nullable=False)
@@ -265,7 +265,7 @@ class AuditLog(Base):
     details: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     
     # Timestamp
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False, index=True)
     
     # Relationships
     user: Mapped[Optional["User"]] = relationship("User", back_populates="audit_logs")
@@ -302,7 +302,7 @@ class RefreshToken(Base):
     ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
     
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False)
     
     __table_args__ = (
         Index("ix_refresh_tokens_user_expires", "user_id", "expires_at"),
@@ -333,7 +333,7 @@ class EnvironmentData(Base):
     
     # Timestamps
     data_timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__("datetime").timezone.utc), nullable=False)
     
     __table_args__ = (
         Index("ix_environment_location", "latitude", "longitude"),

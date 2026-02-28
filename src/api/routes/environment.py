@@ -132,7 +132,7 @@ async def get_air_quality(
             "health_implications": get_aqi_health_implications(aqi),
             "recommendation": get_aqi_recommendation(aqi),
             "pediatric_advisory": get_aqi_pediatric_advisory(aqi),
-            "data_timestamp": datetime.utcnow().isoformat(),
+            "data_timestamp": datetime.now(__import__("datetime").timezone.utc).isoformat(),
             "location": f"{latitude:.4f}, {longitude:.4f}",
         }
         
@@ -151,7 +151,7 @@ async def get_air_quality(
             health_implications="Unable to retrieve air quality data.",
             recommendation="Check local air quality sources.",
             pediatric_advisory=None,
-            data_timestamp=datetime.utcnow(),
+            data_timestamp=datetime.now(__import__("datetime").timezone.utc),
             location=f"{latitude:.4f}, {longitude:.4f}",
         )
 
@@ -218,7 +218,7 @@ async def get_weather(
             "uv_index": uv_index,
             "alerts": data.get("alerts", []),
             "pediatric_considerations": considerations,
-            "data_timestamp": datetime.utcnow().isoformat(),
+            "data_timestamp": datetime.now(__import__("datetime").timezone.utc).isoformat(),
             "location": f"{latitude:.4f}, {longitude:.4f}",
         }
         
@@ -237,7 +237,7 @@ async def get_weather(
             uv_index=None,
             alerts=[],
             pediatric_considerations=["Unable to retrieve weather data."],
-            data_timestamp=datetime.utcnow(),
+            data_timestamp=datetime.now(__import__("datetime").timezone.utc),
             location=f"{latitude:.4f}, {longitude:.4f}",
         )
 

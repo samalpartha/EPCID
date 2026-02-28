@@ -134,7 +134,7 @@ async def start_symptom_checker(
         "child_id": request.child_id,
         "age_months": request.age_months,
         "sex": request.sex,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(__import__("datetime").timezone.utc),
         "symptoms": [],
         "warnings": warnings,
     }
@@ -244,7 +244,7 @@ async def get_triage(
         session_id=request.session_id,
         triage=triage,
         symptoms_assessed=[SymptomInput(**s) for s in symptoms],
-        assessment_time=datetime.utcnow(),
+        assessment_time=datetime.now(__import__("datetime").timezone.utc),
         confidence=0.85,
     )
 

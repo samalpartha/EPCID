@@ -105,7 +105,7 @@ export interface Medication {
   intervalHours: number
   instructions: string
   color: string
-  type?: string
+  type?: 'acetaminophen' | 'ibuprofen' | 'other'
 }
 
 export interface DoseLog {
@@ -144,6 +144,9 @@ export interface RiskImpact {
 export interface SuggestedAction {
   title: string
   message: string
+  action_href?: string
+  action_label?: string
+  urgency?: 'low' | 'moderate' | 'high' | 'critical'
 }
 
 export interface DetectedEvent {
@@ -392,7 +395,7 @@ interface AppState {
 
 export const useStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set, get): AppState => ({
       // Auth
       user: null,
       token: null,
@@ -761,7 +764,7 @@ export const useStore = create<AppState>()(
           return {
             drug_name: med?.name || 'Unknown',
             dosage_mg: parseInt(log.dosage) || 0,
-            administered_at: log.timestamp,
+            administered_at: new Date(log.timestamp).toISOString(),
             efficacy_flag: 'normal',
           }
         })
@@ -1012,8 +1015,8 @@ export const useStore = create<AppState>()(
       // Store version for migrations
       version: 2,
       // Handle migrations between store versions
-      migrate: (persistedState: unknown, version: number) => {
-        const state = persistedState as Partial<AppState>
+      migrate: (persistedState: unknown, version: number): any => {
+        const state = persistedState as any
 
         if (version < 2) {
           // Migration from v1 to v2: Add any necessary transformations

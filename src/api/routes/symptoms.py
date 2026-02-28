@@ -47,7 +47,7 @@ async def create_symptom(
     - **notes**: Additional notes
     """
     symptom_id = f"sym-{uuid4().hex[:8]}"
-    now = datetime.utcnow()
+    now = datetime.now(__import__("datetime").timezone.utc)
     
     symptom_data = {
         "id": symptom_id,
@@ -79,7 +79,7 @@ async def create_symptoms_batch(
 ):
     """Log multiple symptoms in a single request."""
     results = []
-    now = datetime.utcnow()
+    now = datetime.now(__import__("datetime").timezone.utc)
     
     for symptom in symptoms:
         symptom_id = f"sym-{uuid4().hex[:8]}"
@@ -163,7 +163,7 @@ async def get_child_symptoms(
     current_user: dict = Depends(get_current_active_user),
 ):
     """Get symptom history for a child."""
-    since = datetime.utcnow() - timedelta(days=days)
+    since = datetime.now(__import__("datetime").timezone.utc) - timedelta(days=days)
     
     symptoms = [
         SymptomResponse(**symptom)
@@ -177,7 +177,7 @@ async def get_child_symptoms(
     
     date_range = {
         "start": since,
-        "end": datetime.utcnow(),
+        "end": datetime.now(__import__("datetime").timezone.utc),
     }
     
     return SymptomHistory(

@@ -87,10 +87,10 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { 
-    user, 
-    token, 
-    setUser, 
+  const {
+    user,
+    token,
+    setUser,
     logout,
     children: childrenList,
     setChildren,
@@ -114,7 +114,7 @@ export default function DashboardLayout({
     doseLogs,
     latestAssessment,
   } = useStore()
-  
+
   const [childDropdownOpen, setChildDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
@@ -170,7 +170,7 @@ export default function DashboardLayout({
 
       try {
         const { authApi, childrenApi } = await import('@/lib/api')
-        
+
         const profile = await authApi.getProfile()
         setUser(profile)
 
@@ -232,10 +232,10 @@ export default function DashboardLayout({
     <div className="min-h-screen flex flex-col">
       {/* Hackathon Demo Banner */}
       <DemoModeBanner />
-      
+
       {/* AI Status Indicator */}
       <AIStatusIndicator />
-      
+
       {/* Top Safety Bar - Glass Style */}
       <div className="bg-gradient-to-r from-surface-900/95 to-surface-800/95 dark:from-navy-950/95 dark:to-navy-925/95 backdrop-blur-xl border-b border-surface-700/30 dark:border-primary-400/10">
         <div className="max-w-full mx-auto px-4 py-2">
@@ -354,32 +354,31 @@ export default function DashboardLayout({
                   {childrenList
                     .filter((child, index, self) => index === self.findIndex(c => c.id === child.id))
                     .map((child) => (
-                    <button
-                      key={child.id}
-                      onClick={() => {
-                        selectChild(child)
-                        setChildDropdownOpen(false)
-                      }}
-                      className={`
+                      <button
+                        key={child.id}
+                        onClick={() => {
+                          selectChild(child)
+                          setChildDropdownOpen(false)
+                        }}
+                        className={`
                         w-full p-3 flex items-center gap-3 hover:bg-surface-50 dark:hover:bg-navy-900 transition-colors
                         ${selectedChild?.id === child.id ? 'bg-primary-50 dark:bg-primary-500/10' : ''}
                       `}
-                    >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
-                        selectedChild?.id === child.id 
-                          ? 'bg-gradient-to-br from-primary-400 to-primary-600' 
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${selectedChild?.id === child.id
+                          ? 'bg-gradient-to-br from-primary-400 to-primary-600'
                           : 'bg-surface-400 dark:bg-navy-700'
-                      }`}>
-                        {child.name.charAt(0)}
-                      </div>
-                      <span className={`${selectedChild?.id === child.id ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-surface-700 dark:text-surface-300'}`}>
-                        {child.name}
-                      </span>
-                      {selectedChild?.id === child.id && (
-                        <div className="ml-auto w-2 h-2 rounded-full bg-primary-500" />
-                      )}
-                    </button>
-                  ))}
+                          }`}>
+                          {child.name.charAt(0)}
+                        </div>
+                        <span className={`${selectedChild?.id === child.id ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-surface-700 dark:text-surface-300'}`}>
+                          {child.name}
+                        </span>
+                        {selectedChild?.id === child.id && (
+                          <div className="ml-auto w-2 h-2 rounded-full bg-primary-500" />
+                        )}
+                      </button>
+                    ))}
                   <Link
                     href="/dashboard/children"
                     onClick={() => setChildDropdownOpen(false)}
@@ -411,16 +410,16 @@ export default function DashboardLayout({
                   onClick={() => setSidebarOpen(false)}
                   className={`
                     group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative
-                    ${isActive 
-                      ? 'bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400' 
+                    ${isActive
+                      ? 'bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400'
                       : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-navy-900/50 hover:text-surface-900 dark:hover:text-white'
                     }
                   `}
                 >
                   <div className={`
                     w-9 h-9 rounded-lg flex items-center justify-center transition-all
-                    ${isActive 
-                      ? 'bg-primary-100 dark:bg-primary-500/20' 
+                    ${isActive
+                      ? 'bg-primary-100 dark:bg-primary-500/20'
                       : 'bg-surface-100 dark:bg-navy-900/50 group-hover:bg-surface-200 dark:group-hover:bg-navy-800'
                     }
                   `}>
@@ -476,7 +475,7 @@ export default function DashboardLayout({
               >
                 <Menu className="w-5 h-5" />
               </button>
-              
+
               {/* Home button */}
               {pathname !== '/dashboard' && (
                 <Link
@@ -487,7 +486,7 @@ export default function DashboardLayout({
                   <span className="text-sm font-medium hidden sm:inline">Home</span>
                 </Link>
               )}
-              
+
               <div>
                 <h1 className="text-lg font-semibold text-surface-900 dark:text-white">
                   {navItems.find(item => item.href === pathname)?.label || 'Dashboard'}
@@ -500,35 +499,35 @@ export default function DashboardLayout({
 
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Quick Actions */}
-              <Link 
+              <Link
                 href="/dashboard/assess"
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-accent-500 hover:bg-accent-600 text-white font-medium rounded-lg transition-all text-xs shadow-glow-accent"
               >
                 <Heart className="w-3.5 h-3.5" />
                 <span>Quick Assess</span>
               </Link>
-              
+
               {/* Help button */}
-              <Link 
+              <Link
                 href="/dashboard/help"
                 className="p-2 text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-white rounded-lg hover:bg-surface-100 dark:hover:bg-navy-900/50 transition-colors"
               >
                 <HelpCircle className="w-5 h-5" />
               </Link>
-              
+
               {/* Theme toggle */}
               <ThemeToggle />
-              
+
               {/* Notifications */}
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
                   className="relative p-2 text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-white rounded-lg hover:bg-surface-100 dark:hover:bg-navy-900/50 transition-colors"
                 >
                   <Bell className="w-5 h-5" />
                   {(() => {
                     const unreadCount = [
-                      ...detectedEvents.filter(e => e.status === 'active').map(e => e.id),
+                      ...detectedEvents.filter(e => e.status === 'pending').map(e => e.id),
                       ...smartInsights.map(i => i.id),
                     ].filter(id => !readNotificationIds.has(id)).length
                     return unreadCount > 0 ? (
@@ -538,7 +537,7 @@ export default function DashboardLayout({
                     ) : null
                   })()}
                 </button>
-                
+
                 <AnimatePresence>
                   {notificationsOpen && (
                     <>
@@ -565,16 +564,18 @@ export default function DashboardLayout({
                           </button>
                         </div>
                         <div className="max-h-80 overflow-y-auto divide-y divide-surface-100 dark:divide-navy-800">
-                          {detectedEvents.filter(e => e.status === 'active').map((event) => (
-                            <div 
+                          {detectedEvents.filter(e => e.status === 'pending').map((event) => (
+                            <div
                               key={event.id}
                               onClick={() => {
-                                setReadNotificationIds(prev => new Set([...prev, event.id]))
+                                setReadNotificationIds(prev => new Set(Array.from(prev).concat(event.id)))
+                                if (event.suggested_action?.action_href) {
+                                  router.push(event.suggested_action.action_href)
+                                }
                                 setNotificationsOpen(false)
                               }}
-                              className={`px-4 py-3 hover:bg-surface-50 dark:hover:bg-navy-900/50 cursor-pointer transition-colors ${
-                                readNotificationIds.has(event.id) ? 'opacity-60' : ''
-                              }`}
+                              className={`px-4 py-3 hover:bg-surface-50 dark:hover:bg-navy-900/50 cursor-pointer transition-colors ${readNotificationIds.has(event.id) ? 'opacity-60' : ''
+                                }`}
                             >
                               <div className="flex items-start gap-3">
                                 <div className="w-8 h-8 rounded-full bg-danger-100 dark:bg-danger-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -601,27 +602,24 @@ export default function DashboardLayout({
                             <div
                               key={insight.id}
                               onClick={() => {
-                                setReadNotificationIds(prev => new Set([...prev, insight.id]))
+                                setReadNotificationIds(prev => new Set(Array.from(prev).concat(insight.id)))
                                 if (insight.action_href) {
                                   router.push(insight.action_href)
                                 }
                                 setNotificationsOpen(false)
                               }}
-                              className={`px-4 py-3 hover:bg-surface-50 dark:hover:bg-navy-900/50 cursor-pointer transition-colors ${
-                                readNotificationIds.has(insight.id) ? 'opacity-60' : ''
-                              }`}
+                              className={`px-4 py-3 hover:bg-surface-50 dark:hover:bg-navy-900/50 cursor-pointer transition-colors ${readNotificationIds.has(insight.id) ? 'opacity-60' : ''
+                                }`}
                             >
                               <div className="flex items-start gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                                  insight.priority === 'high' ? 'bg-amber-100 dark:bg-amber-900/50' :
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${insight.priority === 'high' ? 'bg-amber-100 dark:bg-amber-900/50' :
                                   insight.priority === 'medium' ? 'bg-blue-100 dark:bg-blue-900/50' :
-                                  'bg-surface-100 dark:bg-surface-800'
-                                }`}>
-                                  <Sparkles className={`w-4 h-4 ${
-                                    insight.priority === 'high' ? 'text-amber-500' :
+                                    'bg-surface-100 dark:bg-surface-800'
+                                  }`}>
+                                  <Sparkles className={`w-4 h-4 ${insight.priority === 'high' ? 'text-amber-500' :
                                     insight.priority === 'medium' ? 'text-blue-500' :
-                                    'text-surface-500'
-                                  }`} />
+                                      'text-surface-500'
+                                    }`} />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-surface-900 dark:text-white">
@@ -652,7 +650,7 @@ export default function DashboardLayout({
                   )}
                 </AnimatePresence>
               </div>
-              
+
               {/* User avatar */}
               <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-surface-200 dark:border-navy-800">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold shadow-md ring-2 ring-primary-400/20">

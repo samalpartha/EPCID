@@ -43,7 +43,7 @@ const medications = {
     ageRestriction: 'Consult doctor for infants under 3 months',
     minAgeMonths: 0,
     formulations: [
-      { 
+      {
         id: 'tylenol_infant_drops',
         name: 'Infant Drops',
         brand: 'Tylenol Infants',
@@ -55,7 +55,7 @@ const medications = {
         maxMl: 5,
         forAge: '0-2 years',
       },
-      { 
+      {
         id: 'tylenol_liquid',
         name: "Children's Liquid",
         brand: "Children's Tylenol",
@@ -67,7 +67,7 @@ const medications = {
         maxMl: 15,
         forAge: '2-11 years',
       },
-      { 
+      {
         id: 'tylenol_chewable',
         name: 'Chewable Tablets',
         brand: "Children's Tylenol",
@@ -78,7 +78,7 @@ const medications = {
         description: '160 mg per tablet',
         forAge: '2-11 years',
       },
-      { 
+      {
         id: 'tylenol_junior',
         name: 'Junior Strength',
         brand: 'Tylenol Junior',
@@ -109,7 +109,7 @@ const medications = {
     ageRestriction: 'NOT for infants under 6 months',
     minAgeMonths: 6,
     formulations: [
-      { 
+      {
         id: 'advil_infant_drops',
         name: 'Infant Drops',
         brand: 'Infant Advil',
@@ -121,7 +121,7 @@ const medications = {
         maxMl: 2.5,
         forAge: '6-23 months',
       },
-      { 
+      {
         id: 'motrin_liquid',
         name: "Children's Liquid",
         brand: "Children's Motrin",
@@ -133,7 +133,7 @@ const medications = {
         maxMl: 15,
         forAge: '2-11 years',
       },
-      { 
+      {
         id: 'advil_chewable',
         name: 'Chewable Tablets',
         brand: "Children's Advil",
@@ -144,7 +144,7 @@ const medications = {
         description: '50 mg per tablet',
         forAge: '2-11 years',
       },
-      { 
+      {
         id: 'advil_junior',
         name: 'Junior Strength',
         brand: 'Junior Advil',
@@ -176,7 +176,7 @@ const medications = {
     ageRestriction: 'NOT for children under 2 years without doctor approval',
     minAgeMonths: 24,
     formulations: [
-      { 
+      {
         id: 'benadryl_liquid',
         name: "Children's Liquid",
         brand: "Children's Benadryl",
@@ -188,7 +188,7 @@ const medications = {
         maxMl: 20,
         forAge: '2-11 years',
       },
-      { 
+      {
         id: 'benadryl_chewable',
         name: 'Chewable Tablets',
         brand: "Children's Benadryl",
@@ -235,7 +235,7 @@ export default function DosageCalculatorPage() {
   const [showRecentDoseWarning, setShowRecentDoseWarning] = useState(false)
   const [recentDoseInfo, setRecentDoseInfo] = useState<{ time: Date; hoursAgo: number; nextSafeTime: Date } | null>(null)
   const [doseLogged, setDoseLogged] = useState(false)
-  
+
   // Auto-populate weight from profile
   const profileWeight = selectedChild?.weight_lbs
   const useProfileWeight = () => {
@@ -244,7 +244,7 @@ export default function DosageCalculatorPage() {
       setWeightUnit('lbs')
     }
   }
-  
+
   // Child age for age-appropriate formulation filtering
   const childAgeMonths = useMemo(() => {
     if (!selectedChild?.date_of_birth) return 72
@@ -252,7 +252,7 @@ export default function DosageCalculatorPage() {
     const now = new Date()
     return (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth())
   }, [selectedChild])
-  
+
   const childAgeYears = useMemo(() => {
     if (!selectedChild?.date_of_birth) return 6
     return calculateAge(selectedChild.date_of_birth)
@@ -263,11 +263,11 @@ export default function DosageCalculatorPage() {
     const w = parseFloat(weight) || 0
     return weightUnit === 'lbs' ? w / 2.205 : w
   }, [weight, weightUnit])
-  
+
   // Check for recent doses of this medication (Double-Dose Prevention)
   const lastDoseOfMed = useMemo(() => {
     if (!selectedMed || !selectedChild) return null
-    
+
     // Check dose logs for this medication
     const medName = medications[selectedMed].name.toLowerCase()
     const recentDoses = doseLogs
@@ -275,7 +275,7 @@ export default function DosageCalculatorPage() {
         const logMedName = log.medication?.toLowerCase() || ''
         return (
           log.child_id === selectedChild.id &&
-          (logMedName.includes('tylenol') || logMedName.includes('acetaminophen') 
+          (logMedName.includes('tylenol') || logMedName.includes('acetaminophen')
             ? selectedMed === 'acetaminophen'
             : logMedName.includes('advil') || logMedName.includes('motrin') || logMedName.includes('ibuprofen')
               ? selectedMed === 'ibuprofen'
@@ -286,21 +286,21 @@ export default function DosageCalculatorPage() {
         )
       })
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    
+
     return recentDoses[0] || null
   }, [selectedMed, selectedChild, doseLogs])
-  
+
   // Calculate time until next safe dose
   const nextSafeDose = useMemo(() => {
     if (!lastDoseOfMed || !selectedMed) return null
-    
+
     const lastDoseTime = new Date(lastDoseOfMed.timestamp)
     const minHours = medications[selectedMed].minHoursBetween
     const nextSafeTime = new Date(lastDoseTime.getTime() + minHours * 60 * 60 * 1000)
     const now = new Date()
     const hoursAgo = (now.getTime() - lastDoseTime.getTime()) / (1000 * 60 * 60)
     const hoursTillSafe = (nextSafeTime.getTime() - now.getTime()) / (1000 * 60 * 60)
-    
+
     return {
       lastDoseTime,
       hoursAgo,
@@ -309,7 +309,7 @@ export default function DosageCalculatorPage() {
       isSafeNow: hoursTillSafe <= 0,
     }
   }, [lastDoseOfMed, selectedMed])
-  
+
   // Check for warning when medication changes
   useEffect(() => {
     if (nextSafeDose && !nextSafeDose.isSafeNow) {
@@ -338,7 +338,7 @@ export default function DosageCalculatorPage() {
 
     // Calculate liquid amount (mL)
     const liquidMl = form.perMl ? (recommendedMg / form.concentration) * form.perMl : 0
-    
+
     // Calculate tablet amount
     const tabletCount = form.perUnit ? recommendedMg / form.concentration : 0
 
@@ -355,27 +355,27 @@ export default function DosageCalculatorPage() {
       formulationType: form.type as 'liquid' | 'tablet',
     }
   }, [selectedMed, weight, weightKg, selectedFormulation])
-  
+
   // Log the calculated dose
   const handleLogDose = () => {
     if (!selectedChild || !selectedMed || !doseResult) return
-    
+
     const med = medications[selectedMed]
     const form = med.formulations[selectedFormulation]
-    
+
     addDoseLog({
       id: `dose_${Date.now()}`,
       medicationId: selectedMed,
       child_id: selectedChild.id,
       medication: `${form.brand} ${form.name}`,
       medication_name: `${form.brand} ${form.name}`,
-      dosage: form.type === 'liquid' 
+      dosage: form.type === 'liquid'
         ? `${doseResult.liquidAmount}`
         : `${doseResult.tabletAmount} tablet(s)`,
-      dosage_mg: doseResult.doseMg,
+      dosage_mg: doseResult.recommendedMg,
       timestamp: new Date().toISOString(),
     })
-    
+
     setDoseLogged(true)
     setTimeout(() => setDoseLogged(false), 3000)
   }
@@ -399,7 +399,7 @@ export default function DosageCalculatorPage() {
           </p>
         </div>
       </motion.div>
-      
+
       {/* Recent Dose Warning Modal */}
       <AnimatePresence>
         {showRecentDoseWarning && recentDoseInfo && selectedMed && (
@@ -432,15 +432,15 @@ export default function DosageCalculatorPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="secondary"
                     onClick={() => setShowRecentDoseWarning(false)}
                   >
                     I understand, continue
                   </Button>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="ghost"
                     onClick={() => setSelectedMed(null)}
                   >
@@ -448,7 +448,7 @@ export default function DosageCalculatorPage() {
                   </Button>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setShowRecentDoseWarning(false)}
                 className="text-red-400 hover:text-red-600"
               >
@@ -458,7 +458,7 @@ export default function DosageCalculatorPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Dose Logged Success Toast */}
       <AnimatePresence>
         {doseLogged && (
@@ -511,7 +511,7 @@ export default function DosageCalculatorPage() {
               </div>
             </motion.button>
           )}
-          
+
           {/* Weight already filled from profile */}
           {weight && profileWeight && weight === profileWeight.toString() && (
             <div className="flex items-center gap-2 p-2 rounded-lg bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 text-sm">
@@ -519,7 +519,7 @@ export default function DosageCalculatorPage() {
               Using {selectedChild?.name}'s weight from profile
             </div>
           )}
-          
+
           <div className="flex gap-4">
             <div className="flex-1 relative">
               <input
@@ -530,7 +530,7 @@ export default function DosageCalculatorPage() {
                 className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white text-lg placeholder-surface-500 focus:border-cyan-500 focus:outline-none"
               />
               {weight && (
-                <button 
+                <button
                   onClick={() => setWeight('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
                 >
@@ -541,21 +541,19 @@ export default function DosageCalculatorPage() {
             <div className="flex rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700">
               <button
                 onClick={() => setWeightUnit('lbs')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  weightUnit === 'lbs'
+                className={`px-4 py-3 font-medium transition-colors ${weightUnit === 'lbs'
                     ? 'bg-cyan-500 text-white'
                     : 'bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 lbs
               </button>
               <button
                 onClick={() => setWeightUnit('kg')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  weightUnit === 'kg'
+                className={`px-4 py-3 font-medium transition-colors ${weightUnit === 'kg'
                     ? 'bg-cyan-500 text-white'
                     : 'bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 kg
               </button>
@@ -563,13 +561,13 @@ export default function DosageCalculatorPage() {
           </div>
           {weight && (
             <p className="text-sm text-surface-500">
-              {weightUnit === 'lbs' 
+              {weightUnit === 'lbs'
                 ? `= ${weightKg.toFixed(1)} kg`
                 : `= ${(weightKg * 2.205).toFixed(1)} lbs`
               }
             </p>
           )}
-          
+
           {/* Missing weight prompt */}
           {!profileWeight && !weight && (
             <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
@@ -599,7 +597,7 @@ export default function DosageCalculatorPage() {
           <div className="grid gap-3">
             {(Object.entries(medications) as [MedicationType, typeof medications.acetaminophen][]).map(([key, med]) => {
               const isAgeAppropriate = childAgeMonths >= med.minAgeMonths
-              
+
               return (
                 <button
                   key={key}
@@ -609,13 +607,12 @@ export default function DosageCalculatorPage() {
                     setDoseLogged(false)
                   }}
                   disabled={!isAgeAppropriate}
-                  className={`p-4 rounded-xl text-left transition-all relative ${
-                    selectedMed === key
+                  className={`p-4 rounded-xl text-left transition-all relative ${selectedMed === key
                       ? 'bg-cyan-50 dark:bg-cyan-900/30 border-2 border-cyan-500'
                       : isAgeAppropriate
                         ? 'bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700 hover:border-cyan-300 dark:hover:border-cyan-700'
                         : 'bg-surface-100 dark:bg-surface-800/30 border border-surface-200 dark:border-surface-700 opacity-50 cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -672,11 +669,10 @@ export default function DosageCalculatorPage() {
                   <button
                     key={form.id}
                     onClick={() => setSelectedFormulation(index)}
-                    className={`p-4 rounded-xl text-left transition-all ${
-                      selectedFormulation === index
+                    className={`p-4 rounded-xl text-left transition-all ${selectedFormulation === index
                         ? 'bg-white dark:bg-surface-800 border-2 border-violet-500 shadow-lg ring-2 ring-violet-200 dark:ring-violet-800'
                         : 'bg-white/50 dark:bg-surface-800/50 border border-violet-200 dark:border-violet-700 hover:border-violet-400'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="text-3xl">{form.icon}</div>
@@ -730,7 +726,7 @@ export default function DosageCalculatorPage() {
                         {/* Syringe body */}
                         <div className="w-20 h-48 rounded-lg border-4 border-cyan-400 bg-gradient-to-t from-cyan-400 to-transparent relative overflow-hidden">
                           {/* Liquid level */}
-                          <div 
+                          <div
                             className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-cyan-500 to-cyan-300 transition-all"
                             style={{ height: `${Math.min(100, (doseResult.liquidMl / 15) * 100)}%` }}
                           />
@@ -791,12 +787,12 @@ export default function DosageCalculatorPage() {
                     </div>
                   </>
                 )}
-                
+
                 <div className="mt-3 text-sm text-surface-500">
                   = {doseResult.recommendedMg} mg ({doseResult.minDoseMg}-{doseResult.maxDoseMg} mg range)
                 </div>
               </div>
-              
+
               {/* Product Info */}
               <div className="p-4 rounded-xl bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
                 <div className="flex items-center gap-3">
@@ -826,7 +822,7 @@ export default function DosageCalculatorPage() {
                     Maximum {doseResult.maxDailyDoses} doses in 24 hours
                   </div>
                 </div>
-                
+
                 <div className="p-4 rounded-xl bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
                   <div className="flex items-center gap-2 mb-2">
                     <Timer className="w-5 h-5 text-violet-600" />
@@ -854,7 +850,7 @@ export default function DosageCalculatorPage() {
                   )}
                 </div>
               </div>
-              
+
               {/* Log This Dose Button */}
               <div className="flex gap-3">
                 <Button
@@ -912,8 +908,8 @@ export default function DosageCalculatorPage() {
         <div className="flex items-start gap-3">
           <Shield className="w-5 h-5 text-surface-500 flex-shrink-0 mt-0.5" />
           <div className="text-xs text-surface-600 dark:text-surface-400">
-            <strong>Disclaimer:</strong> This dosage calculator is for reference only and should not replace 
-            professional medical advice. Always verify dosing with your pediatrician or pharmacist, especially 
+            <strong>Disclaimer:</strong> This dosage calculator is for reference only and should not replace
+            professional medical advice. Always verify dosing with your pediatrician or pharmacist, especially
             for infants or children with medical conditions. Use only the measuring device provided with the medication.
           </div>
         </div>

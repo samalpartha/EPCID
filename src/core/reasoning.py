@@ -60,7 +60,7 @@ class ReasoningStep:
     output_data: Dict[str, Any]
     rationale: str
     confidence: float
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     warnings: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
@@ -88,7 +88,7 @@ class ReasoningChain:
     uncertainty_factors: List[str]
     supporting_evidence: List[str]
     contradicting_evidence: List[str]
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def get_explanation(self) -> str:
@@ -215,7 +215,7 @@ class ChainOfThought(ReasoningStrategy):
             contradicting_evidence.extend(step.output_data.get("contradicting_evidence", []))
         
         chain_id = hashlib.sha256(
-            f"{goal}:{datetime.utcnow().isoformat()}".encode()
+            f"{goal}:{datetime.now(__import__("datetime").timezone.utc).isoformat()}".encode()
         ).hexdigest()[:12]
         
         chain = ReasoningChain(
@@ -587,7 +587,7 @@ class SelfConsistency(ReasoningStrategy):
         best_chain = max(chains, key=lambda c: c.overall_confidence)
         
         chain_id = hashlib.sha256(
-            f"{goal}:sc:{datetime.utcnow().isoformat()}".encode()
+            f"{goal}:sc:{datetime.now(__import__("datetime").timezone.utc).isoformat()}".encode()
         ).hexdigest()[:12]
         
         result = ReasoningChain(
