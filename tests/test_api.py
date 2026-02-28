@@ -13,6 +13,8 @@ from httpx import AsyncClient
 # Import the app
 from src.api.main import app
 
+pytestmark = pytest.mark.integration
+
 
 # Test client fixtures
 @pytest.fixture

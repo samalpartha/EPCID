@@ -8,8 +8,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field, validator
-
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 # Enums
 class RiskLevel(str, Enum):
@@ -76,8 +75,7 @@ class UserResponse(BaseModel):
     is_verified: bool = False
     created_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Child Schemas
@@ -88,7 +86,8 @@ class ChildBase(BaseModel):
     date_of_birth: datetime
     gender: Gender
 
-    @validator("date_of_birth")
+    @field_validator("date_of_birth")
+    @classmethod
     def validate_dob(cls, v: datetime) -> datetime:
         if v > datetime.now():
             raise ValueError("Date of birth cannot be in the future")
@@ -123,8 +122,7 @@ class ChildResponse(ChildBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Symptom Schemas
@@ -146,8 +144,8 @@ class SymptomCreate(SymptomBase):
         description="Additional measurements (e.g., temperature: 101.5)",
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "child_id": "child-001",
                 "symptom_type": "fever",
@@ -157,6 +155,7 @@ class SymptomCreate(SymptomBase):
                 "notes": "Started this morning, seems uncomfortable",
             }
         }
+    )
 
 
 class SymptomResponse(SymptomBase):
@@ -168,8 +167,7 @@ class SymptomResponse(SymptomBase):
     onset_time: datetime | None
     measurements: dict[str, Any] | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SymptomHistory(BaseModel):
@@ -194,8 +192,8 @@ class AssessmentRequest(BaseModel):
     include_guidelines: bool = True
     include_environmental: bool = True
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "child_id": "child-001",
                 "symptoms": [
@@ -212,6 +210,7 @@ class AssessmentRequest(BaseModel):
                 "include_environmental": True,
             }
         }
+    )
 
 
 class RiskFactor(BaseModel):
@@ -255,8 +254,8 @@ class AssessmentResponse(BaseModel):
     # Disclaimers
     disclaimers: list[str]
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "id": "assess-001",
                 "child_id": "child-001",
@@ -289,6 +288,7 @@ class AssessmentResponse(BaseModel):
                 ],
             }
         }
+    )
 
 
 # Guideline Schemas
@@ -338,8 +338,7 @@ class LocationRequest(BaseModel):
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
 
-    class Config:
-        json_schema_extra = {"example": {"latitude": 40.7128, "longitude": -74.0060}}
+    model_config = ConfigDict(json_schema_extra={"example": {"latitude": 40.7128, "longitude": -74.0060}})
 
 
 class AirQualityResponse(BaseModel):

@@ -13,7 +13,7 @@ from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from ...api.dependencies import get_current_active_user
 from ...api.schemas import UserResponse
@@ -44,8 +44,8 @@ class RegisterRequest(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100)
     phone: str | None = None
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "email": "parent@example.com",
                 "password": "securepassword123",
@@ -53,6 +53,7 @@ class RegisterRequest(BaseModel):
                 "phone": "+1-555-123-4567",
             }
         }
+    )
 
 
 class TokenResponse(BaseModel):
