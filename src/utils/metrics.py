@@ -8,6 +8,7 @@ Performance and clinical metrics collection:
 - Model performance metrics
 - Safety rule trigger rates
 """
+
 from __future__ import annotations
 
 import logging
@@ -40,7 +41,7 @@ class Timer:
         self.start_time: float | None = None
         self.end_time: float | None = None
 
-    def __enter__(self) -> "Timer":
+    def __enter__(self) -> Timer:
         self.start_time = time.perf_counter()
         return self
 

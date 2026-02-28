@@ -3,6 +3,7 @@ EPCID Database Models
 
 SQLAlchemy ORM models for all database entities.
 """
+
 from __future__ import annotations
 
 import enum
@@ -103,10 +104,10 @@ class User(Base):
     preferences: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Relationships
-    children: Mapped[list["Child"]] = relationship(
+    children: Mapped[list[Child]] = relationship(
         "Child", back_populates="user", cascade="all, delete-orphan"
     )
-    audit_logs: Mapped[list["AuditLog"]] = relationship(
+    audit_logs: Mapped[list[AuditLog]] = relationship(
         "AuditLog", back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -149,11 +150,11 @@ class Child(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="children")
-    symptoms: Mapped[list["Symptom"]] = relationship(
+    user: Mapped[User] = relationship("User", back_populates="children")
+    symptoms: Mapped[list[Symptom]] = relationship(
         "Symptom", back_populates="child", cascade="all, delete-orphan"
     )
-    assessments: Mapped[list["Assessment"]] = relationship(
+    assessments: Mapped[list[Assessment]] = relationship(
         "Assessment", back_populates="child", cascade="all, delete-orphan"
     )
 
@@ -213,7 +214,7 @@ class Symptom(Base):
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
-    child: Mapped["Child"] = relationship("Child", back_populates="symptoms")
+    child: Mapped[Child] = relationship("Child", back_populates="symptoms")
 
     # Indexes
     __table_args__ = (
@@ -274,7 +275,7 @@ class Assessment(Base):
     model_version: Mapped[str] = mapped_column(String(20), default="1.0.0", nullable=False)
 
     # Relationships
-    child: Mapped["Child"] = relationship("Child", back_populates="assessments")
+    child: Mapped[Child] = relationship("Child", back_populates="assessments")
 
     # Indexes
     __table_args__ = (
