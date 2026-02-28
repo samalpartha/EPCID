@@ -41,7 +41,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, description="Minimum 8 characters")
     full_name: str = Field(..., min_length=2, max_length=100)
     phone: Optional[str] = None
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -114,11 +114,11 @@ async def register(request: RegisterRequest):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
-    
+
     # Create user
     user_id = f"user-{len(fake_users_db) + 1:03d}"
     hashed_password = get_password_hash(request.password)
-    
+
     new_user = {
         "id": user_id,
         "email": request.email,
@@ -129,13 +129,13 @@ async def register(request: RegisterRequest):
         "is_verified": False,
         "created_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
     }
-    
+
     fake_users_db[request.email] = new_user
-    
+
     # Generate tokens
     access_token = create_access_token(data={"sub": request.email, "user_id": user_id})
     refresh_token = create_refresh_token(data={"sub": request.email, "user_id": user_id})
-    
+
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -165,24 +165,24 @@ async def login(request: LoginRequest):
     Access token expires in 1 hour, refresh token in 7 days.
     """
     user = fake_users_db.get(request.email)
-    
+
     if not user or not verify_password(request.password, user["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     if not user["is_active"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is disabled",
         )
-    
+
     # Generate tokens
     access_token = create_access_token(data={"sub": user["email"], "user_id": user["id"]})
     refresh_token = create_refresh_token(data={"sub": user["email"], "user_id": user["id"]})
-    
+
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -224,24 +224,24 @@ async def refresh_token(request: RefreshRequest):
     try:
         payload = decode_token(request.refresh_token)
         email = payload.get("sub")
-        
+
         if not email:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid refresh token",
             )
-        
+
         user = fake_users_db.get(email)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found",
             )
-        
+
         # Generate new tokens
         access_token = create_access_token(data={"sub": email, "user_id": user["id"]})
         new_refresh_token = create_refresh_token(data={"sub": email, "user_id": user["id"]})
-        
+
         return TokenResponse(
             access_token=access_token,
             refresh_token=new_refresh_token,
@@ -255,7 +255,7 @@ async def refresh_token(request: RefreshRequest):
                 is_verified=user["is_verified"],
             ),
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -313,10 +313,10 @@ async def change_password(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
         )
-    
+
     # Update password
     fake_users_db[current_user["email"]]["hashed_password"] = get_password_hash(request.new_password)
-    
+
     return None
 
 
@@ -346,6 +346,6 @@ class UserResponse(BaseModel):
     full_name: str
     is_active: bool = True
     is_verified: bool = False
-    
+
     class Config:
         from_attributes = True

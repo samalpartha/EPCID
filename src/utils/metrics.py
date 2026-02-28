@@ -31,17 +31,17 @@ class MetricValue:
 
 class Timer:
     """Context manager for timing operations."""
-    
+
     def __init__(self, name: str, collector: Optional["MetricsCollector"] = None):
         self.name = name
         self.collector = collector
         self.start_time: Optional[float] = None
         self.end_time: Optional[float] = None
-    
+
     def __enter__(self) -> "Timer":
         self.start_time = time.perf_counter()
         return self
-    
+
     def __exit__(self, *args) -> None:
         self.end_time = time.perf_counter()
         if self.collector:
@@ -49,7 +49,7 @@ class Timer:
                 self.name,
                 self.duration_ms,
             )
-    
+
     @property
     def duration_ms(self) -> float:
         """Get duration in milliseconds."""
@@ -60,20 +60,20 @@ class Timer:
 
 class Counter:
     """Simple counter metric."""
-    
+
     def __init__(self, name: str, labels: Optional[Dict[str, str]] = None):
         self.name = name
         self.labels = labels or {}
         self._count = 0
-    
+
     def inc(self, amount: int = 1) -> None:
         """Increment the counter."""
         self._count += amount
-    
+
     def reset(self) -> None:
         """Reset the counter."""
         self._count = 0
-    
+
     @property
     def value(self) -> int:
         """Get current count."""
@@ -91,25 +91,25 @@ class MetricsCollector:
     - Risk tier distributions
     - Model performance metrics
     """
-    
+
     def __init__(
         self,
         retention_minutes: int = 60,
     ):
         self.retention_minutes = retention_minutes
-        
+
         # Metric storage
         self._latencies: Dict[str, List[MetricValue]] = defaultdict(list)
         self._counters: Dict[str, Counter] = {}
         self._gauges: Dict[str, MetricValue] = {}
         self._histograms: Dict[str, List[float]] = defaultdict(list)
-        
+
         # Risk assessment metrics
         self._risk_assessments: List[Dict[str, Any]] = []
         self._safety_triggers: List[Dict[str, Any]] = []
-        
+
         logger.info("Initialized MetricsCollector")
-    
+
     def observe_latency(
         self,
         operation: str,
@@ -123,7 +123,7 @@ class MetricsCollector:
             labels=labels or {},
         ))
         self._cleanup_old_metrics()
-    
+
     @contextmanager
     def time(self, operation: str, labels: Optional[Dict[str, str]] = None):
         """Context manager for timing operations."""
@@ -133,7 +133,7 @@ class MetricsCollector:
         finally:
             duration_ms = (time.perf_counter() - start) * 1000
             self.observe_latency(operation, duration_ms, labels)
-    
+
     def inc_counter(
         self,
         name: str,
@@ -145,7 +145,7 @@ class MetricsCollector:
         if key not in self._counters:
             self._counters[key] = Counter(name, labels)
         self._counters[key].inc(amount)
-    
+
     def set_gauge(
         self,
         name: str,
@@ -159,7 +159,7 @@ class MetricsCollector:
             timestamp=datetime.now(__import__("datetime").timezone.utc),
             labels=labels or {},
         )
-    
+
     def record_histogram(
         self,
         name: str,
@@ -170,7 +170,7 @@ class MetricsCollector:
         # Keep last 1000 observations
         if len(self._histograms[name]) > 1000:
             self._histograms[name] = self._histograms[name][-1000:]
-    
+
     def record_risk_assessment(
         self,
         risk_tier: str,
@@ -186,17 +186,17 @@ class MetricsCollector:
             "latency_ms": latency_ms,
             "triggered_rules": triggered_rules,
         })
-        
+
         # Increment tier counter
         self.inc_counter("risk_assessments", labels={"tier": risk_tier})
-        
+
         # Record latency
         self.observe_latency("risk_assessment", latency_ms, {"tier": risk_tier})
-        
+
         # Keep last 10000 assessments
         if len(self._risk_assessments) > 10000:
             self._risk_assessments = self._risk_assessments[-10000:]
-    
+
     def record_safety_trigger(
         self,
         rule_name: str,
@@ -208,16 +208,16 @@ class MetricsCollector:
             "rule_name": rule_name,
             "risk_tier": risk_tier,
         })
-        
+
         self.inc_counter("safety_triggers", labels={"rule": rule_name})
-    
+
     def get_latency_stats(
         self,
         operation: str,
     ) -> Dict[str, float]:
         """Get latency statistics for an operation."""
         values = [m.value for m in self._latencies.get(operation, [])]
-        
+
         if not values:
             return {
                 "count": 0,
@@ -228,7 +228,7 @@ class MetricsCollector:
                 "min": 0,
                 "max": 0,
             }
-        
+
         sorted_values = sorted(values)
         return {
             "count": len(values),
@@ -239,7 +239,7 @@ class MetricsCollector:
             "min": min(values),
             "max": max(values),
         }
-    
+
     def get_counter_value(
         self,
         name: str,
@@ -248,7 +248,7 @@ class MetricsCollector:
         """Get counter value."""
         key = self._make_key(name, labels)
         return self._counters.get(key, Counter(name)).value
-    
+
     def get_gauge_value(
         self,
         name: str,
@@ -258,21 +258,21 @@ class MetricsCollector:
         key = self._make_key(name, labels)
         metric = self._gauges.get(key)
         return metric.value if metric else None
-    
+
     def get_risk_tier_distribution(
         self,
         window_minutes: int = 60,
     ) -> Dict[str, int]:
         """Get risk tier distribution for recent assessments."""
         cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(minutes=window_minutes)
-        
+
         distribution = defaultdict(int)
         for assessment in self._risk_assessments:
             if assessment["timestamp"] > cutoff:
                 distribution[assessment["risk_tier"]] += 1
-        
+
         return dict(distribution)
-    
+
     def get_safety_trigger_rate(
         self,
         rule_name: Optional[str] = None,
@@ -280,16 +280,16 @@ class MetricsCollector:
     ) -> float:
         """Get safety rule trigger rate per hour."""
         cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(minutes=window_minutes)
-        
+
         triggers = [
             t for t in self._safety_triggers
             if t["timestamp"] > cutoff
             and (rule_name is None or t["rule_name"] == rule_name)
         ]
-        
+
         # Calculate rate per hour
         return len(triggers) * (60 / window_minutes)
-    
+
     def get_summary(self) -> Dict[str, Any]:
         """Get summary of all metrics."""
         return {
@@ -308,7 +308,7 @@ class MetricsCollector:
             "risk_distribution": self.get_risk_tier_distribution(),
             "safety_trigger_rate": self.get_safety_trigger_rate(),
         }
-    
+
     def _make_key(
         self,
         name: str,
@@ -317,28 +317,28 @@ class MetricsCollector:
         """Create a key from name and labels."""
         if not labels:
             return name
-        
+
         label_str = ",".join(f"{k}={v}" for k, v in sorted(labels.items()))
         return f"{name}{{{label_str}}}"
-    
+
     def _percentile(self, sorted_values: List[float], p: int) -> float:
         """Calculate percentile from sorted values."""
         if not sorted_values:
             return 0.0
-        
+
         k = (len(sorted_values) - 1) * p / 100
         f = int(k)
         c = f + 1
-        
+
         if c >= len(sorted_values):
             return sorted_values[-1]
-        
+
         return sorted_values[f] + (k - f) * (sorted_values[c] - sorted_values[f])
-    
+
     def _cleanup_old_metrics(self) -> None:
         """Remove metrics older than retention period."""
         cutoff = datetime.now(__import__("datetime").timezone.utc) - timedelta(minutes=self.retention_minutes)
-        
+
         for op in list(self._latencies.keys()):
             self._latencies[op] = [
                 m for m in self._latencies[op]

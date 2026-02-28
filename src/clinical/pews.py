@@ -66,12 +66,12 @@ class CardiovascularPEWS:
     capillary_refill: CapillaryRefill = CapillaryRefill.NORMAL
     systolic_bp: Optional[int] = None
     skin_color: str = "normal"  # normal, pale, mottled, grey
-    
+
     # Age-adjusted assessment
     tachycardia: bool = False
     bradycardia: bool = False
     hypotension: bool = False
-    
+
     score: int = 0
     score_components: List[str] = field(default_factory=list)
 
@@ -83,7 +83,7 @@ class RespiratoryPEWS:
     work_of_breathing: WorkOfBreathing = WorkOfBreathing.NORMAL
     oxygen_requirement: float = 0.21  # FiO2 (room air = 0.21)
     oxygen_saturation: Optional[float] = None
-    
+
     # Specific signs
     nasal_flaring: bool = False
     retractions: bool = False
@@ -91,11 +91,11 @@ class RespiratoryPEWS:
     grunting: bool = False
     stridor: bool = False
     wheezing: bool = False
-    
+
     # Age-adjusted assessment
     tachypnea: bool = False
     hypoxia: bool = False
-    
+
     score: int = 0
     score_components: List[str] = field(default_factory=list)
 
@@ -105,15 +105,15 @@ class BehaviorPEWS:
     """Behavior/Neurological component of PEWS."""
     avpu: AVPU = AVPU.ALERT
     behavior: BehaviorStatus = BehaviorStatus.APPROPRIATE
-    
+
     # Parent concern
     parent_concern: bool = False
     parent_notes: Optional[str] = None
-    
+
     # Additional observations
     consolable: bool = True
     interacting: bool = True
-    
+
     score: int = 0
     score_components: List[str] = field(default_factory=list)
 
@@ -125,20 +125,20 @@ class PEWSScore:
     cardiovascular: CardiovascularPEWS = field(default_factory=CardiovascularPEWS)
     respiratory: RespiratoryPEWS = field(default_factory=RespiratoryPEWS)
     behavior: BehaviorPEWS = field(default_factory=BehaviorPEWS)
-    
+
     # Total score (0-9 typically, can vary by implementation)
     total_score: int = 0
     max_possible_score: int = 9
-    
+
     # Risk stratification
     risk_level: str = "low"  # low, moderate, high, critical
     escalation_recommended: bool = False
     rapid_response_threshold: bool = False
-    
+
     # Clinical interpretation
     interpretation: str = ""
     recommended_actions: List[str] = field(default_factory=list)
-    
+
     # Metadata
     age_months: int = 0
     confidence: float = 0.5
@@ -171,10 +171,10 @@ class PEWSCalculator:
         if score.escalation_recommended:
             print("Consider escalation to senior clinician")
     """
-    
+
     def __init__(self):
         self.vital_normalizer = VitalSignNormalizer()
-    
+
     def calculate(
         self,
         age_months: int,
@@ -230,7 +230,7 @@ class PEWSCalculator:
             PEWSScore with complete assessment
         """
         result = PEWSScore(age_months=age_months)
-        
+
         # Get age-adjusted vital sign assessment
         vitals = self.vital_normalizer.normalize(
             age_months=age_months,
@@ -239,18 +239,18 @@ class PEWSCalculator:
             systolic_bp=systolic_bp,
             oxygen_saturation=oxygen_saturation,
         )
-        
+
         # Convert capillary refill seconds to category if provided
         if capillary_refill_seconds is not None:
             capillary_refill = self._seconds_to_capillary_refill(capillary_refill_seconds)
-        
+
         # Calculate component scores
         result.cardiovascular = self._calculate_cardiovascular(
             vitals=vitals,
             capillary_refill=capillary_refill,
             skin_color=skin_color,
         )
-        
+
         result.respiratory = self._calculate_respiratory(
             vitals=vitals,
             oxygen_requirement=oxygen_requirement,
@@ -262,37 +262,37 @@ class PEWSCalculator:
             stridor=stridor,
             wheezing=wheezing,
         )
-        
+
         result.behavior = self._calculate_behavior(
             avpu=avpu,
             behavior=behavior,
             parent_concern=parent_concern,
             parent_notes=parent_notes,
         )
-        
+
         # Calculate total score
         result.total_score = (
             result.cardiovascular.score +
             result.respiratory.score +
             result.behavior.score
         )
-        
+
         # Determine risk level and recommendations
         result.risk_level = self._determine_risk_level(result.total_score)
         result.escalation_recommended = result.total_score >= 5
         result.rapid_response_threshold = result.total_score >= 7
-        
+
         # Generate interpretation and actions
         result.interpretation = self._generate_interpretation(result)
         result.recommended_actions = self._generate_recommendations(result)
-        
+
         # Calculate confidence
         result.confidence = self._calculate_confidence(
             vitals, work_of_breathing, avpu
         )
-        
+
         return result
-    
+
     def _seconds_to_capillary_refill(self, seconds: float) -> CapillaryRefill:
         """Convert capillary refill time in seconds to category."""
         if seconds <= 2:
@@ -303,7 +303,7 @@ class PEWSCalculator:
             return CapillaryRefill.PROLONGED
         else:
             return CapillaryRefill.SEVERELY_PROLONGED
-    
+
     def _calculate_cardiovascular(
         self,
         vitals: AgeAdjustedVitals,
@@ -320,10 +320,10 @@ class PEWSCalculator:
             bradycardia=vitals.bradycardia,
             hypotension=vitals.hypotension,
         )
-        
+
         score = 0
         components = []
-        
+
         # Heart rate scoring (0-2 points based on deviation)
         if vitals.heart_rate is not None:
             if vitals.hr_status == VitalSignStatus.CRITICALLY_HIGH:
@@ -338,7 +338,7 @@ class PEWSCalculator:
             elif vitals.hr_status == VitalSignStatus.LOW:
                 score += 1
                 components.append(f"Bradycardia (HR {vitals.heart_rate})")
-        
+
         # Capillary refill scoring (0-2 points)
         if capillary_refill == CapillaryRefill.SEVERELY_PROLONGED:
             score += 2
@@ -349,7 +349,7 @@ class PEWSCalculator:
         elif capillary_refill == CapillaryRefill.SLIGHTLY_PROLONGED:
             score += 1
             components.append("Slightly prolonged cap refill (2-3s)")
-        
+
         # Skin color (0-1 points)
         if skin_color.lower() in ["grey", "gray", "mottled"]:
             score += 1
@@ -357,12 +357,12 @@ class PEWSCalculator:
         elif skin_color.lower() == "pale":
             score += 1
             components.append("Pale skin color")
-        
+
         cv.score = min(3, score)  # Cap at 3
         cv.score_components = components
-        
+
         return cv
-    
+
     def _calculate_respiratory(
         self,
         vitals: AgeAdjustedVitals,
@@ -390,10 +390,10 @@ class PEWSCalculator:
             tachypnea=vitals.tachypnea if hasattr(vitals, 'tachypnea') else False,
             hypoxia=vitals.hypoxia if hasattr(vitals, 'hypoxia') else False,
         )
-        
+
         score = 0
         components = []
-        
+
         # Respiratory rate scoring (0-2 points)
         if vitals.respiratory_rate is not None:
             if vitals.rr_status == VitalSignStatus.CRITICALLY_HIGH:
@@ -402,7 +402,7 @@ class PEWSCalculator:
             elif vitals.rr_status == VitalSignStatus.HIGH:
                 score += 1
                 components.append(f"Tachypnea (RR {vitals.respiratory_rate})")
-        
+
         # Oxygen requirement (0-2 points)
         if oxygen_requirement > 0.5:
             score += 2
@@ -410,7 +410,7 @@ class PEWSCalculator:
         elif oxygen_requirement > 0.21:
             score += 1
             components.append(f"Supplemental O2 (FiO2 {oxygen_requirement:.0%})")
-        
+
         # Work of breathing (0-2 points)
         if work_of_breathing == WorkOfBreathing.SEVERE:
             score += 2
@@ -421,7 +421,7 @@ class PEWSCalculator:
         elif work_of_breathing == WorkOfBreathing.MILD:
             score += 1
             components.append("Mild increased work of breathing")
-        
+
         # Specific respiratory signs
         if grunting:
             score += 1
@@ -433,7 +433,7 @@ class PEWSCalculator:
             components.append("Retractions present")
         if nasal_flaring:
             components.append("Nasal flaring")
-        
+
         # Oxygen saturation
         if vitals.oxygen_saturation is not None:
             if vitals.spo2_status == VitalSignStatus.CRITICALLY_LOW:
@@ -442,12 +442,12 @@ class PEWSCalculator:
             elif vitals.spo2_status == VitalSignStatus.LOW:
                 score += 1
                 components.append(f"Hypoxia (SpO2 {vitals.oxygen_saturation}%)")
-        
+
         resp.score = min(3, score)  # Cap at 3
         resp.score_components = components
-        
+
         return resp
-    
+
     def _calculate_behavior(
         self,
         avpu: AVPU,
@@ -462,10 +462,10 @@ class PEWSCalculator:
             parent_concern=parent_concern,
             parent_notes=parent_notes,
         )
-        
+
         score = 0
         components = []
-        
+
         # AVPU scoring (0-3 points)
         if avpu == AVPU.UNRESPONSIVE:
             score += 3
@@ -476,7 +476,7 @@ class PEWSCalculator:
         elif avpu == AVPU.VERBAL:
             score += 1
             components.append("Responds to verbal (AVPU: V)")
-        
+
         # Behavior scoring (0-2 points)
         if behavior == BehaviorStatus.LETHARGIC:
             score += 2
@@ -490,19 +490,19 @@ class PEWSCalculator:
         elif behavior == BehaviorStatus.DECREASED_ACTIVITY:
             score += 1
             components.append("Decreased activity")
-        
+
         # Parent concern (add 1 point if present)
         if parent_concern:
             score += 1
             components.append("Parent concern noted")
             if parent_notes:
                 components.append(f"Parent notes: {parent_notes}")
-        
+
         beh.score = min(3, score)  # Cap at 3
         beh.score_components = components
-        
+
         return beh
-    
+
     def _determine_risk_level(self, total_score: int) -> str:
         """Determine risk level from total PEWS score."""
         if total_score >= 7:
@@ -513,11 +513,11 @@ class PEWSCalculator:
             return "moderate"
         else:
             return "low"
-    
+
     def _generate_interpretation(self, result: PEWSScore) -> str:
         """Generate clinical interpretation of PEWS score."""
         score = result.total_score
-        
+
         if score >= 7:
             return (
                 f"PEWS Score {score}/9: CRITICAL - Immediate senior review required. "
@@ -538,12 +538,12 @@ class PEWSCalculator:
                 f"PEWS Score {score}/9: LOW RISK - Continue routine monitoring. "
                 "Reassess as clinically indicated."
             )
-    
+
     def _generate_recommendations(self, result: PEWSScore) -> List[str]:
         """Generate recommended actions based on PEWS score."""
         actions = []
         score = result.total_score
-        
+
         if score >= 7:
             actions.extend([
                 "Activate rapid response team",
@@ -570,19 +570,19 @@ class PEWSCalculator:
                 "Continue routine monitoring",
                 "Reassess per standard protocol",
             ])
-        
+
         # Add specific component-based recommendations
         if result.respiratory.score >= 2:
             actions.append("Respiratory assessment - consider respiratory therapy evaluation")
-        
+
         if result.cardiovascular.score >= 2:
             actions.append("Cardiovascular assessment - check perfusion and fluid status")
-        
+
         if result.behavior.score >= 2:
             actions.append("Neurological assessment - evaluate for underlying cause of altered status")
-        
+
         return actions
-    
+
     def _calculate_confidence(
         self,
         vitals: AgeAdjustedVitals,
@@ -591,7 +591,7 @@ class PEWSCalculator:
     ) -> float:
         """Calculate confidence based on available data."""
         confidence = 0.5
-        
+
         if vitals.heart_rate is not None:
             confidence += 0.1
         if vitals.respiratory_rate is not None:
@@ -602,5 +602,5 @@ class PEWSCalculator:
             confidence += 0.1  # Active assessment made
         if avpu != AVPU.ALERT:
             confidence += 0.1  # Active assessment made
-        
+
         return min(0.95, confidence)

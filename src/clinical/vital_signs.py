@@ -30,25 +30,25 @@ class VitalSignRange:
     """Age-specific vital sign reference range."""
     age_min_months: int
     age_max_months: int
-    
+
     # Heart rate (bpm)
     hr_low: int
     hr_normal_low: int
     hr_normal_high: int
     hr_high: int
-    
+
     # Respiratory rate (breaths/min)
     rr_low: int
     rr_normal_low: int
     rr_normal_high: int
     rr_high: int
-    
+
     # Systolic blood pressure (mmHg)
     sbp_low: int
     sbp_normal_low: int
     sbp_normal_high: int
     sbp_high: int
-    
+
     # Mean arterial pressure (mmHg) - Phoenix criteria thresholds
     map_critical_low: int
 
@@ -142,7 +142,7 @@ VITAL_SIGN_RANGES: List[VitalSignRange] = [
 class AgeAdjustedVitals:
     """Age-adjusted vital sign assessment results."""
     age_months: int
-    
+
     # Raw values
     heart_rate: Optional[int] = None
     respiratory_rate: Optional[int] = None
@@ -151,19 +151,19 @@ class AgeAdjustedVitals:
     mean_arterial_pressure: Optional[float] = None
     oxygen_saturation: Optional[float] = None
     temperature: Optional[float] = None
-    
+
     # Z-scores (standard deviations from mean)
     hr_zscore: Optional[float] = None
     rr_zscore: Optional[float] = None
     sbp_zscore: Optional[float] = None
-    
+
     # Status assessments
     hr_status: VitalSignStatus = VitalSignStatus.NORMAL
     rr_status: VitalSignStatus = VitalSignStatus.NORMAL
     sbp_status: VitalSignStatus = VitalSignStatus.NORMAL
     spo2_status: VitalSignStatus = VitalSignStatus.NORMAL
     temp_status: VitalSignStatus = VitalSignStatus.NORMAL
-    
+
     # Flags
     map_below_threshold: bool = False
     tachycardia: bool = False
@@ -182,10 +182,10 @@ class VitalSignNormalizer:
     Provides z-score calculations and status assessments for
     pediatric vital signs, accounting for age-dependent normal values.
     """
-    
+
     def __init__(self):
         self.ranges = VITAL_SIGN_RANGES
-    
+
     def get_range_for_age(self, age_months: int) -> VitalSignRange:
         """Get the appropriate vital sign range for a given age."""
         for r in self.ranges:
@@ -193,7 +193,7 @@ class VitalSignNormalizer:
                 return r
         # Default to adolescent range for older children
         return self.ranges[-1]
-    
+
     def normalize(
         self,
         age_months: int,
@@ -220,9 +220,9 @@ class VitalSignNormalizer:
             AgeAdjustedVitals with normalized values and status assessments
         """
         ref = self.get_range_for_age(age_months)
-        
+
         result = AgeAdjustedVitals(age_months=age_months)
-        
+
         # Heart rate assessment
         if heart_rate is not None:
             result.heart_rate = heart_rate
@@ -238,7 +238,7 @@ class VitalSignNormalizer:
             )
             result.tachycardia = heart_rate > ref.hr_normal_high
             result.bradycardia = heart_rate < ref.hr_normal_low
-        
+
         # Respiratory rate assessment
         if respiratory_rate is not None:
             result.respiratory_rate = respiratory_rate
@@ -253,7 +253,7 @@ class VitalSignNormalizer:
                 ref.rr_normal_high, ref.rr_high,
             )
             result.tachypnea = respiratory_rate > ref.rr_normal_high
-        
+
         # Blood pressure assessment
         if systolic_bp is not None:
             result.systolic_bp = systolic_bp
@@ -268,10 +268,10 @@ class VitalSignNormalizer:
                 ref.sbp_normal_high, ref.sbp_high,
             )
             result.hypotension = systolic_bp < ref.sbp_low
-        
+
         if diastolic_bp is not None:
             result.diastolic_bp = diastolic_bp
-        
+
         # Calculate MAP if we have both SBP and DBP
         if systolic_bp is not None and diastolic_bp is not None:
             result.mean_arterial_pressure = (
@@ -280,7 +280,7 @@ class VitalSignNormalizer:
             result.map_below_threshold = (
                 result.mean_arterial_pressure < ref.map_critical_low
             )
-        
+
         # Oxygen saturation assessment
         if oxygen_saturation is not None:
             result.oxygen_saturation = oxygen_saturation
@@ -294,7 +294,7 @@ class VitalSignNormalizer:
                 result.spo2_status = VitalSignStatus.NORMAL
             else:
                 result.spo2_status = VitalSignStatus.NORMAL
-        
+
         # Temperature assessment
         if temperature is not None:
             result.temperature = temperature
@@ -314,9 +314,9 @@ class VitalSignNormalizer:
             else:
                 result.temp_status = VitalSignStatus.CRITICALLY_HIGH
                 result.fever = True
-        
+
         return result
-    
+
     def _calculate_zscore(
         self,
         value: float,
@@ -334,7 +334,7 @@ class VitalSignNormalizer:
         if sd == 0:
             return 0.0
         return (value - mean) / sd
-    
+
     def _assess_status(
         self,
         value: float,
@@ -354,7 +354,7 @@ class VitalSignNormalizer:
             return VitalSignStatus.HIGH
         else:
             return VitalSignStatus.CRITICALLY_HIGH
-    
+
     def get_critical_map_threshold(self, age_months: int) -> int:
         """Get the Phoenix criteria MAP threshold for the given age."""
         ref = self.get_range_for_age(age_months)

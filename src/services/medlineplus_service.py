@@ -33,7 +33,7 @@ class MedlinePlusResult:
     source: str
     language: str
     topic_id: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "title": self.title,
@@ -52,9 +52,9 @@ class MedlinePlusService:
     MedlinePlus Connect provides patient education materials linked
     to clinical data (diagnoses, labs, medications).
     """
-    
+
     BASE_URL = "https://connect.medlineplus.gov/service"
-    
+
     # Common ICD-10 codes for pediatric conditions
     COMMON_PEDIATRIC_CODES = {
         "fever": "R50.9",
@@ -69,7 +69,7 @@ class MedlinePlusService:
         "wheezing": "R06.2",
         "difficulty_breathing": "R06.00",
     }
-    
+
     def __init__(
         self,
         timeout_seconds: int = 10,
@@ -78,9 +78,9 @@ class MedlinePlusService:
         self.timeout_seconds = timeout_seconds
         self.cache_ttl_hours = cache_ttl_hours
         self._cache: Dict[str, tuple] = {}  # key -> (result, timestamp)
-        
+
         logger.info("Initialized MedlinePlus service")
-    
+
     async def search_by_code(
         self,
         code: str,
@@ -99,12 +99,12 @@ class MedlinePlusService:
             List of MedlinePlusResult objects
         """
         cache_key = f"code:{code_system}:{code}:{language}"
-        
+
         # Check cache
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         try:
             # Build URL
             params = {
@@ -113,24 +113,24 @@ class MedlinePlusService:
                 "informationRecipient.languageCode.c": language,
                 "knowledgeResponseType": "application/json",
             }
-            
+
             url = f"{self.BASE_URL}?{urlencode(params)}"
-            
+
             # Make request (simulated for now - would use aiohttp in production)
             results = await self._make_request(url)
-            
+
             # Parse results
             parsed = self._parse_response(results)
-            
+
             # Cache results
             self._set_cached(cache_key, parsed)
-            
+
             return parsed
-            
+
         except Exception as e:
             logger.error(f"MedlinePlus search failed: {e}")
             return []
-    
+
     async def search_by_symptom(
         self,
         symptom: str,
@@ -149,13 +149,13 @@ class MedlinePlusService:
         # Map symptom to ICD-10 code if possible
         normalized = symptom.lower().replace(" ", "_")
         code = self.COMMON_PEDIATRIC_CODES.get(normalized)
-        
+
         if code:
             return await self.search_by_code(code, "ICD-10-CM", language)
-        
+
         # Fall back to topic search
         return await self.search_topics(symptom, language)
-    
+
     async def search_topics(
         self,
         query: str,
@@ -172,23 +172,23 @@ class MedlinePlusService:
             List of MedlinePlusResult objects
         """
         cache_key = f"topic:{query}:{language}"
-        
+
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         try:
             # In production, would call the MedlinePlus API
             # For now, return curated pediatric content
             results = self._get_curated_content(query)
-            
+
             self._set_cached(cache_key, results)
             return results
-            
+
         except Exception as e:
             logger.error(f"MedlinePlus topic search failed: {e}")
             return []
-    
+
     async def get_medication_info(
         self,
         medication_name: str,
@@ -205,11 +205,11 @@ class MedlinePlusService:
             List of MedlinePlusResult objects
         """
         cache_key = f"med:{medication_name}:{language}"
-        
+
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         try:
             # Map common medications to RxNorm codes
             rxnorm_codes = {
@@ -218,10 +218,10 @@ class MedlinePlusService:
                 "amoxicillin": "723",
                 "diphenhydramine": "3498",
             }
-            
+
             normalized = medication_name.lower()
             code = rxnorm_codes.get(normalized)
-            
+
             if code:
                 params = {
                     "mainSearchCriteria.v.cs": "2.16.840.1.113883.6.88",  # RxNorm
@@ -230,21 +230,21 @@ class MedlinePlusService:
                     "informationRecipient.languageCode.c": language,
                     "knowledgeResponseType": "application/json",
                 }
-                
+
                 url = f"{self.BASE_URL}?{urlencode(params)}"
                 results = await self._make_request(url)
                 parsed = self._parse_response(results)
             else:
                 # Return curated content
                 parsed = self._get_medication_content(medication_name)
-            
+
             self._set_cached(cache_key, parsed)
             return parsed
-            
+
         except Exception as e:
             logger.error(f"MedlinePlus medication search failed: {e}")
             return []
-    
+
     async def get_lab_info(
         self,
         lab_name: str,
@@ -263,11 +263,11 @@ class MedlinePlusService:
             List of MedlinePlusResult objects
         """
         cache_key = f"lab:{loinc_code or lab_name}:{language}"
-        
+
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         try:
             if loinc_code:
                 params = {
@@ -276,38 +276,38 @@ class MedlinePlusService:
                     "informationRecipient.languageCode.c": language,
                     "knowledgeResponseType": "application/json",
                 }
-                
+
                 url = f"{self.BASE_URL}?{urlencode(params)}"
                 results = await self._make_request(url)
                 parsed = self._parse_response(results)
             else:
                 parsed = []
-            
+
             self._set_cached(cache_key, parsed)
             return parsed
-            
+
         except Exception as e:
             logger.error(f"MedlinePlus lab search failed: {e}")
             return []
-    
+
     async def _make_request(self, url: str) -> Dict[str, Any]:
         """Make HTTP request to MedlinePlus API."""
         # In production, would use aiohttp:
         # async with aiohttp.ClientSession() as session:
         #     async with session.get(url, timeout=self.timeout_seconds) as response:
         #         return await response.json()
-        
+
         # For now, return simulated response
         await asyncio.sleep(0.1)  # Simulate network latency
         return {"feed": {"entry": []}}
-    
+
     def _parse_response(self, response: Dict[str, Any]) -> List[MedlinePlusResult]:
         """Parse MedlinePlus API response."""
         results = []
-        
+
         try:
             entries = response.get("feed", {}).get("entry", [])
-            
+
             for entry in entries:
                 result = MedlinePlusResult(
                     title=entry.get("title", {}).get("_value", ""),
@@ -318,12 +318,12 @@ class MedlinePlusService:
                     topic_id=entry.get("id", {}).get("_value"),
                 )
                 results.append(result)
-                
+
         except Exception as e:
             logger.error(f"Error parsing MedlinePlus response: {e}")
-        
+
         return results
-    
+
     def _get_code_system_oid(self, code_system: str) -> str:
         """Get OID for code system."""
         oids = {
@@ -334,7 +334,7 @@ class MedlinePlusService:
             "LOINC": "2.16.840.1.113883.6.1",
         }
         return oids.get(code_system, code_system)
-    
+
     def _get_curated_content(self, query: str) -> List[MedlinePlusResult]:
         """Get curated content for common queries."""
         # Curated pediatric health content
@@ -375,14 +375,14 @@ class MedlinePlusService:
                 language="en",
             ),
         }
-        
+
         query_lower = query.lower()
         for key, result in content.items():
             if key in query_lower:
                 return [result]
-        
+
         return []
-    
+
     def _get_medication_content(self, medication_name: str) -> List[MedlinePlusResult]:
         """Get curated medication content."""
         content = {
@@ -401,10 +401,10 @@ class MedlinePlusService:
                 language="en",
             ),
         }
-        
+
         name_lower = medication_name.lower()
         return [content[name_lower]] if name_lower in content else []
-    
+
     def _get_cached(self, key: str) -> Optional[List[MedlinePlusResult]]:
         """Get cached result if not expired."""
         if key in self._cache:
@@ -413,11 +413,11 @@ class MedlinePlusService:
                 return result
             del self._cache[key]
         return None
-    
+
     def _set_cached(self, key: str, value: List[MedlinePlusResult]) -> None:
         """Set cached result."""
         self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))
-    
+
     def clear_cache(self) -> None:
         """Clear the cache."""
         self._cache.clear()

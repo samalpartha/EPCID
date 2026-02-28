@@ -48,7 +48,7 @@ async def create_symptom(
     """
     symptom_id = f"sym-{uuid4().hex[:8]}"
     now = datetime.now(__import__("datetime").timezone.utc)
-    
+
     symptom_data = {
         "id": symptom_id,
         "user_id": current_user["id"],
@@ -60,9 +60,9 @@ async def create_symptom(
         "notes": symptom.notes,
         "recorded_at": now,
     }
-    
+
     fake_symptoms_db[symptom_id] = symptom_data
-    
+
     return SymptomResponse(**symptom_data)
 
 
@@ -80,10 +80,10 @@ async def create_symptoms_batch(
     """Log multiple symptoms in a single request."""
     results = []
     now = datetime.now(__import__("datetime").timezone.utc)
-    
+
     for symptom in symptoms:
         symptom_id = f"sym-{uuid4().hex[:8]}"
-        
+
         symptom_data = {
             "id": symptom_id,
             "user_id": current_user["id"],
@@ -95,10 +95,10 @@ async def create_symptoms_batch(
             "notes": symptom.notes,
             "recorded_at": now,
         }
-        
+
         fake_symptoms_db[symptom_id] = symptom_data
         results.append(SymptomResponse(**symptom_data))
-    
+
     return results
 
 
@@ -126,28 +126,28 @@ async def list_symptoms(
     - **limit**: Max results to return
     """
     symptoms = []
-    
+
     for symptom in fake_symptoms_db.values():
         if symptom["user_id"] != current_user["id"]:
             continue
-        
+
         if child_id and symptom["child_id"] != child_id:
             continue
-        
+
         if symptom_type and symptom["symptom_type"] != symptom_type:
             continue
-        
+
         if severity and symptom["severity"] != severity:
             continue
-        
+
         if since and symptom["recorded_at"] < since:
             continue
-        
+
         symptoms.append(SymptomResponse(**symptom))
-    
+
     # Sort by recorded_at descending
     symptoms.sort(key=lambda x: x.recorded_at, reverse=True)
-    
+
     return symptoms[:limit]
 
 
@@ -164,7 +164,7 @@ async def get_child_symptoms(
 ):
     """Get symptom history for a child."""
     since = datetime.now(__import__("datetime").timezone.utc) - timedelta(days=days)
-    
+
     symptoms = [
         SymptomResponse(**symptom)
         for symptom in fake_symptoms_db.values()
@@ -172,14 +172,14 @@ async def get_child_symptoms(
         and symptom["child_id"] == child_id
         and symptom["recorded_at"] >= since
     ]
-    
+
     symptoms.sort(key=lambda x: x.recorded_at, reverse=True)
-    
+
     date_range = {
         "start": since,
         "end": datetime.now(__import__("datetime").timezone.utc),
     }
-    
+
     return SymptomHistory(
         child_id=child_id,
         symptoms=symptoms,
@@ -200,19 +200,19 @@ async def get_symptom(
 ):
     """Get a specific symptom by ID."""
     symptom = fake_symptoms_db.get(symptom_id)
-    
+
     if not symptom:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Symptom not found",
         )
-    
+
     if symptom["user_id"] != current_user["id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
         )
-    
+
     return SymptomResponse(**symptom)
 
 
@@ -228,21 +228,21 @@ async def delete_symptom(
 ):
     """Delete a symptom record."""
     symptom = fake_symptoms_db.get(symptom_id)
-    
+
     if not symptom:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Symptom not found",
         )
-    
+
     if symptom["user_id"] != current_user["id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
         )
-    
+
     del fake_symptoms_db[symptom_id]
-    
+
     return None
 
 

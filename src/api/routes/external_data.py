@@ -123,15 +123,15 @@ async def get_disease_activity(
     - **diseases**: Optional filter for specific diseases (influenza, rsv, covid, strep)
     """
     from ...services.cdc_service import CDCService, DiseaseType
-    
+
     service = CDCService()
-    
+
     disease_list = None
     if diseases:
         disease_list = [DiseaseType(d.strip().lower()) for d in diseases.split(",")]
-    
+
     activities = await service.get_disease_activity(state.upper(), disease_list)
-    
+
     return [activity.to_dict() for activity in activities]
 
 
@@ -151,10 +151,10 @@ async def get_outbreak_alerts(
     Returns alerts for diseases with HIGH or VERY_HIGH activity levels.
     """
     from ...services.cdc_service import CDCService
-    
+
     service = CDCService()
     alerts = await service.get_outbreak_alerts(state.upper(), zip_code)
-    
+
     return alerts
 
 
@@ -174,10 +174,10 @@ async def get_due_vaccinations(
     Based on the CDC 2024 immunization schedule.
     """
     from ...services.cdc_service import CDCService
-    
+
     service = CDCService()
     vaccines = service.get_vaccination_schedule(age_months, include_catchup)
-    
+
     return [v.to_dict() for v in vaccines]
 
 
@@ -198,14 +198,14 @@ async def calculate_growth_percentile(request: GrowthPercentileRequest):
     - **unit**: Unit of measurement (kg, lbs, cm, inches)
     """
     from ...services.cdc_service import CDCService
-    
+
     # Convert units if needed
     value = request.value
     if request.unit == "lbs":
         value = value * 0.453592  # Convert to kg
     elif request.unit == "inches":
         value = value * 2.54  # Convert to cm
-    
+
     service = CDCService()
     result = service.get_growth_percentile(
         request.age_months,
@@ -213,7 +213,7 @@ async def calculate_growth_percentile(request: GrowthPercentileRequest):
         request.measurement_type.lower(),
         value,
     )
-    
+
     return result
 
 
@@ -233,13 +233,13 @@ async def get_vital_ranges(
     Based on PALS (Pediatric Advanced Life Support) guidelines.
     """
     from ...services.cdc_service import CDCService
-    
+
     service = CDCService()
     result = service.get_vital_sign_reference(age_months, vital_type.lower())
-    
+
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
-    
+
     return result
 
 
@@ -262,21 +262,21 @@ async def get_air_quality(
     Provide either zip_code OR latitude/longitude.
     """
     from ...services.air_quality_service import AirQualityService
-    
+
     if not zip_code and not (latitude and longitude):
         raise HTTPException(
             status_code=400,
             detail="Provide either zip_code or latitude/longitude",
         )
-    
+
     service = AirQualityService()
     reading = await service.get_current_aqi(zip_code, latitude, longitude)
-    
+
     if not reading:
         raise HTTPException(status_code=404, detail="Air quality data not available")
-    
+
     guidance = service.get_pediatric_guidance(reading.aqi)
-    
+
     return {
         **reading.to_dict(),
         "pediatric_guidance": guidance,
@@ -298,16 +298,16 @@ async def get_drug_info(drug_name: str):
     - **drug_name**: Brand or generic drug name (e.g., "Tylenol", "acetaminophen")
     """
     from ...services.openfda_service import OpenFDAService
-    
+
     service = OpenFDAService()
     label = await service.get_drug_label(drug_name)
-    
+
     if not label:
         raise HTTPException(
             status_code=404,
             detail=f"Drug information not found for '{drug_name}'",
         )
-    
+
     return label.to_dict()
 
 
@@ -327,10 +327,10 @@ async def check_drug_interaction(
     causation, only correlation in reported events.
     """
     from ...services.openfda_service import OpenFDAService
-    
+
     service = OpenFDAService()
     result = await service.check_symptom_drug_correlation(drug_name, symptom)
-    
+
     return result
 
 
@@ -357,16 +357,16 @@ async def get_health_context(
     """
     from ...services.cdc_service import CDCService
     from ...services.air_quality_service import AirQualityService
-    
+
     cdc_service = CDCService()
     air_service = AirQualityService()
-    
+
     # Get disease activity
     activities = await cdc_service.get_disease_activity(state.upper())
-    
+
     # Get outbreak alerts
     alerts = await cdc_service.get_outbreak_alerts(state.upper(), zip_code)
-    
+
     # Get air quality if zip provided
     air_quality = None
     if zip_code:
@@ -376,13 +376,13 @@ async def get_health_context(
                 **reading.to_dict(),
                 "guidance": air_service.get_pediatric_guidance(reading.aqi),
             }
-    
+
     # Get due vaccinations if age provided
     vaccinations = None
     if age_months is not None:
         vaccines = cdc_service.get_vaccination_schedule(age_months)
         vaccinations = [v.to_dict() for v in vaccines]
-    
+
     return {
         "state": state.upper(),
         "disease_activity": [a.to_dict() for a in activities],

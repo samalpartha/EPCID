@@ -23,15 +23,15 @@ async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> Opt
     """
     if not token:
         return None
-    
+
     payload = verify_token(token, token_type="access")
     if not payload:
         return None
-    
+
     email = payload.get("sub")
     if not email:
         return None
-    
+
     from .routes.auth import fake_users_db
     user = fake_users_db.get(email)
     return user
@@ -49,7 +49,7 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> dict:
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     payload = verify_token(token, token_type="access")
     if not payload:
         raise HTTPException(
@@ -57,7 +57,7 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> dict:
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     email = payload.get("sub")
     if not email:
         raise HTTPException(
@@ -65,7 +65,7 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> dict:
             detail="Invalid token payload",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     from .routes.auth import fake_users_db
     user = fake_users_db.get(email)
     if not user:
@@ -73,13 +73,13 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> dict:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     if not user.get("is_active"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is disabled",
         )
-    
+
     return user
 
 

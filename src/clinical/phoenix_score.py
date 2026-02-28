@@ -45,15 +45,15 @@ class RespiratoryAssessment:
     pao2: Optional[float] = None  # mmHg
     fio2: Optional[float] = None  # Fraction (0-1)
     spo2: Optional[float] = None  # Percentage
-    
+
     # Ventilation status
     ventilation_type: VentilationType = VentilationType.NONE
     on_invasive_ventilation: bool = False
-    
+
     # Calculated ratios
     pao2_fio2_ratio: Optional[float] = None
     spo2_fio2_ratio: Optional[float] = None
-    
+
     # Score
     score: int = 0
     score_components: List[str] = field(default_factory=list)
@@ -67,10 +67,10 @@ class CardiovascularAssessment:
     diastolic_bp: Optional[int] = None
     mean_arterial_pressure: Optional[float] = None
     age_months: Optional[int] = None
-    
+
     # Lactate
     lactate: Optional[float] = None  # mmol/L
-    
+
     # Vasoactive medications (boolean for presence)
     vasoactive_medications: List[str] = field(default_factory=list)
     dobutamine: bool = False
@@ -79,11 +79,11 @@ class CardiovascularAssessment:
     milrinone: bool = False
     norepinephrine: bool = False
     vasopressin: bool = False
-    
+
     # Score
     score: int = 0
     score_components: List[str] = field(default_factory=list)
-    
+
     # Flags
     map_below_threshold: bool = False
     elevated_lactate: bool = False
@@ -96,7 +96,7 @@ class CoagulationAssessment:
     inr: Optional[float] = None
     d_dimer: Optional[float] = None  # mg/L FEU
     fibrinogen: Optional[float] = None  # mg/dL
-    
+
     # Score
     score: int = 0
     score_components: List[str] = field(default_factory=list)
@@ -110,14 +110,14 @@ class NeurologicalAssessment:
     gcs_eye: Optional[int] = None  # 1-4
     gcs_verbal: Optional[int] = None  # 1-5
     gcs_motor: Optional[int] = None  # 1-6
-    
+
     # Pupil reactivity
     pupils_fixed: bool = False
     bilateral_fixed_pupils: bool = False
-    
+
     # Alternative: AVPU scale
     avpu: Optional[str] = None  # "A", "V", "P", "U"
-    
+
     # Score
     score: int = 0
     score_components: List[str] = field(default_factory=list)
@@ -131,23 +131,23 @@ class PhoenixScore:
     cardiovascular: CardiovascularAssessment = field(default_factory=CardiovascularAssessment)
     coagulation: CoagulationAssessment = field(default_factory=CoagulationAssessment)
     neurological: NeurologicalAssessment = field(default_factory=NeurologicalAssessment)
-    
+
     # Total score
     total_score: int = 0
-    
+
     # Diagnostic criteria
     suspected_infection: bool = False
     meets_sepsis_criteria: bool = False
     meets_septic_shock_criteria: bool = False
-    
+
     # Risk assessment
     risk_level: str = "low"  # low, moderate, high, critical
-    
+
     # Explanation
     summary: str = ""
     contributing_factors: List[str] = field(default_factory=list)
     missing_data: List[str] = field(default_factory=list)
-    
+
     # Confidence based on available data
     confidence: float = 0.5
 
@@ -178,7 +178,7 @@ class PhoenixScoreCalculator:
         if score.meets_sepsis_criteria:
             print(f"Sepsis identified, score: {score.total_score}")
     """
-    
+
     # MAP thresholds by age (months) from Phoenix criteria
     MAP_THRESHOLDS = [
         (0, 1, 31),      # 0-<1 month: MAP >= 31
@@ -188,10 +188,10 @@ class PhoenixScoreCalculator:
         (60, 144, 40),   # 5-<12 years: MAP >= 40
         (144, 216, 46),  # 12-<18 years: MAP >= 46
     ]
-    
+
     def __init__(self):
         self.vital_normalizer = VitalSignNormalizer()
-    
+
     def calculate(
         self,
         age_months: int,
@@ -247,7 +247,7 @@ class PhoenixScoreCalculator:
             PhoenixScore with complete assessment
         """
         result = PhoenixScore(suspected_infection=suspected_infection)
-        
+
         # Calculate component scores
         result.respiratory = self._calculate_respiratory(
             pao2=pao2,
@@ -256,7 +256,7 @@ class PhoenixScoreCalculator:
             on_invasive_ventilation=on_invasive_ventilation,
             ventilation_type=ventilation_type,
         )
-        
+
         result.cardiovascular = self._calculate_cardiovascular(
             age_months=age_months,
             systolic_bp=systolic_bp,
@@ -264,21 +264,21 @@ class PhoenixScoreCalculator:
             lactate=lactate,
             vasoactive_medications=vasoactive_medications or [],
         )
-        
+
         result.coagulation = self._calculate_coagulation(
             platelet_count=platelet_count,
             inr=inr,
             d_dimer=d_dimer,
             fibrinogen=fibrinogen,
         )
-        
+
         result.neurological = self._calculate_neurological(
             gcs_total=gcs_total,
             pupils_fixed=pupils_fixed,
             bilateral_fixed_pupils=bilateral_fixed_pupils,
             avpu=avpu,
         )
-        
+
         # Calculate total score
         result.total_score = (
             result.respiratory.score +
@@ -286,21 +286,21 @@ class PhoenixScoreCalculator:
             result.coagulation.score +
             result.neurological.score
         )
-        
+
         # Determine sepsis criteria
         if suspected_infection and result.total_score >= 2:
             result.meets_sepsis_criteria = True
-            
+
             # Check for septic shock
             if result.cardiovascular.score >= 1:
                 result.meets_septic_shock_criteria = True
-        
+
         # Determine risk level
         result.risk_level = self._determine_risk_level(result)
-        
+
         # Collect contributing factors
         result.contributing_factors = self._collect_contributing_factors(result)
-        
+
         # Identify missing data
         result.missing_data = self._identify_missing_data(
             pao2=pao2, fio2=fio2, spo2=spo2,
@@ -308,15 +308,15 @@ class PhoenixScoreCalculator:
             lactate=lactate, platelet_count=platelet_count,
             inr=inr, gcs_total=gcs_total, avpu=avpu,
         )
-        
+
         # Calculate confidence
         result.confidence = self._calculate_confidence(result)
-        
+
         # Generate summary
         result.summary = self._generate_summary(result)
-        
+
         return result
-    
+
     def _calculate_respiratory(
         self,
         pao2: Optional[float],
@@ -353,15 +353,15 @@ class PhoenixScoreCalculator:
             on_invasive_ventilation=on_invasive_ventilation,
             ventilation_type=ventilation_type,
         )
-        
+
         score = 0
         components = []
-        
+
         # Calculate ratios
         if pao2 is not None and fio2 is not None and fio2 > 0:
             pf_ratio = pao2 / fio2
             assessment.pao2_fio2_ratio = pf_ratio
-            
+
             # Score based on PaO2:FiO2
             if pf_ratio < 100 and on_invasive_ventilation:
                 score = 3
@@ -377,14 +377,14 @@ class PhoenixScoreCalculator:
                 components.append(f"PaO2:FiO2 {pf_ratio:.0f} (<400)")
             else:
                 components.append(f"PaO2:FiO2 {pf_ratio:.0f} (normal)")
-                
+
         elif spo2 is not None and fio2 is not None and fio2 > 0:
             # Use SpO2:FiO2 as alternative
             # Convert FiO2 fraction to percentage for calculation
             fio2_pct = fio2 * 100 if fio2 <= 1 else fio2
             sf_ratio = (spo2 / fio2_pct) * 100
             assessment.spo2_fio2_ratio = sf_ratio
-            
+
             if sf_ratio < 148:
                 score = 2 if on_invasive_ventilation else 2
                 if on_invasive_ventilation:
@@ -401,7 +401,7 @@ class PhoenixScoreCalculator:
                 components.append(f"SpO2:FiO2 {sf_ratio:.0f} (<292)")
             else:
                 components.append(f"SpO2:FiO2 {sf_ratio:.0f} (normal)")
-        
+
         elif spo2 is not None:
             # Use SpO2 alone as rough indicator
             if spo2 < 90:
@@ -410,12 +410,12 @@ class PhoenixScoreCalculator:
             elif spo2 < 94:
                 score = 1
                 components.append(f"SpO2 {spo2}% (low)")
-        
+
         assessment.score = min(3, score)  # Cap at 3
         assessment.score_components = components
-        
+
         return assessment
-    
+
     def _calculate_cardiovascular(
         self,
         age_months: int,
@@ -450,23 +450,23 @@ class PhoenixScoreCalculator:
             lactate=lactate,
             vasoactive_medications=vasoactive_medications,
         )
-        
+
         score = 0
         components = []
-        
+
         # Known vasoactive medications for Phoenix criteria
         known_vasoactives = {
             "dobutamine", "dopamine", "epinephrine", 
             "milrinone", "norepinephrine", "vasopressin"
         }
-        
+
         # Count vasoactive medications
         vaso_count = 0
         for med in vasoactive_medications:
             med_lower = med.lower()
             if any(v in med_lower for v in known_vasoactives):
                 vaso_count += 1
-                
+
                 # Set individual flags
                 if "dobutamine" in med_lower:
                     assessment.dobutamine = True
@@ -480,7 +480,7 @@ class PhoenixScoreCalculator:
                     assessment.norepinephrine = True
                 elif "vasopressin" in med_lower:
                     assessment.vasopressin = True
-        
+
         # Vasoactive score
         if vaso_count >= 2:
             score += 2
@@ -488,7 +488,7 @@ class PhoenixScoreCalculator:
         elif vaso_count == 1:
             score += 1
             components.append("1 vasoactive medication")
-        
+
         # Lactate score
         if lactate is not None:
             assessment.lactate = lactate
@@ -500,14 +500,14 @@ class PhoenixScoreCalculator:
                 score += 1
                 assessment.elevated_lactate = True
                 components.append(f"Lactate {lactate} mmol/L (5-11)")
-        
+
         # MAP score
         if systolic_bp is not None and diastolic_bp is not None:
             map_value = diastolic_bp + (systolic_bp - diastolic_bp) / 3
             assessment.mean_arterial_pressure = map_value
-            
+
             map_threshold = self._get_map_threshold(age_months)
-            
+
             if map_value < map_threshold:
                 # Below threshold
                 deficit = map_threshold - map_value
@@ -518,12 +518,12 @@ class PhoenixScoreCalculator:
                     score += 1
                     components.append(f"MAP {map_value:.0f} mmHg (below threshold {map_threshold})")
                 assessment.map_below_threshold = True
-        
+
         assessment.score = min(6, score)  # Cap at 6
         assessment.score_components = components
-        
+
         return assessment
-    
+
     def _calculate_coagulation(
         self,
         platelet_count: Optional[int],
@@ -546,37 +546,37 @@ class PhoenixScoreCalculator:
             d_dimer=d_dimer,
             fibrinogen=fibrinogen,
         )
-        
+
         score = 0
         components = []
-        
+
         # Platelet score
         if platelet_count is not None:
             if platelet_count < 100:
                 score += 1
                 components.append(f"Platelets {platelet_count} (<100)")
-            
+
             if platelet_count < 50:
                 score += 1
                 components.append(f"Severe thrombocytopenia (<50)")
-        
+
         # INR consideration
         if inr is not None and inr > 1.3:
             components.append(f"INR {inr} (elevated)")
-        
+
         # D-dimer consideration
         if d_dimer is not None and d_dimer > 2:
             components.append(f"D-dimer {d_dimer} (elevated)")
-        
+
         # Fibrinogen consideration
         if fibrinogen is not None and fibrinogen < 100:
             components.append(f"Fibrinogen {fibrinogen} (low)")
-        
+
         assessment.score = min(2, score)  # Cap at 2
         assessment.score_components = components
-        
+
         return assessment
-    
+
     def _calculate_neurological(
         self,
         gcs_total: Optional[int],
@@ -605,17 +605,17 @@ class PhoenixScoreCalculator:
             bilateral_fixed_pupils=bilateral_fixed_pupils,
             avpu=avpu,
         )
-        
+
         score = 0
         components = []
-        
+
         # Convert AVPU to GCS if needed
         effective_gcs = gcs_total
         if effective_gcs is None and avpu is not None:
             avpu_to_gcs = {"A": 15, "V": 12, "P": 8, "U": 3}
             effective_gcs = avpu_to_gcs.get(avpu.upper(), 15)
             components.append(f"AVPU: {avpu} (estimated GCS {effective_gcs})")
-        
+
         # GCS score
         if effective_gcs is not None:
             assessment.gcs_total = effective_gcs
@@ -625,26 +625,26 @@ class PhoenixScoreCalculator:
             elif effective_gcs <= 14:
                 score = 1
                 components.append(f"GCS {effective_gcs} (11-14)")
-        
+
         # Bilateral fixed pupils override
         if bilateral_fixed_pupils:
             score = 2
             components.append("Bilateral fixed pupils")
         elif pupils_fixed:
             components.append("Fixed pupil(s) present")
-        
+
         assessment.score = min(2, score)  # Cap at 2
         assessment.score_components = components
-        
+
         return assessment
-    
+
     def _get_map_threshold(self, age_months: int) -> int:
         """Get the age-appropriate MAP threshold for Phoenix criteria."""
         for min_age, max_age, threshold in self.MAP_THRESHOLDS:
             if min_age <= age_months < max_age:
                 return threshold
         return 46  # Default to adolescent threshold
-    
+
     def _determine_risk_level(self, result: PhoenixScore) -> str:
         """Determine overall risk level from Phoenix score."""
         if result.meets_septic_shock_criteria:
@@ -655,50 +655,50 @@ class PhoenixScoreCalculator:
             return "moderate"
         else:
             return "low"
-    
+
     def _collect_contributing_factors(self, result: PhoenixScore) -> List[str]:
         """Collect all contributing factors from component assessments."""
         factors = []
-        
+
         factors.extend(result.respiratory.score_components)
         factors.extend(result.cardiovascular.score_components)
         factors.extend(result.coagulation.score_components)
         factors.extend(result.neurological.score_components)
-        
+
         if result.meets_sepsis_criteria:
             factors.append("Meets Phoenix Sepsis Criteria (Score >= 2)")
         if result.meets_septic_shock_criteria:
             factors.append("Meets Septic Shock Criteria (CV Score >= 1)")
-        
+
         return factors
-    
+
     def _identify_missing_data(self, **kwargs) -> List[str]:
         """Identify missing data that would improve assessment."""
         missing = []
-        
+
         # Key parameters for full assessment
         if kwargs.get("pao2") is None and kwargs.get("spo2") is None:
             missing.append("Oxygenation data (PaO2 or SpO2)")
-        
+
         if kwargs.get("systolic_bp") is None:
             missing.append("Blood pressure")
-        
+
         if kwargs.get("lactate") is None:
             missing.append("Lactate level")
-        
+
         if kwargs.get("platelet_count") is None:
             missing.append("Platelet count")
-        
+
         if kwargs.get("gcs_total") is None and kwargs.get("avpu") is None:
             missing.append("Neurological assessment (GCS or AVPU)")
-        
+
         return missing
-    
+
     def _calculate_confidence(self, result: PhoenixScore) -> float:
         """Calculate confidence based on available data."""
         # Base confidence
         confidence = 0.5
-        
+
         # Increase based on available data
         has_respiratory = (
             result.respiratory.pao2_fio2_ratio is not None or
@@ -710,7 +710,7 @@ class PhoenixScoreCalculator:
         )
         has_coag = result.coagulation.platelet_count is not None
         has_neuro = result.neurological.gcs_total is not None
-        
+
         if has_respiratory:
             confidence += 0.15
         if has_cv:
@@ -719,24 +719,24 @@ class PhoenixScoreCalculator:
             confidence += 0.1
         if has_neuro:
             confidence += 0.1
-        
+
         return min(0.95, confidence)
-    
+
     def _generate_summary(self, result: PhoenixScore) -> str:
         """Generate a human-readable summary of the assessment."""
         lines = []
-        
+
         lines.append(f"Phoenix Sepsis Score: {result.total_score}")
         lines.append(f"  - Respiratory: {result.respiratory.score}/3")
         lines.append(f"  - Cardiovascular: {result.cardiovascular.score}/6")
         lines.append(f"  - Coagulation: {result.coagulation.score}/2")
         lines.append(f"  - Neurological: {result.neurological.score}/2")
-        
+
         if result.meets_septic_shock_criteria:
             lines.append("\n⚠️ MEETS SEPTIC SHOCK CRITERIA")
         elif result.meets_sepsis_criteria:
             lines.append("\n⚠️ MEETS SEPSIS CRITERIA")
         elif not result.suspected_infection:
             lines.append("\nNote: Infection not suspected - sepsis criteria not applicable")
-        
+
         return "\n".join(lines)

@@ -56,7 +56,7 @@ class MedicationSafetyAgent(BaseAgent):
     medications and symptoms. Always includes explicit caveats
     about the nature of adverse event reporting data.
     """
-    
+
     # Standard caveats
     CAVEATS = {
         "reporting_basis": (
@@ -76,7 +76,7 @@ class MedicationSafetyAgent(BaseAgent):
             "Pediatric dosing and safety profiles may vary."
         ),
     }
-    
+
     # Simulated drug database (would use OpenFDA in production)
     DRUG_DATABASE = {
         "acetaminophen": DrugInfo(
@@ -157,7 +157,7 @@ class MedicationSafetyAgent(BaseAgent):
             interactions=["sedatives", "MAO_inhibitors"],
         ),
     }
-    
+
     def __init__(
         self,
         config: Optional[AgentConfig] = None,
@@ -170,7 +170,7 @@ class MedicationSafetyAgent(BaseAgent):
             timeout_seconds=15,
         )
         super().__init__(config, **kwargs)
-    
+
     async def process(
         self,
         input_data: Dict[str, Any],
@@ -188,26 +188,26 @@ class MedicationSafetyAgent(BaseAgent):
         """
         import uuid
         request_id = str(uuid.uuid4())[:12]
-        
+
         medications = input_data.get("medications", [])
         symptoms = input_data.get("symptoms", [])
         age_months = input_data.get("demographics", {}).get("age_months")
-        
+
         # Normalize medication names
         normalized_meds = self._normalize_medications(medications)
-        
+
         # Look up drug information
         drug_infos = self._lookup_drugs(normalized_meds)
-        
+
         # Check for symptom-medication matches
         ae_matches = self._find_adverse_event_matches(drug_infos, symptoms)
-        
+
         # Check age-appropriateness
         age_warnings = self._check_age_appropriateness(drug_infos, age_months)
-        
+
         # Check for interactions
         interactions = self._check_interactions(drug_infos)
-        
+
         # Generate response with caveats
         response_text = self._generate_response(
             drug_infos,
@@ -215,7 +215,7 @@ class MedicationSafetyAgent(BaseAgent):
             age_warnings,
             interactions,
         )
-        
+
         return self.create_response(
             request_id=request_id,
             data={
@@ -230,11 +230,11 @@ class MedicationSafetyAgent(BaseAgent):
             explanation=self._generate_explanation(drug_infos, ae_matches),
             warnings=age_warnings,
         )
-    
+
     def _normalize_medications(self, medications: List) -> List[str]:
         """Normalize medication names for lookup."""
         normalized = []
-        
+
         for med in medications:
             if isinstance(med, str):
                 name = med.lower().strip()
@@ -242,7 +242,7 @@ class MedicationSafetyAgent(BaseAgent):
                 name = med.get("name", "").lower().strip()
             else:
                 continue
-            
+
             # Map brand names to generic
             brand_to_generic = {
                 "tylenol": "acetaminophen",
@@ -252,22 +252,22 @@ class MedicationSafetyAgent(BaseAgent):
                 "amoxil": "amoxicillin",
                 "benadryl": "diphenhydramine",
             }
-            
+
             normalized_name = brand_to_generic.get(name, name)
             normalized.append(normalized_name)
-        
+
         return list(set(normalized))
-    
+
     def _lookup_drugs(self, medication_names: List[str]) -> List[DrugInfo]:
         """Look up drug information from database."""
         results = []
-        
+
         for name in medication_names:
             if name in self.DRUG_DATABASE:
                 results.append(self.DRUG_DATABASE[name])
-        
+
         return results
-    
+
     def _find_adverse_event_matches(
         self,
         drugs: List[DrugInfo],
@@ -275,16 +275,16 @@ class MedicationSafetyAgent(BaseAgent):
     ) -> List[AdverseEventMatch]:
         """Find matches between symptoms and known adverse events."""
         matches = []
-        
+
         for drug in drugs:
             for event in drug.common_adverse_events:
                 event_name = event["event"]
-                
+
                 # Check for symptom match (exact or similar)
                 for symptom in symptoms:
                     symptom_lower = symptom.lower().replace("_", " ")
                     event_lower = event_name.lower().replace("_", " ")
-                    
+
                     if symptom_lower == event_lower or event_lower in symptom_lower:
                         matches.append(AdverseEventMatch(
                             drug_name=drug.name,
@@ -295,9 +295,9 @@ class MedicationSafetyAgent(BaseAgent):
                             source="OpenFDA",
                             caveat=self.CAVEATS["reporting_basis"],
                         ))
-        
+
         return matches
-    
+
     def _check_age_appropriateness(
         self,
         drugs: List[DrugInfo],
@@ -305,30 +305,30 @@ class MedicationSafetyAgent(BaseAgent):
     ) -> List[str]:
         """Check if medications are age-appropriate."""
         warnings = []
-        
+
         if age_months is None:
             return []
-        
+
         for drug in drugs:
             if drug.name == "ibuprofen" and age_months < 6:
                 warnings.append(
                     f"Ibuprofen is not recommended for infants under 6 months old. "
                     f"Current age: {age_months} months."
                 )
-            
+
             if drug.name == "diphenhydramine" and age_months < 24:
                 warnings.append(
                     f"Diphenhydramine (Benadryl) is not recommended for children under 2 years. "
                     f"Current age: {age_months} months."
                 )
-        
+
         return warnings
-    
+
     def _check_interactions(self, drugs: List[DrugInfo]) -> List[str]:
         """Check for drug-drug interactions."""
         interactions = []
         drug_names = [d.name for d in drugs]
-        
+
         # Check each drug against others
         for drug in drugs:
             for interaction in drug.interactions:
@@ -336,9 +336,9 @@ class MedicationSafetyAgent(BaseAgent):
                     interactions.append(
                         f"Potential interaction: {drug.name} and {interaction}"
                     )
-        
+
         return interactions
-    
+
     def _generate_response(
         self,
         drugs: List[DrugInfo],
@@ -351,51 +351,51 @@ class MedicationSafetyAgent(BaseAgent):
             "## Medication Safety Information\n",
             "*" + self.CAVEATS["reporting_basis"] + "*\n",
         ]
-        
+
         if not drugs:
             lines.append("No medication information was found for the provided medications.")
             return "\n".join(lines)
-        
+
         # Drug summaries
         lines.append("### Medications Reviewed")
         for drug in drugs:
             lines.append(f"\n**{drug.name.title()}** ({', '.join(drug.brand_names)})")
             lines.append(f"- Class: {drug.drug_class}")
             lines.append(f"- Pediatric use: {drug.pediatric_use}")
-        
+
         # Adverse event matches
         if matches:
             lines.append("\n### Symptom-Medication Correlations")
             lines.append(
                 "*The following symptoms have been reported in FDA adverse event data for these medications:*\n"
             )
-            
+
             for match in matches:
                 lines.append(
                     f"- **{match.symptom}** is mentioned in approximately "
                     f"**{match.report_percentage:.1f}%** of adverse event reports for **{match.drug_name}**"
                 )
-            
+
             lines.append("\n" + self.CAVEATS["not_causation"])
-        
+
         # Age warnings
         if age_warnings:
             lines.append("\n### ⚠️ Age-Related Considerations")
             for warning in age_warnings:
                 lines.append(f"- {warning}")
-        
+
         # Interactions
         if interactions:
             lines.append("\n### Drug Interactions")
             for interaction in interactions:
                 lines.append(f"- {interaction}")
-        
+
         # Final disclaimer
         lines.append("\n---")
         lines.append("*" + self.CAVEATS["consult_provider"] + "*")
-        
+
         return "\n".join(lines)
-    
+
     def _match_to_dict(self, match: AdverseEventMatch) -> Dict[str, Any]:
         """Convert match to dictionary."""
         return {
@@ -406,7 +406,7 @@ class MedicationSafetyAgent(BaseAgent):
             "source": match.source,
             "caveat": match.caveat,
         }
-    
+
     def _generate_explanation(
         self,
         drugs: List[DrugInfo],
@@ -414,17 +414,17 @@ class MedicationSafetyAgent(BaseAgent):
     ) -> str:
         """Generate explanation of the analysis."""
         lines = ["## Medication Safety Analysis\n"]
-        
+
         lines.append(f"**Medications analyzed:** {len(drugs)}")
         lines.append(f"**Symptom-medication correlations found:** {len(matches)}")
-        
+
         lines.append("\n### Data Sources")
         lines.append("- OpenFDA Drug Labels")
         lines.append("- OpenFDA Adverse Event Reports")
-        
+
         lines.append("\n### Important Limitations")
         lines.append("- Percentages are from voluntary reports, not controlled studies")
         lines.append("- Correlation does not imply causation")
         lines.append("- Individual responses may vary")
-        
+
         return "\n".join(lines)

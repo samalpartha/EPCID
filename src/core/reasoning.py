@@ -35,7 +35,7 @@ class ConfidenceLevel(Enum):
     MODERATE = "moderate"    # 0.70-0.85
     LOW = "low"              # 0.50-0.70
     VERY_LOW = "very_low"    # <0.50
-    
+
     @classmethod
     def from_score(cls, score: float) -> "ConfidenceLevel":
         """Get confidence level from numerical score."""
@@ -62,7 +62,7 @@ class ReasoningStep:
     confidence: float
     timestamp: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     warnings: List[str] = field(default_factory=list)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -90,11 +90,11 @@ class ReasoningChain:
     contradicting_evidence: List[str]
     created_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def get_explanation(self) -> str:
         """Generate human-readable explanation of reasoning."""
         lines = ["## Reasoning Process\n"]
-        
+
         for step in self.steps:
             lines.append(f"### Step {step.step_number}: {step.description}")
             lines.append(f"**Rationale:** {step.rationale}")
@@ -102,23 +102,23 @@ class ReasoningChain:
             if step.warnings:
                 lines.append(f"**Warnings:** {', '.join(step.warnings)}")
             lines.append("")
-        
+
         lines.append("## Conclusion")
         lines.append(f"**Result:** {self.final_conclusion}")
         lines.append(f"**Overall Confidence:** {self.overall_confidence:.0%}")
-        
+
         if self.uncertainty_factors:
             lines.append(f"\n**Uncertainty Factors:**")
             for factor in self.uncertainty_factors:
                 lines.append(f"- {factor}")
-        
+
         if self.supporting_evidence:
             lines.append(f"\n**Supporting Evidence:**")
             for evidence in self.supporting_evidence:
                 lines.append(f"- {evidence}")
-        
+
         return "\n".join(lines)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -137,7 +137,7 @@ class ReasoningChain:
 
 class ReasoningStrategy(ABC):
     """Abstract base class for reasoning strategies."""
-    
+
     @abstractmethod
     def reason(
         self,
@@ -146,7 +146,7 @@ class ReasoningStrategy(ABC):
     ) -> ReasoningChain:
         """Execute reasoning with the given context and goal."""
         pass
-    
+
     @abstractmethod
     def validate(self, chain: ReasoningChain) -> Tuple[bool, List[str]]:
         """Validate a reasoning chain. Returns (is_valid, issues)."""
@@ -160,7 +160,7 @@ class ChainOfThought(ReasoningStrategy):
     Breaks down complex reasoning into explicit, sequential steps.
     Critical for explainability in clinical decision support.
     """
-    
+
     def __init__(
         self,
         max_steps: int = 10,
@@ -171,7 +171,7 @@ class ChainOfThought(ReasoningStrategy):
         self.min_confidence_threshold = min_confidence_threshold
         self.require_rationale = require_rationale
         logger.info(f"Initialized ChainOfThought reasoning: max_steps={max_steps}")
-    
+
     def reason(
         self,
         context: Dict[str, Any],
@@ -179,45 +179,45 @@ class ChainOfThought(ReasoningStrategy):
     ) -> ReasoningChain:
         """Execute chain-of-thought reasoning."""
         import hashlib
-        
+
         steps: List[ReasoningStep] = []
         uncertainty_factors: List[str] = []
         supporting_evidence: List[str] = []
         contradicting_evidence: List[str] = []
-        
+
         # Step 1: Analyze available data
         step1 = self._analyze_data(context)
         steps.append(step1)
-        
+
         # Step 2: Identify relevant patterns
         step2 = self._identify_patterns(context, step1.output_data)
         steps.append(step2)
-        
+
         # Step 3: Apply clinical rules
         step3 = self._apply_clinical_rules(context, step2.output_data)
         steps.append(step3)
-        
+
         # Step 4: Assess uncertainty
         step4 = self._assess_uncertainty(context, steps)
         steps.append(step4)
         uncertainty_factors = step4.output_data.get("uncertainty_factors", [])
-        
+
         # Step 5: Synthesize conclusion
         step5 = self._synthesize_conclusion(context, steps, goal)
         steps.append(step5)
-        
+
         # Calculate overall confidence
         overall_confidence = self._calculate_overall_confidence(steps)
-        
+
         # Collect evidence
         for step in steps:
             supporting_evidence.extend(step.output_data.get("supporting_evidence", []))
             contradicting_evidence.extend(step.output_data.get("contradicting_evidence", []))
-        
+
         chain_id = hashlib.sha256(
             f"{goal}:{datetime.now(__import__("datetime").timezone.utc).isoformat()}".encode()
         ).hexdigest()[:12]
-        
+
         chain = ReasoningChain(
             id=chain_id,
             reasoning_type=ReasoningType.CHAIN_OF_THOUGHT,
@@ -229,35 +229,35 @@ class ChainOfThought(ReasoningStrategy):
             contradicting_evidence=list(set(contradicting_evidence)),
             metadata={"goal": goal},
         )
-        
+
         logger.info(f"Completed chain-of-thought reasoning: {chain.id}, confidence={overall_confidence:.2f}")
         return chain
-    
+
     def _analyze_data(self, context: Dict[str, Any]) -> ReasoningStep:
         """Analyze available data for completeness and quality."""
         input_data = {
             "data_sources": list(context.keys()),
             "context_keys": len(context),
         }
-        
+
         # Check data completeness
         required_fields = ["symptoms", "vitals", "demographics"]
         present_fields = [f for f in required_fields if f in context]
         missing_fields = [f for f in required_fields if f not in context]
-        
+
         completeness_score = len(present_fields) / len(required_fields)
-        
+
         output_data = {
             "completeness_score": completeness_score,
             "present_fields": present_fields,
             "missing_fields": missing_fields,
             "data_quality": "adequate" if completeness_score >= 0.7 else "incomplete",
         }
-        
+
         warnings = []
         if missing_fields:
             warnings.append(f"Missing data fields: {', '.join(missing_fields)}")
-        
+
         return ReasoningStep(
             step_number=1,
             description="Data Analysis",
@@ -267,7 +267,7 @@ class ChainOfThought(ReasoningStrategy):
             confidence=completeness_score,
             warnings=warnings,
         )
-    
+
     def _identify_patterns(
         self,
         context: Dict[str, Any],
@@ -276,26 +276,26 @@ class ChainOfThought(ReasoningStrategy):
         """Identify clinical patterns in the data."""
         patterns_found = []
         supporting_evidence = []
-        
+
         # Check for fever pattern
         vitals = context.get("vitals", {})
         if vitals.get("temperature", 0) >= 38.0:
             patterns_found.append("elevated_temperature")
             supporting_evidence.append(f"Temperature: {vitals.get('temperature')}°C")
-        
+
         # Check for respiratory concerns
         symptoms = context.get("symptoms", [])
         respiratory_symptoms = ["cough", "wheezing", "difficulty_breathing", "rapid_breathing"]
         if any(s in symptoms for s in respiratory_symptoms):
             patterns_found.append("respiratory_symptoms")
             supporting_evidence.append(f"Respiratory symptoms present")
-        
+
         # Check for GI concerns
         gi_symptoms = ["vomiting", "diarrhea", "abdominal_pain", "poor_appetite"]
         if any(s in symptoms for s in gi_symptoms):
             patterns_found.append("gastrointestinal_symptoms")
             supporting_evidence.append("GI symptoms present")
-        
+
         return ReasoningStep(
             step_number=2,
             description="Pattern Identification",
@@ -308,7 +308,7 @@ class ChainOfThought(ReasoningStrategy):
             rationale=f"Identified {len(patterns_found)} clinical patterns from available data",
             confidence=0.8 if patterns_found else 0.6,
         )
-    
+
     def _apply_clinical_rules(
         self,
         context: Dict[str, Any],
@@ -317,35 +317,35 @@ class ChainOfThought(ReasoningStrategy):
         """Apply clinical safety rules and guidelines."""
         rules_triggered = []
         risk_indicators = []
-        
+
         vitals = context.get("vitals", {})
         demographics = context.get("demographics", {})
         symptoms = context.get("symptoms", [])
-        
+
         age_months = demographics.get("age_months", 24)
-        
+
         # Critical safety rules
         critical_symptoms = ["cyanosis", "unresponsive", "seizure", "severe_difficulty_breathing"]
         if any(s in symptoms for s in critical_symptoms):
             rules_triggered.append("CRITICAL_SYMPTOM_RULE")
             risk_indicators.append("Critical symptom detected - immediate evaluation required")
-        
+
         # Infant fever rule
         if age_months < 3 and vitals.get("temperature", 0) >= 38.0:
             rules_triggered.append("INFANT_FEVER_RULE")
             risk_indicators.append("Fever in infant <3 months requires urgent evaluation")
-        
+
         # Dehydration rule
         dehydration_signs = ["decreased_urine", "dry_mouth", "no_tears", "sunken_eyes"]
         if sum(1 for s in dehydration_signs if s in symptoms) >= 2:
             rules_triggered.append("DEHYDRATION_RULE")
             risk_indicators.append("Multiple signs of dehydration present")
-        
+
         # High fever rule
         if vitals.get("temperature", 0) >= 40.0:
             rules_triggered.append("HIGH_FEVER_RULE")
             risk_indicators.append("High fever ≥40°C detected")
-        
+
         return ReasoningStep(
             step_number=3,
             description="Clinical Rule Application",
@@ -360,7 +360,7 @@ class ChainOfThought(ReasoningStrategy):
             confidence=0.95 if rules_triggered else 0.7,
             warnings=risk_indicators,
         )
-    
+
     def _assess_uncertainty(
         self,
         context: Dict[str, Any],
@@ -368,28 +368,28 @@ class ChainOfThought(ReasoningStrategy):
     ) -> ReasoningStep:
         """Assess uncertainty in the reasoning process."""
         uncertainty_factors = []
-        
+
         # Check data completeness uncertainty
         step1 = previous_steps[0] if previous_steps else None
         if step1 and step1.output_data.get("completeness_score", 0) < 1.0:
             missing = step1.output_data.get("missing_fields", [])
             uncertainty_factors.append(f"Incomplete data: missing {', '.join(missing)}")
-        
+
         # Check for conflicting patterns
         step2 = previous_steps[1] if len(previous_steps) > 1 else None
         if step2:
             patterns = step2.output_data.get("patterns_found", [])
             if len(patterns) > 2:
                 uncertainty_factors.append("Multiple concurrent patterns may indicate complex condition")
-        
+
         # Check temporal context
         if "symptom_duration" not in context:
             uncertainty_factors.append("Unknown symptom duration affects risk assessment")
-        
+
         # Calculate uncertainty score
         uncertainty_score = len(uncertainty_factors) * 0.1
         confidence = max(0.3, 1.0 - uncertainty_score)
-        
+
         return ReasoningStep(
             step_number=4,
             description="Uncertainty Assessment",
@@ -402,7 +402,7 @@ class ChainOfThought(ReasoningStrategy):
             rationale=f"Identified {len(uncertainty_factors)} sources of uncertainty",
             confidence=confidence,
         )
-    
+
     def _synthesize_conclusion(
         self,
         context: Dict[str, Any],
@@ -413,11 +413,11 @@ class ChainOfThought(ReasoningStrategy):
         # Collect all risk indicators
         risk_indicators = []
         rules_triggered = []
-        
+
         for step in previous_steps:
             risk_indicators.extend(step.output_data.get("risk_indicators", []))
             rules_triggered.extend(step.output_data.get("rules_triggered", []))
-        
+
         # Determine risk tier
         if "CRITICAL_SYMPTOM_RULE" in rules_triggered:
             risk_tier = "CRITICAL"
@@ -431,11 +431,11 @@ class ChainOfThought(ReasoningStrategy):
         else:
             risk_tier = "LOW"
             conclusion = "No high-risk indicators detected. Continue monitoring."
-        
+
         # Calculate confidence based on data quality and rule clarity
         confidence_scores = [step.confidence for step in previous_steps]
         avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
-        
+
         return ReasoningStep(
             step_number=5,
             description="Conclusion Synthesis",
@@ -452,7 +452,7 @@ class ChainOfThought(ReasoningStrategy):
             rationale=f"Synthesized conclusion based on {len(rules_triggered)} triggered rules and {len(risk_indicators)} risk indicators",
             confidence=avg_confidence,
         )
-    
+
     def _get_recommendations(self, risk_tier: str) -> List[str]:
         """Get recommendations based on risk tier."""
         recommendations = {
@@ -478,47 +478,47 @@ class ChainOfThought(ReasoningStrategy):
             ],
         }
         return recommendations.get(risk_tier, recommendations["LOW"])
-    
+
     def _calculate_overall_confidence(self, steps: List[ReasoningStep]) -> float:
         """Calculate overall confidence from all steps."""
         if not steps:
             return 0.5
-        
+
         # Weighted average with more weight on critical steps
         weights = [1.0, 1.0, 1.5, 0.8, 1.2]  # Weights for each step
-        
+
         total_weight = 0
         weighted_sum = 0
-        
+
         for i, step in enumerate(steps):
             weight = weights[i] if i < len(weights) else 1.0
             weighted_sum += step.confidence * weight
             total_weight += weight
-        
+
         return weighted_sum / total_weight if total_weight > 0 else 0.5
-    
+
     def validate(self, chain: ReasoningChain) -> Tuple[bool, List[str]]:
         """Validate a reasoning chain."""
         issues = []
-        
+
         # Check step count
         if len(chain.steps) < 3:
             issues.append("Insufficient reasoning steps")
-        
+
         # Check for rationale in each step
         if self.require_rationale:
             for step in chain.steps:
                 if not step.rationale:
                     issues.append(f"Step {step.step_number} missing rationale")
-        
+
         # Check confidence threshold
         if chain.overall_confidence < self.min_confidence_threshold:
             issues.append(f"Overall confidence {chain.overall_confidence:.2f} below threshold {self.min_confidence_threshold}")
-        
+
         # Check for conclusion
         if not chain.final_conclusion:
             issues.append("Missing final conclusion")
-        
+
         is_valid = len(issues) == 0
         return is_valid, issues
 
@@ -530,7 +530,7 @@ class SelfConsistency(ReasoningStrategy):
     Generates multiple reasoning paths and validates through consensus.
     Improves reliability through diversity of reasoning approaches.
     """
-    
+
     def __init__(
         self,
         num_samples: int = 3,
@@ -541,7 +541,7 @@ class SelfConsistency(ReasoningStrategy):
         self.consensus_threshold = consensus_threshold
         self.base_strategy = base_strategy or ChainOfThought()
         logger.info(f"Initialized SelfConsistency: samples={num_samples}")
-    
+
     def reason(
         self,
         context: Dict[str, Any],
@@ -549,7 +549,7 @@ class SelfConsistency(ReasoningStrategy):
     ) -> ReasoningChain:
         """Execute self-consistency reasoning with multiple paths."""
         import hashlib
-        
+
         # Generate multiple reasoning chains
         chains: List[ReasoningChain] = []
         for i in range(self.num_samples):
@@ -557,39 +557,39 @@ class SelfConsistency(ReasoningStrategy):
             varied_context = self._add_variation(context, i)
             chain = self.base_strategy.reason(varied_context, goal)
             chains.append(chain)
-        
+
         # Aggregate conclusions
         conclusions = [c.final_conclusion for c in chains]
         confidence_scores = [c.overall_confidence for c in chains]
-        
+
         # Find consensus
         consensus_conclusion, consensus_rate = self._find_consensus(conclusions)
-        
+
         # Merge uncertainty factors
         all_uncertainties = []
         for chain in chains:
             all_uncertainties.extend(chain.uncertainty_factors)
         unique_uncertainties = list(set(all_uncertainties))
-        
+
         # Merge evidence
         all_supporting = []
         all_contradicting = []
         for chain in chains:
             all_supporting.extend(chain.supporting_evidence)
             all_contradicting.extend(chain.contradicting_evidence)
-        
+
         # Calculate overall confidence (boosted by consensus)
         base_confidence = sum(confidence_scores) / len(confidence_scores)
         consensus_boost = 0.1 if consensus_rate >= self.consensus_threshold else -0.1
         overall_confidence = min(1.0, base_confidence + consensus_boost)
-        
+
         # Merge steps from best chain
         best_chain = max(chains, key=lambda c: c.overall_confidence)
-        
+
         chain_id = hashlib.sha256(
             f"{goal}:sc:{datetime.now(__import__("datetime").timezone.utc).isoformat()}".encode()
         ).hexdigest()[:12]
-        
+
         result = ReasoningChain(
             id=chain_id,
             reasoning_type=ReasoningType.SELF_CONSISTENCY,
@@ -606,10 +606,10 @@ class SelfConsistency(ReasoningStrategy):
                 "individual_conclusions": conclusions,
             },
         )
-        
+
         logger.info(f"Completed self-consistency reasoning: consensus={consensus_rate:.2f}")
         return result
-    
+
     def _add_variation(self, context: Dict[str, Any], sample_idx: int) -> Dict[str, Any]:
         """Add slight variation to context for diverse reasoning."""
         # For now, just return the context as-is
@@ -620,22 +620,22 @@ class SelfConsistency(ReasoningStrategy):
         varied = dict(context)
         varied["_sample_idx"] = sample_idx
         return varied
-    
+
     def _find_consensus(self, conclusions: List[str]) -> Tuple[str, float]:
         """Find consensus among conclusions."""
         if not conclusions:
             return "Unable to determine", 0.0
-        
+
         # Simple majority voting
         from collections import Counter
-        
+
         # Normalize conclusions for comparison
         normalized = [c.lower().strip() for c in conclusions]
-        
+
         # Count occurrences
         counter = Counter(normalized)
         most_common, count = counter.most_common(1)[0]
-        
+
         # Find original conclusion
         for c in conclusions:
             if c.lower().strip() == most_common:
@@ -643,23 +643,23 @@ class SelfConsistency(ReasoningStrategy):
                 break
         else:
             consensus_conclusion = conclusions[0]
-        
+
         consensus_rate = count / len(conclusions)
         return consensus_conclusion, consensus_rate
-    
+
     def validate(self, chain: ReasoningChain) -> Tuple[bool, List[str]]:
         """Validate a self-consistency reasoning chain."""
         issues = []
-        
+
         # Check consensus rate
         consensus_rate = chain.metadata.get("consensus_rate", 0)
         if consensus_rate < self.consensus_threshold:
             issues.append(f"Low consensus rate: {consensus_rate:.2f}")
-        
+
         # Validate underlying chain
         base_valid, base_issues = self.base_strategy.validate(chain)
         issues.extend(base_issues)
-        
+
         return len(issues) == 0, issues
 
 
@@ -670,7 +670,7 @@ class ReasoningEngine:
     Provides a unified interface for reasoning across the platform,
     with support for multiple strategies and automatic selection.
     """
-    
+
     def __init__(
         self,
         default_strategy: ReasoningType = ReasoningType.CHAIN_OF_THOUGHT,
@@ -678,15 +678,15 @@ class ReasoningEngine:
     ):
         self.default_strategy = default_strategy
         self.enable_reflection = enable_reflection
-        
+
         # Initialize strategies
         self.strategies: Dict[ReasoningType, ReasoningStrategy] = {
             ReasoningType.CHAIN_OF_THOUGHT: ChainOfThought(),
             ReasoningType.SELF_CONSISTENCY: SelfConsistency(),
         }
-        
+
         logger.info(f"Initialized ReasoningEngine with default: {default_strategy.value}")
-    
+
     def reason(
         self,
         context: Dict[str, Any],
@@ -695,41 +695,41 @@ class ReasoningEngine:
     ) -> ReasoningChain:
         """Execute reasoning with specified or default strategy."""
         strategy = strategy or self.default_strategy
-        
+
         if strategy not in self.strategies:
             logger.warning(f"Unknown strategy {strategy}, falling back to default")
             strategy = self.default_strategy
-        
+
         # Execute reasoning
         chain = self.strategies[strategy].reason(context, goal)
-        
+
         # Apply reflection if enabled
         if self.enable_reflection:
             chain = self._reflect(chain, context)
-        
+
         return chain
-    
+
     def _reflect(self, chain: ReasoningChain, context: Dict[str, Any]) -> ReasoningChain:
         """Apply reflection to verify and potentially revise reasoning."""
         # Validate the chain
         strategy = self.strategies.get(chain.reasoning_type)
         if strategy:
             is_valid, issues = strategy.validate(chain)
-            
+
             if not is_valid:
                 logger.warning(f"Reasoning chain {chain.id} has issues: {issues}")
                 chain.metadata["reflection_issues"] = issues
-                
+
                 # Adjust confidence based on issues
                 penalty = len(issues) * 0.05
                 chain.overall_confidence = max(0.1, chain.overall_confidence - penalty)
-        
+
         return chain
-    
+
     def explain(self, chain: ReasoningChain) -> str:
         """Generate human-readable explanation of reasoning."""
         return chain.get_explanation()
-    
+
     def compare_strategies(
         self,
         context: Dict[str, Any],
@@ -740,5 +740,5 @@ class ReasoningEngine:
         for strategy_type, strategy in self.strategies.items():
             chain = strategy.reason(context, goal)
             results[strategy_type.value] = chain
-        
+
         return results

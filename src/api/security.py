@@ -52,18 +52,18 @@ def create_access_token(
         Encoded JWT token
     """
     to_encode = data.copy()
-    
+
     if expires_delta:
         expire = datetime.now(__import__("datetime").timezone.utc) + expires_delta
     else:
         expire = datetime.now(__import__("datetime").timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+
     to_encode.update({
         "exp": expire,
         "iat": datetime.now(__import__("datetime").timezone.utc),
         "type": "access",
     })
-    
+
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -82,18 +82,18 @@ def create_refresh_token(
         Encoded JWT refresh token
     """
     to_encode = data.copy()
-    
+
     if expires_delta:
         expire = datetime.now(__import__("datetime").timezone.utc) + expires_delta
     else:
         expire = datetime.now(__import__("datetime").timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    
+
     to_encode.update({
         "exp": expire,
         "iat": datetime.now(__import__("datetime").timezone.utc),
         "type": "refresh",
     })
-    
+
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -126,13 +126,13 @@ def verify_token(token: str, token_type: str = "access") -> Optional[Dict[str, A
     """
     try:
         payload = decode_token(token)
-        
+
         # Verify token type
         if payload.get("type") != token_type:
             return None
-        
+
         return payload
-        
+
     except JWTError:
         return None
 

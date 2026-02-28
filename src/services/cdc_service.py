@@ -53,7 +53,7 @@ class DiseaseActivity:
     year: int
     pediatric_impact: str
     recommendation: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "disease": self.disease.value,
@@ -77,7 +77,7 @@ class VaccinationSchedule:
     total_doses: int
     catch_up_age: Optional[str]
     notes: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "vaccine_name": self.vaccine_name,
@@ -111,22 +111,22 @@ class CDCService:
     Provides disease surveillance, vaccination schedules,
     and pediatric growth reference data.
     """
-    
+
     FLUVIEW_BASE_URL = "https://www.cdc.gov/flu/weekly/flureport.xml"
-    
+
     def __init__(
         self,
         cache_ttl_hours: int = 6,
     ):
         self.cache_ttl_hours = cache_ttl_hours
         self._cache: Dict[str, tuple] = {}
-        
+
         # Pre-load reference data
         self._vaccination_schedule = self._load_vaccination_schedule()
         self._growth_charts = self._load_growth_charts()
-        
+
         logger.info("Initialized CDC service")
-    
+
     async def get_disease_activity(
         self,
         state: str,
@@ -143,24 +143,24 @@ class CDCService:
             List of DiseaseActivity objects
         """
         cache_key = f"activity:{state}"
-        
+
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         diseases = diseases or list(DiseaseType)
         activities = []
-        
+
         # In production, would call actual CDC APIs
         # For now, use curated regional data
         for disease in diseases:
             activity = self._get_regional_activity(state, disease)
             if activity:
                 activities.append(activity)
-        
+
         self._set_cached(cache_key, activities)
         return activities
-    
+
     async def get_outbreak_alerts(
         self,
         state: str,
@@ -177,7 +177,7 @@ class CDCService:
             List of alert dictionaries
         """
         activities = await self.get_disease_activity(state)
-        
+
         alerts = []
         for activity in activities:
             if activity.activity_level in [ActivityLevel.HIGH, ActivityLevel.VERY_HIGH]:
@@ -190,9 +190,9 @@ class CDCService:
                     "pediatric_impact": activity.pediatric_impact,
                     "trend": activity.trend,
                 })
-        
+
         return alerts
-    
+
     def get_vaccination_schedule(
         self,
         age_months: int,
@@ -209,19 +209,19 @@ class CDCService:
             List of VaccinationSchedule objects
         """
         due_vaccines = []
-        
+
         for vaccine in self._vaccination_schedule:
             rec_age = self._parse_age_range(vaccine.recommended_age)
-            
+
             if rec_age[0] <= age_months <= rec_age[1]:
                 due_vaccines.append(vaccine)
             elif include_catchup and vaccine.catch_up_age:
                 catchup_age = self._parse_age_range(vaccine.catch_up_age)
                 if catchup_age[0] <= age_months <= catchup_age[1]:
                     due_vaccines.append(vaccine)
-        
+
         return due_vaccines
-    
+
     def get_growth_percentile(
         self,
         age_months: int,
@@ -242,17 +242,17 @@ class CDCService:
             Dict with percentile information
         """
         chart = self._get_growth_chart(age_months, sex, measurement_type)
-        
+
         if not chart:
             return {
                 "percentile": None,
                 "status": "unknown",
                 "message": "Growth data not available for this age/measurement",
             }
-        
+
         # Calculate percentile
         percentile = self._interpolate_percentile(chart, value)
-        
+
         # Determine status
         if percentile < 3:
             status = "below_normal"
@@ -269,7 +269,7 @@ class CDCService:
         else:
             status = "above_normal"
             message = f"Above 97th percentile - consult pediatrician"
-        
+
         return {
             "percentile": percentile,
             "status": status,
@@ -280,7 +280,7 @@ class CDCService:
                 "p95": chart.p95,
             }
         }
-    
+
     def get_vital_sign_reference(
         self,
         age_months: int,
@@ -298,17 +298,17 @@ class CDCService:
         """
         # Age-specific vital sign ranges (from pediatric references)
         ranges = self._get_vital_ranges_for_age(age_months)
-        
+
         if vital_type not in ranges:
             return {"error": f"Unknown vital type: {vital_type}"}
-        
+
         return {
             "vital_type": vital_type,
             "age_months": age_months,
             "age_group": self._get_age_group(age_months),
             **ranges[vital_type],
         }
-    
+
     def _get_regional_activity(
         self,
         state: str,
@@ -317,10 +317,10 @@ class CDCService:
         """Get simulated regional disease activity."""
         # Regional data (would come from CDC APIs in production)
         # This simulates typical winter respiratory illness patterns
-        
+
         current_week = datetime.now().isocalendar()[1]
         is_respiratory_season = current_week >= 40 or current_week <= 15
-        
+
         activity_data = {
             DiseaseType.INFLUENZA: {
                 "activity_level": ActivityLevel.HIGH if is_respiratory_season else ActivityLevel.LOW,
@@ -353,11 +353,11 @@ class CDCService:
                 "recommendation": "Practice good hand hygiene. Keep children home if symptomatic.",
             },
         }
-        
+
         data = activity_data.get(disease)
         if not data:
             return None
-        
+
         return DiseaseActivity(
             disease=disease,
             region=self._state_to_region(state),
@@ -369,7 +369,7 @@ class CDCService:
             pediatric_impact=data["pediatric_impact"],
             recommendation=data["recommendation"],
         )
-    
+
     def _state_to_region(self, state: str) -> str:
         """Convert state to HHS region."""
         regions = {
@@ -384,19 +384,19 @@ class CDCService:
             "Region 9": ["AZ", "CA", "HI", "NV"],
             "Region 10": ["AK", "ID", "OR", "WA"],
         }
-        
+
         for region, states in regions.items():
             if state.upper() in states:
                 return region
         return "Unknown"
-    
+
     def _load_vaccination_schedule(self) -> List[VaccinationSchedule]:
         """Load CDC vaccination schedule."""
         # Based on CDC 2024 schedule
         return [
             # Birth
             VaccinationSchedule("Hepatitis B", "Hepatitis B", "0 months", 1, 3, "0-18 years", "First dose at birth"),
-            
+
             # 2 months
             VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "2 months", 1, 5, None, ""),
             VaccinationSchedule("Hib", "Haemophilus influenzae type b", "2 months", 1, 4, None, ""),
@@ -404,14 +404,14 @@ class CDCService:
             VaccinationSchedule("PCV15/PCV20", "Pneumococcal", "2 months", 1, 4, None, ""),
             VaccinationSchedule("RV", "Rotavirus", "2 months", 1, 3, None, "Must start by 15 weeks"),
             VaccinationSchedule("Hepatitis B", "Hepatitis B", "2 months", 2, 3, None, ""),
-            
+
             # 4 months
             VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "4 months", 2, 5, None, ""),
             VaccinationSchedule("Hib", "Haemophilus influenzae type b", "4 months", 2, 4, None, ""),
             VaccinationSchedule("IPV", "Polio", "4 months", 2, 4, None, ""),
             VaccinationSchedule("PCV15/PCV20", "Pneumococcal", "4 months", 2, 4, None, ""),
             VaccinationSchedule("RV", "Rotavirus", "4 months", 2, 3, None, ""),
-            
+
             # 6 months
             VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "6 months", 3, 5, None, ""),
             VaccinationSchedule("Hib", "Haemophilus influenzae type b", "6 months", 3, 4, None, "Depending on brand"),
@@ -420,29 +420,29 @@ class CDCService:
             VaccinationSchedule("Hepatitis B", "Hepatitis B", "6-18 months", 3, 3, None, ""),
             VaccinationSchedule("IPV", "Polio", "6-18 months", 3, 4, None, ""),
             VaccinationSchedule("Influenza", "Influenza", "6 months+", 1, 2, None, "Annual; 2 doses first year"),
-            
+
             # 12-15 months
             VaccinationSchedule("MMR", "Measles, Mumps, Rubella", "12-15 months", 1, 2, "13 months-12 years", ""),
             VaccinationSchedule("Varicella", "Chickenpox", "12-15 months", 1, 2, "13 months-12 years", ""),
             VaccinationSchedule("Hib", "Haemophilus influenzae type b", "12-15 months", 4, 4, None, ""),
             VaccinationSchedule("PCV15/PCV20", "Pneumococcal", "12-15 months", 4, 4, None, ""),
             VaccinationSchedule("Hepatitis A", "Hepatitis A", "12-23 months", 1, 2, "2-18 years", "2 doses 6 months apart"),
-            
+
             # 15-18 months
             VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "15-18 months", 4, 5, None, ""),
-            
+
             # 4-6 years
             VaccinationSchedule("DTaP", "Diphtheria, Tetanus, Pertussis", "4-6 years", 5, 5, None, ""),
             VaccinationSchedule("IPV", "Polio", "4-6 years", 4, 4, None, ""),
             VaccinationSchedule("MMR", "Measles, Mumps, Rubella", "4-6 years", 2, 2, None, ""),
             VaccinationSchedule("Varicella", "Chickenpox", "4-6 years", 2, 2, None, ""),
-            
+
             # 11-12 years
             VaccinationSchedule("Tdap", "Tetanus, Diphtheria, Pertussis", "11-12 years", 1, 1, "13-18 years", "Booster"),
             VaccinationSchedule("HPV", "Human Papillomavirus", "11-12 years", 1, 2, "13-26 years", "2-3 doses based on age"),
             VaccinationSchedule("MenACWY", "Meningococcal", "11-12 years", 1, 2, "13-18 years", "Booster at 16"),
         ]
-    
+
     def _load_growth_charts(self) -> Dict[str, List[GrowthPercentile]]:
         """Load WHO/CDC growth chart data."""
         # Abbreviated dataset - full data from CDC/WHO
@@ -452,7 +452,7 @@ class CDCService:
             "height_male": [],
             "height_female": [],
         }
-        
+
         # Sample weight data for males (kg) - would load full dataset
         weight_male_data = [
             (0, 2.5, 2.9, 3.3, 3.5, 4.0, 4.4, 4.6),
@@ -468,7 +468,7 @@ class CDCService:
             (48, 13.6, 14.7, 16.2, 16.3, 18.0, 19.9, 21.2),
             (60, 15.3, 16.6, 18.3, 18.4, 20.4, 22.6, 24.2),
         ]
-        
+
         for row in weight_male_data:
             charts["weight_male"].append(GrowthPercentile(
                 age_months=row[0],
@@ -477,9 +477,9 @@ class CDCService:
                 p5=row[1], p10=row[2], p25=row[3], p50=row[4],
                 p75=row[5], p90=row[6], p95=row[7],
             ))
-        
+
         return charts
-    
+
     def _get_growth_chart(
         self,
         age_months: int,
@@ -489,19 +489,19 @@ class CDCService:
         """Get growth chart for age/sex/measurement."""
         key = f"{measurement_type}_{sex}"
         charts = self._growth_charts.get(key, [])
-        
+
         # Find closest age
         closest = None
         min_diff = float('inf')
-        
+
         for chart in charts:
             diff = abs(chart.age_months - age_months)
             if diff < min_diff:
                 min_diff = diff
                 closest = chart
-        
+
         return closest
-    
+
     def _interpolate_percentile(
         self,
         chart: GrowthPercentile,
@@ -517,31 +517,31 @@ class CDCService:
             (90, chart.p90),
             (95, chart.p95),
         ]
-        
+
         # Below 5th percentile
         if value < chart.p5:
             return 3
-        
+
         # Above 95th percentile
         if value > chart.p95:
             return 97
-        
+
         # Interpolate
         for i in range(len(percentiles) - 1):
             p1, v1 = percentiles[i]
             p2, v2 = percentiles[i + 1]
-            
+
             if v1 <= value <= v2:
                 ratio = (value - v1) / (v2 - v1)
                 return int(p1 + ratio * (p2 - p1))
-        
+
         return 50
-    
+
     def _parse_age_range(self, age_str: str) -> tuple:
         """Parse age range string to months."""
         # Handle formats like "2 months", "12-15 months", "4-6 years"
         age_str = age_str.lower().strip()
-        
+
         if "-" in age_str:
             parts = age_str.split("-")
             start = self._parse_single_age(parts[0].strip())
@@ -550,11 +550,11 @@ class CDCService:
         else:
             age = self._parse_single_age(age_str)
             return (age, age + 2)  # 2-month window
-    
+
     def _parse_single_age(self, age_str: str) -> int:
         """Parse single age to months."""
         age_str = age_str.lower()
-        
+
         if "year" in age_str:
             years = int(''.join(filter(str.isdigit, age_str)) or 0)
             return years * 12
@@ -563,7 +563,7 @@ class CDCService:
         else:
             # Assume months
             return int(''.join(filter(str.isdigit, age_str)) or 0)
-    
+
     def _get_vital_ranges_for_age(self, age_months: int) -> Dict[str, Any]:
         """Get normal vital sign ranges for age."""
         # Based on PALS guidelines
@@ -597,7 +597,7 @@ class CDCService:
                 "respiratory_rate": {"low": 14, "normal_low": 18, "normal_high": 30, "high": 35, "unit": "/min"},
                 "temperature": {"low": 97.5, "normal_low": 98.0, "normal_high": 99.5, "high": 100.4, "unit": "°F"},
             }
-    
+
     def _get_age_group(self, age_months: int) -> str:
         """Get age group label."""
         if age_months < 1:
@@ -612,7 +612,7 @@ class CDCService:
             return "School Age"
         else:
             return "Adolescent"
-    
+
     def _get_cached(self, key: str) -> Optional[Any]:
         """Get cached result if not expired."""
         if key in self._cache:
@@ -621,7 +621,7 @@ class CDCService:
                 return result
             del self._cache[key]
         return None
-    
+
     def _set_cached(self, key: str, value: Any) -> None:
         """Set cached result."""
         self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))

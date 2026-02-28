@@ -41,7 +41,7 @@ async def run_assessment_pipeline(
     Run the full assessment pipeline using all agents.
     """
     assessment_id = f"assess-{uuid4().hex[:8]}"
-    
+
     try:
         # Initialize agents
         ingestion_agent = IngestionAgent(agent_id="ingestion-001")
@@ -50,7 +50,7 @@ async def run_assessment_pipeline(
         guideline_agent = GuidelineRAGAgent(agent_id="guideline-001")
         escalation_agent = EscalationAgent(agent_id="escalation-001")
         explainer = ExplanationGenerator()
-        
+
         # Step 1: Ingest and normalize symptoms
         normalized_symptoms = []
         for symptom in request.symptoms:
@@ -61,20 +61,20 @@ async def run_assessment_pipeline(
             })
             if result.get("status") == "success":
                 normalized_symptoms.append(result.get("normalized_event"))
-        
+
         # Step 2: Extract phenotype signals
         phenotype_result = await phenotype_agent.process({
             "symptoms": normalized_symptoms,
             "child_id": request.child_id,
         })
-        
+
         # Step 3: Risk stratification
         risk_result = await risk_agent.process({
             "phenotype": phenotype_result.get("phenotype", {}),
             "symptoms": normalized_symptoms,
             "child_id": request.child_id,
         })
-        
+
         # Step 4: Get guideline recommendations (if requested)
         guidelines_content = []
         if request.include_guidelines:
@@ -83,7 +83,7 @@ async def run_assessment_pipeline(
                 "risk_level": risk_result.get("risk_level", "low"),
             })
             guidelines_content = guideline_result.get("recommendations", [])
-        
+
         # Step 5: Check environmental factors (if requested)
         environmental_context = None
         if request.include_environmental and request.location:
@@ -94,14 +94,14 @@ async def run_assessment_pipeline(
                 "symptoms": [s.symptom_type for s in request.symptoms],
             })
             environmental_context = env_result
-        
+
         # Step 6: Generate escalation recommendations
         escalation_result = await escalation_agent.process({
             "risk_level": risk_result.get("risk_level", "low"),
             "risk_score": risk_result.get("risk_score", 0.0),
             "symptoms": [s.symptom_type for s in request.symptoms],
         })
-        
+
         # Step 7: Generate explanation
         explanation = explainer.generate_explanation({
             "risk_result": risk_result,
@@ -109,7 +109,7 @@ async def run_assessment_pipeline(
             "guidelines": guidelines_content,
             "environmental": environmental_context,
         })
-        
+
         # Build risk factors
         risk_factors = []
         for symptom in request.symptoms:
@@ -122,7 +122,7 @@ async def run_assessment_pipeline(
                     source="symptom_input",
                 )
             )
-        
+
         # Determine risk level
         risk_score = risk_result.get("risk_score", 0.3)
         if risk_score < 0.25:
@@ -133,7 +133,7 @@ async def run_assessment_pipeline(
             risk_level = RiskLevel.HIGH
         else:
             risk_level = RiskLevel.CRITICAL
-        
+
         # Build response
         response = AssessmentResponse(
             id=assessment_id,
@@ -166,7 +166,7 @@ async def run_assessment_pipeline(
                 "If you believe your child is experiencing a medical emergency, call 911 immediately.",
             ],
         )
-        
+
         # Store assessment
         fake_assessments_db[assessment_id] = {
             "assessment": response.model_dump(),
@@ -174,9 +174,9 @@ async def run_assessment_pipeline(
             "request": request.model_dump(),
             "created_at": datetime.now(__import__("datetime").timezone.utc),
         }
-        
+
         return response
-        
+
     except Exception as e:
         # Return safe fallback response on error
         return AssessmentResponse(
@@ -254,19 +254,19 @@ async def list_assessments(
 ):
     """Get previous assessments."""
     assessments = []
-    
+
     for stored in fake_assessments_db.values():
         if stored["user_id"] != current_user["id"]:
             continue
-        
+
         if child_id and stored["assessment"]["child_id"] != child_id:
             continue
-        
+
         assessments.append(AssessmentResponse(**stored["assessment"]))
-    
+
     # Sort by timestamp descending
     assessments.sort(key=lambda x: x.timestamp, reverse=True)
-    
+
     return assessments[:limit]
 
 
@@ -282,19 +282,19 @@ async def get_assessment(
 ):
     """Get a specific assessment."""
     stored = fake_assessments_db.get(assessment_id)
-    
+
     if not stored:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Assessment not found",
         )
-    
+
     if stored["user_id"] != current_user["id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
         )
-    
+
     return AssessmentResponse(**stored["assessment"])
 
 
@@ -316,7 +316,7 @@ async def quick_assessment(
     use the full /assessment endpoint.
     """
     from ...api.schemas import SymptomCreate, SymptomSeverity
-    
+
     # Convert simple symptom list to full request
     symptom_objects = [
         SymptomCreate(
@@ -326,14 +326,14 @@ async def quick_assessment(
         )
         for s in symptoms
     ]
-    
+
     request = AssessmentRequest(
         child_id=child_id,
         symptoms=symptom_objects,
         include_guidelines=True,
         include_environmental=False,
     )
-    
+
     return await run_assessment_pipeline(request, current_user["id"])
 
 
@@ -350,9 +350,9 @@ async def get_child_assessment_history(
 ):
     """Get assessment history for a child."""
     from datetime import timedelta
-    
+
     since = datetime.now(__import__("datetime").timezone.utc) - timedelta(days=days)
-    
+
     assessments = [
         AssessmentResponse(**stored["assessment"])
         for stored in fake_assessments_db.values()
@@ -360,9 +360,9 @@ async def get_child_assessment_history(
         and stored["assessment"]["child_id"] == child_id
         and stored["created_at"] >= since
     ]
-    
+
     assessments.sort(key=lambda x: x.timestamp, reverse=True)
-    
+
     return assessments
 
 
@@ -378,18 +378,18 @@ async def delete_assessment(
 ):
     """Delete a specific assessment."""
     stored = fake_assessments_db.get(assessment_id)
-    
+
     if not stored:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Assessment not found",
         )
-    
+
     if stored["user_id"] != current_user["id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
         )
-    
+
     del fake_assessments_db[assessment_id]
     return None

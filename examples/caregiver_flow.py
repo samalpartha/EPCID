@@ -55,53 +55,53 @@ async def caregiver_symptom_check(
         Complete assessment with guidance
     """
     logger.info("Starting caregiver symptom check workflow")
-    
+
     # Initialize shared components
     memory = Memory()
     reasoning_engine = ReasoningEngine()
     explainer = ExplanationGenerator()
-    
+
     # Initialize agents
     ingestion_agent = IngestionAgent(memory=memory, reasoning_engine=reasoning_engine)
     phenotype_agent = PhenotypeAgent(memory=memory, reasoning_engine=reasoning_engine)
     risk_agent = RiskAgent(memory=memory, reasoning_engine=reasoning_engine)
     guideline_agent = GuidelineRAGAgent(memory=memory, reasoning_engine=reasoning_engine)
     escalation_agent = EscalationAgent(memory=memory, reasoning_engine=reasoning_engine)
-    
+
     results = {
         "timestamp": datetime.utcnow().isoformat(),
         "child_id": input_data.get("child_id"),
         "stages": {},
     }
-    
+
     # =====================================
     # Stage 1: Ingest and normalize data
     # =====================================
     logger.info("Stage 1: Data ingestion and normalization")
-    
+
     ingestion_response = await ingestion_agent.run(input_data)
     results["stages"]["ingestion"] = {
         "status": ingestion_response.status.value,
         "quality_score": ingestion_response.data.get("quality_score"),
         "warnings": ingestion_response.warnings,
     }
-    
+
     if not ingestion_response.success:
         logger.error("Ingestion failed")
         results["error"] = "Data ingestion failed"
         return results
-    
+
     normalized_data = ingestion_response.data.get("normalized", {})
-    
+
     # =====================================
     # Stage 2: Derive clinical phenotypes
     # =====================================
     logger.info("Stage 2: Deriving clinical phenotypes")
-    
+
     phenotype_input = {
         "normalized": normalized_data,
     }
-    
+
     phenotype_response = await phenotype_agent.run(phenotype_input)
     results["stages"]["phenotypes"] = {
         "status": phenotype_response.status.value,
@@ -109,19 +109,19 @@ async def caregiver_symptom_check(
         "clinical_state": phenotype_response.data.get("clinical_state"),
         "severe_phenotypes": phenotype_response.data.get("severe_phenotypes"),
     }
-    
+
     phenotypes = phenotype_response.data.get("phenotypes", [])
-    
+
     # =====================================
     # Stage 3: Risk stratification
     # =====================================
     logger.info("Stage 3: Risk assessment")
-    
+
     risk_input = {
         "normalized": normalized_data,
         "phenotypes": phenotypes,
     }
-    
+
     risk_response = await risk_agent.run(risk_input)
     results["stages"]["risk"] = {
         "status": risk_response.status.value,
@@ -131,32 +131,32 @@ async def caregiver_symptom_check(
         "triggered_rules": risk_response.data.get("triggered_rules"),
         "risk_factors": risk_response.data.get("risk_factors"),
     }
-    
+
     risk_tier = risk_response.data.get("risk_tier", "LOW")
-    
+
     # =====================================
     # Stage 4: Retrieve guidelines
     # =====================================
     logger.info("Stage 4: Retrieving guidelines")
-    
+
     guideline_input = {
         "symptoms": normalized_data.get("symptoms", []),
         "demographics": normalized_data.get("demographics", {}),
         "risk_tier": risk_tier,
     }
-    
+
     guideline_response = await guideline_agent.run(guideline_input)
     results["stages"]["guidelines"] = {
         "status": guideline_response.status.value,
         "result_count": guideline_response.data.get("result_count"),
         "citations": guideline_response.data.get("citations"),
     }
-    
+
     # =====================================
     # Stage 5: Generate care guidance
     # =====================================
     logger.info("Stage 5: Generating care guidance")
-    
+
     escalation_input = {
         "risk_tier": risk_tier,
         "symptoms": normalized_data.get("symptoms", []),
@@ -164,7 +164,7 @@ async def caregiver_symptom_check(
         "medications": normalized_data.get("medications", []),
         "demographics": normalized_data.get("demographics", {}),
     }
-    
+
     escalation_response = await escalation_agent.run(
         escalation_input,
         context={"risk_assessment": risk_response.data},
@@ -175,12 +175,12 @@ async def caregiver_symptom_check(
         "urgency": escalation_response.data.get("urgency"),
         "primary_action": escalation_response.data.get("primary_action"),
     }
-    
+
     # =====================================
     # Generate final explanation
     # =====================================
     logger.info("Generating final explanation")
-    
+
     explanation = explainer.explain_risk_assessment(
         risk_tier=risk_tier,
         confidence=risk_response.data.get("confidence", 0.5),
@@ -191,7 +191,7 @@ async def caregiver_symptom_check(
         model_scores=risk_response.data.get("model_scores", {}),
         missing_data=risk_response.data.get("missing_data", []),
     )
-    
+
     results["assessment"] = {
         "risk_tier": risk_tier,
         "urgency": escalation_response.data.get("urgency"),
@@ -202,7 +202,7 @@ async def caregiver_symptom_check(
         "checklist": escalation_response.data.get("checklist"),
         "escalation_criteria": escalation_response.data.get("escalation_criteria"),
     }
-    
+
     logger.info(f"Workflow complete. Risk tier: {risk_tier}")
     return results
 
@@ -210,12 +210,12 @@ async def caregiver_symptom_check(
 # Example usage
 async def main():
     """Run example caregiver workflow."""
-    
+
     # Example 1: Moderate fever with respiratory symptoms
     print("\n" + "=" * 60)
     print("Example 1: Fever with cough")
     print("=" * 60)
-    
+
     input_data = {
         "child_id": "child-001",
         "demographics": {
@@ -239,19 +239,19 @@ async def main():
             {"name": "acetaminophen", "dose": "160mg", "frequency": "every 6 hours"},
         ],
     }
-    
+
     result = await caregiver_symptom_check(input_data)
-    
+
     print(f"\nRisk Tier: {result['assessment']['risk_tier']}")
     print(f"Urgency: {result['assessment']['urgency']}")
     print(f"Action: {result['assessment']['primary_action']}")
     print(f"\nExplanation:\n{result['assessment']['explanation'][:500]}...")
-    
+
     # Example 2: Critical symptoms (infant with fever)
     print("\n" + "=" * 60)
     print("Example 2: Infant with fever (Critical)")
     print("=" * 60)
-    
+
     critical_input = {
         "child_id": "child-002",
         "demographics": {
@@ -271,18 +271,18 @@ async def main():
         },
         "symptom_duration": "4 hours",
     }
-    
+
     critical_result = await caregiver_symptom_check(critical_input)
-    
+
     print(f"\nRisk Tier: {critical_result['assessment']['risk_tier']}")
     print(f"Urgency: {critical_result['assessment']['urgency']}")
     print(f"Action: {critical_result['assessment']['primary_action']}")
-    
+
     # Example 3: Low risk symptoms
     print("\n" + "=" * 60)
     print("Example 3: Mild cold symptoms (Low risk)")
     print("=" * 60)
-    
+
     low_risk_input = {
         "child_id": "child-003",
         "demographics": {
@@ -301,9 +301,9 @@ async def main():
         },
         "symptom_duration": "2 days",
     }
-    
+
     low_result = await caregiver_symptom_check(low_risk_input)
-    
+
     print(f"\nRisk Tier: {low_result['assessment']['risk_tier']}")
     print(f"Urgency: {low_result['assessment']['urgency']}")
     print(f"Action: {low_result['assessment']['primary_action']}")

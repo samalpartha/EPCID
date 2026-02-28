@@ -23,13 +23,13 @@ _redis_client = None
 def get_redis_client():
     """Get or create Redis client with lazy loading."""
     global _redis_client
-    
+
     if _redis_client is not None:
         return _redis_client
-    
+
     try:
         import redis
-        
+
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
         _redis_client = redis.from_url(
             redis_url,
@@ -50,13 +50,13 @@ class CacheService:
     """
     Cache service with Redis backend and in-memory fallback.
     """
-    
+
     # Default TTLs for different data types
     TTL_SHORT = 60  # 1 minute
     TTL_MEDIUM = 300  # 5 minutes
     TTL_LONG = 3600  # 1 hour
     TTL_DAY = 86400  # 24 hours
-    
+
     # Cache key prefixes
     PREFIX_WEATHER = "weather:"
     PREFIX_AIR_QUALITY = "airquality:"
@@ -64,11 +64,11 @@ class CacheService:
     PREFIX_SESSION = "session:"
     PREFIX_ASSESSMENT = "assessment:"
     PREFIX_GUIDELINES = "guidelines:"
-    
+
     def __init__(self):
         self._memory_cache: dict = {}  # Fallback in-memory cache
         self._redis = get_redis_client()
-    
+
     @property
     def is_available(self) -> bool:
         """Check if Redis is available."""
@@ -79,7 +79,7 @@ class CacheService:
             return True
         except:
             return False
-    
+
     def get(self, key: str) -> Optional[Any]:
         """
         Get value from cache.
@@ -98,10 +98,10 @@ class CacheService:
                     return json.loads(value)
             except Exception as e:
                 logger.debug(f"Redis get error: {e}")
-        
+
         # Fallback to memory cache
         return self._memory_cache.get(key)
-    
+
     def set(
         self, 
         key: str, 
@@ -120,7 +120,7 @@ class CacheService:
             True if successful
         """
         serialized = json.dumps(value)
-        
+
         # Try Redis first
         if self._redis:
             try:
@@ -128,11 +128,11 @@ class CacheService:
                 return True
             except Exception as e:
                 logger.debug(f"Redis set error: {e}")
-        
+
         # Fallback to memory cache (no TTL enforcement)
         self._memory_cache[key] = value
         return True
-    
+
     def delete(self, key: str) -> bool:
         """Delete key from cache."""
         if self._redis:
@@ -140,14 +140,14 @@ class CacheService:
                 self._redis.delete(key)
             except:
                 pass
-        
+
         self._memory_cache.pop(key, None)
         return True
-    
+
     def clear_prefix(self, prefix: str) -> int:
         """Clear all keys with given prefix."""
         count = 0
-        
+
         if self._redis:
             try:
                 keys = self._redis.keys(f"{prefix}*")
@@ -155,47 +155,47 @@ class CacheService:
                     count = self._redis.delete(*keys)
             except Exception as e:
                 logger.debug(f"Redis clear error: {e}")
-        
+
         # Clear from memory cache
         to_delete = [k for k in self._memory_cache if k.startswith(prefix)]
         for k in to_delete:
             del self._memory_cache[k]
             count += 1
-        
+
         return count
-    
+
     # =========================================================================
     # Specialized caching methods
     # =========================================================================
-    
+
     def get_weather(self, zip_code: str) -> Optional[dict]:
         """Get cached weather data."""
         return self.get(f"{self.PREFIX_WEATHER}{zip_code}")
-    
+
     def set_weather(self, zip_code: str, data: dict) -> bool:
         """Cache weather data (15 min TTL)."""
         return self.set(f"{self.PREFIX_WEATHER}{zip_code}", data, ttl=900)
-    
+
     def get_air_quality(self, zip_code: str) -> Optional[dict]:
         """Get cached air quality data."""
         return self.get(f"{self.PREFIX_AIR_QUALITY}{zip_code}")
-    
+
     def set_air_quality(self, zip_code: str, data: dict) -> bool:
         """Cache air quality data (30 min TTL)."""
         return self.set(f"{self.PREFIX_AIR_QUALITY}{zip_code}", data, ttl=1800)
-    
+
     def get_guidelines(self, topic: str) -> Optional[dict]:
         """Get cached guidelines."""
         return self.get(f"{self.PREFIX_GUIDELINES}{topic}")
-    
+
     def set_guidelines(self, topic: str, data: dict) -> bool:
         """Cache guidelines (1 hour TTL)."""
         return self.set(f"{self.PREFIX_GUIDELINES}{topic}", data, ttl=self.TTL_LONG)
-    
+
     # =========================================================================
     # Rate limiting
     # =========================================================================
-    
+
     def check_rate_limit(
         self, 
         identifier: str, 
@@ -214,25 +214,25 @@ class CacheService:
             Tuple of (is_allowed, remaining_requests)
         """
         key = f"{self.PREFIX_RATE_LIMIT}{identifier}"
-        
+
         if self._redis:
             try:
                 current = self._redis.incr(key)
                 if current == 1:
                     self._redis.expire(key, window)
-                
+
                 remaining = max(0, limit - current)
                 return current <= limit, remaining
             except Exception as e:
                 logger.debug(f"Rate limit error: {e}")
-        
+
         # No rate limiting without Redis
         return True, limit
-    
+
     # =========================================================================
     # Health check
     # =========================================================================
-    
+
     def health_check(self) -> dict:
         """Get cache health status."""
         status = {
@@ -240,7 +240,7 @@ class CacheService:
             "available": self.is_available,
             "memory_cache_size": len(self._memory_cache),
         }
-        
+
         if self._redis and self.is_available:
             try:
                 info = self._redis.info("memory")
@@ -248,7 +248,7 @@ class CacheService:
                 status["redis_keys"] = self._redis.dbsize()
             except:
                 pass
-        
+
         return status
 
 

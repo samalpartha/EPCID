@@ -19,7 +19,7 @@ import os
 
 class JSONFormatter(logging.Formatter):
     """JSON formatter for structured logging."""
-    
+
     def format(self, record: logging.LogRecord) -> str:
         log_data = {
             "timestamp": datetime.now(__import__("datetime").timezone.utc).isoformat() + "Z",
@@ -30,7 +30,7 @@ class JSONFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
         }
-        
+
         # Add extra fields
         if hasattr(record, "request_id"):
             log_data["request_id"] = record.request_id
@@ -40,30 +40,30 @@ class JSONFormatter(logging.Formatter):
             log_data["agent"] = record.agent
         if hasattr(record, "extra_data"):
             log_data.update(record.extra_data)
-        
+
         # Add exception info
         if record.exc_info:
             log_data["exception"] = self.formatException(record.exc_info)
-        
+
         return json.dumps(log_data)
 
 
 class ContextFilter(logging.Filter):
     """Filter that adds context to log records."""
-    
+
     def __init__(self, context: Optional[Dict[str, Any]] = None):
         super().__init__()
         self.context = context or {}
-    
+
     def filter(self, record: logging.LogRecord) -> bool:
         for key, value in self.context.items():
             setattr(record, key, value)
         return True
-    
+
     def set_context(self, key: str, value: Any) -> None:
         """Set a context value."""
         self.context[key] = value
-    
+
     def clear_context(self) -> None:
         """Clear all context."""
         self.context.clear()
@@ -87,10 +87,10 @@ def setup_logging(
     """
     root_logger = logging.getLogger("epcid")
     root_logger.setLevel(getattr(logging, level.upper()))
-    
+
     # Clear existing handlers
     root_logger.handlers.clear()
-    
+
     # Create formatters
     if json_format:
         formatter = JSONFormatter()
@@ -99,21 +99,21 @@ def setup_logging(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-    
+
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
-    
+
     # File handler
     if log_file:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
-    
+
     return root_logger
 
 
@@ -143,38 +143,38 @@ class AuditLogger:
     - Action details
     - Outcome
     """
-    
+
     REQUIRED_FIELDS = [
         "event_type",
         "action",
         "outcome",
     ]
-    
+
     def __init__(
         self,
         log_file: Optional[str] = None,
     ):
         self.logger = logging.getLogger("epcid.audit")
         self.logger.setLevel(logging.INFO)
-        
+
         # Use JSON format for audit logs
         formatter = JSONFormatter()
-        
+
         # Console handler
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)
         console_handler.setLevel(logging.INFO)
         self.logger.addHandler(console_handler)
-        
+
         # File handler for audit trail
         if log_file:
             log_path = Path(log_file)
             log_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
-    
+
     def log_event(
         self,
         event_type: str,
@@ -206,9 +206,9 @@ class AuditLogger:
             "session_id": session_id,
             "extra_data": details or {},
         }
-        
+
         self.logger.info(f"AUDIT: {event_type} - {action}", extra=extra)
-    
+
     def log_access(
         self,
         resource_type: str,
@@ -229,7 +229,7 @@ class AuditLogger:
                 "resource_id": resource_id,
             },
         )
-    
+
     def log_risk_assessment(
         self,
         child_id: str,
@@ -251,7 +251,7 @@ class AuditLogger:
                 "triggered_rules": triggered_rules,
             },
         )
-    
+
     def log_escalation(
         self,
         child_id: str,
@@ -271,7 +271,7 @@ class AuditLogger:
                 "urgency": urgency,
             },
         )
-    
+
     def log_safety_alert(
         self,
         child_id: str,

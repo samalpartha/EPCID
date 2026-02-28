@@ -20,28 +20,28 @@ router = APIRouter(prefix="/clinical-scoring", tags=["Clinical Scoring"])
 class PhoenixScoreRequest(BaseModel):
     """Request for Phoenix Sepsis Score calculation."""
     age_months: int = Field(..., ge=0, le=216)
-    
+
     # Respiratory
     spo2: Optional[float] = Field(None, ge=0, le=100)
     pao2: Optional[float] = Field(None, ge=0)
     fio2: Optional[float] = Field(None, ge=0.21, le=1.0)
     on_invasive_ventilation: bool = False
-    
+
     # Cardiovascular
     systolic_bp: Optional[int] = Field(None, ge=0)
     diastolic_bp: Optional[int] = Field(None, ge=0)
     lactate: Optional[float] = Field(None, ge=0)
     vasoactive_medications: List[str] = []
-    
+
     # Coagulation
     platelet_count: Optional[int] = Field(None, ge=0)
     inr: Optional[float] = Field(None, ge=0)
-    
+
     # Neurological
     gcs_total: Optional[int] = Field(None, ge=3, le=15)
     avpu: Optional[str] = Field(None, pattern="^[AVPUavpu]$")
     bilateral_fixed_pupils: bool = False
-    
+
     # Clinical context
     suspected_infection: bool = False
 
@@ -56,15 +56,15 @@ class PhoenixScoreComponent(BaseModel):
 class PhoenixScoreResponse(BaseModel):
     """Response with Phoenix Score calculation."""
     total_score: int
-    
+
     respiratory: PhoenixScoreComponent
     cardiovascular: PhoenixScoreComponent
     coagulation: PhoenixScoreComponent
     neurological: PhoenixScoreComponent
-    
+
     meets_sepsis_criteria: bool
     meets_septic_shock_criteria: bool
-    
+
     risk_level: str
     summary: str
     recommendations: List[str]
@@ -75,13 +75,13 @@ class PhoenixScoreResponse(BaseModel):
 class PEWSRequest(BaseModel):
     """Request for PEWS calculation."""
     age_months: int = Field(..., ge=0, le=216)
-    
+
     # Cardiovascular
     heart_rate: Optional[int] = Field(None, ge=0)
     systolic_bp: Optional[int] = Field(None, ge=0)
     capillary_refill_seconds: Optional[float] = Field(None, ge=0)
     skin_color: str = "normal"  # normal, pale, mottled, grey
-    
+
     # Respiratory
     respiratory_rate: Optional[int] = Field(None, ge=0)
     oxygen_saturation: Optional[float] = Field(None, ge=0, le=100)
@@ -90,7 +90,7 @@ class PEWSRequest(BaseModel):
     grunting: bool = False
     stridor: bool = False
     retractions: bool = False
-    
+
     # Behavior
     avpu: str = "A"
     behavior: str = "appropriate"
@@ -108,15 +108,15 @@ class PEWSResponse(BaseModel):
     """Response with PEWS calculation."""
     total_score: int
     max_score: int = 9
-    
+
     cardiovascular: PEWSComponent
     respiratory: PEWSComponent
     behavior: PEWSComponent
-    
+
     risk_level: str
     escalation_recommended: bool
     rapid_response_threshold: bool
-    
+
     interpretation: str
     recommended_actions: List[str]
     confidence: float
@@ -128,14 +128,14 @@ class PhysicalExamRequest(BaseModel):
     mental_status: str = "normal"  # normal, mildly_altered, moderately_altered, severely_altered, unresponsive
     gcs_total: Optional[int] = Field(None, ge=3, le=15)
     avpu: Optional[str] = Field(None, pattern="^[AVPUavpu]$")
-    
+
     # Pulse quality
     pulse_quality: str = "normal"  # normal, slightly_weak, weak, thready, absent
-    
+
     # Perfusion
     capillary_refill_seconds: Optional[float] = Field(None, ge=0)
     skin_perfusion: str = "normal"  # normal, pale, mottled, cool, cold, cyanotic
-    
+
     # Context
     has_fever: bool = False
     has_tachycardia: bool = False
@@ -153,12 +153,12 @@ class PhysicalExamResponse(BaseModel):
     """Response with physical exam assessment."""
     signs_present_count: int
     composite_relative_risk: float
-    
+
     findings: Dict[str, ExamFindingResult]
-    
+
     risk_level: str
     organ_dysfunction_risk: str
-    
+
     summary: List[str]
     recommendations: List[str]
     confidence: float
@@ -182,9 +182,9 @@ async def calculate_phoenix_score(request: PhoenixScoreRequest):
     """
     try:
         from ...clinical.phoenix_score import PhoenixScoreCalculator, VentilationType
-        
+
         calculator = PhoenixScoreCalculator()
-        
+
         result = calculator.calculate(
             age_months=request.age_months,
             spo2=request.spo2,
@@ -202,7 +202,7 @@ async def calculate_phoenix_score(request: PhoenixScoreRequest):
             bilateral_fixed_pupils=request.bilateral_fixed_pupils,
             suspected_infection=request.suspected_infection,
         )
-        
+
         recommendations = []
         if result.meets_septic_shock_criteria:
             recommendations = [
@@ -224,7 +224,7 @@ async def calculate_phoenix_score(request: PhoenixScoreRequest):
                 "Monitor closely for signs of deterioration",
                 "Reassess if clinical status changes",
             ]
-        
+
         return PhoenixScoreResponse(
             total_score=result.total_score,
             respiratory=PhoenixScoreComponent(
@@ -255,7 +255,7 @@ async def calculate_phoenix_score(request: PhoenixScoreRequest):
             missing_data=result.missing_data,
             confidence=result.confidence,
         )
-        
+
     except ImportError:
         # Fallback if clinical module not available
         raise HTTPException(
@@ -284,9 +284,9 @@ async def calculate_pews(request: PEWSRequest):
         from ...clinical.pews import (
             PEWSCalculator, WorkOfBreathing, AVPU, CapillaryRefill
         )
-        
+
         calculator = PEWSCalculator()
-        
+
         # Map work of breathing
         wob_map = {
             "normal": WorkOfBreathing.NORMAL,
@@ -295,14 +295,14 @@ async def calculate_pews(request: PEWSRequest):
             "severe": WorkOfBreathing.SEVERE,
         }
         wob = wob_map.get(request.work_of_breathing.lower(), WorkOfBreathing.NORMAL)
-        
+
         # Map AVPU
         avpu_map = {
             "A": AVPU.ALERT, "V": AVPU.VERBAL,
             "P": AVPU.PAIN, "U": AVPU.UNRESPONSIVE,
         }
         avpu = avpu_map.get(request.avpu.upper(), AVPU.ALERT)
-        
+
         result = calculator.calculate(
             age_months=request.age_months,
             heart_rate=request.heart_rate,
@@ -319,7 +319,7 @@ async def calculate_pews(request: PEWSRequest):
             retractions=request.retractions,
             parent_concern=request.parent_concern,
         )
-        
+
         return PEWSResponse(
             total_score=result.total_score,
             max_score=result.max_possible_score,
@@ -345,7 +345,7 @@ async def calculate_pews(request: PEWSRequest):
             recommended_actions=result.recommended_actions,
             confidence=result.confidence,
         )
-        
+
     except ImportError:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -370,9 +370,9 @@ async def assess_physical_exam(request: PhysicalExamRequest):
         from ...clinical.physical_exam import (
             PhysicalExamAssessor, MentalStatus, PulseQuality, SkinPerfusion
         )
-        
+
         assessor = PhysicalExamAssessor()
-        
+
         # Map mental status
         mental_map = {
             "normal": MentalStatus.NORMAL,
@@ -382,7 +382,7 @@ async def assess_physical_exam(request: PhysicalExamRequest):
             "unresponsive": MentalStatus.UNRESPONSIVE,
         }
         mental = mental_map.get(request.mental_status.lower(), MentalStatus.NORMAL)
-        
+
         # Map pulse quality
         pulse_map = {
             "normal": PulseQuality.NORMAL,
@@ -392,7 +392,7 @@ async def assess_physical_exam(request: PhysicalExamRequest):
             "absent": PulseQuality.ABSENT,
         }
         pulse = pulse_map.get(request.pulse_quality.lower(), PulseQuality.NORMAL)
-        
+
         # Map skin perfusion
         skin_map = {
             "normal": SkinPerfusion.NORMAL,
@@ -403,7 +403,7 @@ async def assess_physical_exam(request: PhysicalExamRequest):
             "cyanotic": SkinPerfusion.CYANOTIC,
         }
         skin = skin_map.get(request.skin_perfusion.lower(), SkinPerfusion.NORMAL)
-        
+
         result = assessor.assess(
             mental_status=mental,
             gcs_total=request.gcs_total,
@@ -414,7 +414,7 @@ async def assess_physical_exam(request: PhysicalExamRequest):
             has_fever=request.has_fever,
             has_tachycardia=request.has_tachycardia,
         )
-        
+
         findings = {
             "altered_mental_status": ExamFindingResult(
                 name=result.altered_mental_status.name,
@@ -441,7 +441,7 @@ async def assess_physical_exam(request: PhysicalExamRequest):
                 description=result.cold_mottled_extremities.description,
             ),
         }
-        
+
         return PhysicalExamResponse(
             signs_present_count=result.signs_present_count,
             composite_relative_risk=result.composite_relative_risk,
@@ -452,7 +452,7 @@ async def assess_physical_exam(request: PhysicalExamRequest):
             recommendations=result.recommendations,
             confidence=result.confidence,
         )
-        
+
     except ImportError:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,

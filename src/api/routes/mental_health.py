@@ -517,13 +517,13 @@ async def get_mood_summary(child_id: str, days: int = 7):
         e for e in mood_entries 
         if e.child_id == child_id and e.timestamp > cutoff
     ]
-    
+
     if not entries:
         return {
             "has_data": False,
             "message": "No mood data for this period"
         }
-    
+
     mood_values = {
         MoodLevel.VERY_SAD: 1,
         MoodLevel.SAD: 2,
@@ -531,23 +531,23 @@ async def get_mood_summary(child_id: str, days: int = 7):
         MoodLevel.HAPPY: 4,
         MoodLevel.VERY_HAPPY: 5
     }
-    
+
     avg_mood = sum(mood_values[e.mood_level] for e in entries) / len(entries)
     avg_anxiety = sum(e.anxiety_level for e in entries) / len(entries)
     avg_energy = sum(e.energy_level for e in entries) / len(entries)
-    
+
     # Find common triggers
     all_triggers = []
     for e in entries:
         if e.triggers:
             all_triggers.extend(e.triggers)
-    
+
     trigger_counts = {}
     for t in all_triggers:
         trigger_counts[t] = trigger_counts.get(t, 0) + 1
-    
+
     top_triggers = sorted(trigger_counts.items(), key=lambda x: x[1], reverse=True)[:5]
-    
+
     return {
         "has_data": True,
         "period_days": days,
@@ -624,7 +624,7 @@ async def get_assessment_questions(assessment_type: str = "GAD-7"):
 async def submit_assessment(submission: AnxietyAssessmentSubmit):
     """Submit an anxiety assessment and get results"""
     total_score = sum(a.score for a in submission.answers)
-    
+
     # Determine severity
     if total_score <= 4:
         severity = AnxietyLevel.NONE
@@ -663,7 +663,7 @@ async def submit_assessment(submission: AnxietyAssessmentSubmit):
             "Remember: anxiety is treatable and you can feel better",
             "Don't try to manage this alone"
         ]
-    
+
     result = AnxietyAssessmentResult(
         child_id=submission.child_id,
         assessment_type=submission.assessment_type,
@@ -672,7 +672,7 @@ async def submit_assessment(submission: AnxietyAssessmentSubmit):
         interpretation=interpretation,
         recommendations=recommendations
     )
-    
+
     assessment_results.append(result)
     return result
 
@@ -692,16 +692,16 @@ async def get_coping_strategies(
 ):
     """Get coping strategies, optionally filtered by age and category"""
     strategies = COPING_STRATEGIES
-    
+
     if age is not None:
         strategies = [
             s for s in strategies 
             if s.age_appropriate_min <= age <= s.age_appropriate_max
         ]
-    
+
     if category is not None:
         strategies = [s for s in strategies if s.category == category]
-    
+
     return strategies
 
 
@@ -769,13 +769,13 @@ async def get_coping_categories():
 async def get_crisis_resources(for_children: Optional[bool] = None):
     """Get crisis resources and hotlines"""
     resources = CRISIS_RESOURCES
-    
+
     if for_children is not None:
         if for_children:
             resources = [r for r in resources if r.for_children]
         else:
             resources = [r for r in resources if r.for_parents]
-    
+
     return resources
 
 
@@ -793,7 +793,7 @@ async def emergency_check(
             "immediate_action": "Call 988 (Suicide & Crisis Lifeline) or text HOME to 741741",
             "resources": [r for r in CRISIS_RESOURCES if r.available_24_7][:3]
         }
-    
+
     return {
         "is_crisis": False,
         "message": "Thank you for checking in. Remember, it's always okay to ask for help.",

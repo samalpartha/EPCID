@@ -36,11 +36,11 @@ class Phenotype:
     trend: Optional[str] = None  # improving, stable, worsening
     description: Optional[str] = None
     contributing_factors: List[str] = None
-    
+
     def __post_init__(self):
         if self.contributing_factors is None:
             self.contributing_factors = []
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
@@ -61,7 +61,7 @@ class PhenotypeAgent(BaseAgent):
     Phenotypes are higher-level clinical signals computed from
     raw data, enabling more nuanced risk assessment.
     """
-    
+
     # Severity thresholds for phenotypes
     SEVERITY_THRESHOLDS = {
         "fever_persistence": {
@@ -89,7 +89,7 @@ class PhenotypeAgent(BaseAgent):
             "severe": 9,
         },
     }
-    
+
     def __init__(
         self,
         config: Optional[AgentConfig] = None,
@@ -102,7 +102,7 @@ class PhenotypeAgent(BaseAgent):
             timeout_seconds=10,
         )
         super().__init__(config, **kwargs)
-    
+
     async def process(
         self,
         input_data: Dict[str, Any],
@@ -120,48 +120,48 @@ class PhenotypeAgent(BaseAgent):
         """
         import uuid
         request_id = str(uuid.uuid4())[:12]
-        
+
         phenotypes: List[Phenotype] = []
         warnings: List[str] = []
-        
+
         # Extract data
         normalized = input_data.get("normalized", input_data)
         symptoms = normalized.get("symptoms", [])
         vitals = normalized.get("vitals", {})
         demographics = normalized.get("demographics", {})
         history = context.get("observation_history", []) if context else []
-        
+
         # Compute fever phenotype
         if "temperature" in vitals:
             fever = self._compute_fever_phenotype(vitals, history)
             if fever:
                 phenotypes.append(fever)
-        
+
         # Compute respiratory effort phenotype
         respiratory = self._compute_respiratory_phenotype(symptoms, vitals)
         if respiratory:
             phenotypes.append(respiratory)
-        
+
         # Compute dehydration phenotype
         dehydration = self._compute_dehydration_phenotype(symptoms, vitals)
         if dehydration:
             phenotypes.append(dehydration)
-        
+
         # Compute symptom burden
         symptom_burden = self._compute_symptom_burden(symptoms)
         phenotypes.append(symptom_burden)
-        
+
         # Compute fatigue/activity index
         if context and "activity_levels" in context:
             fatigue = self._compute_fatigue_index(context["activity_levels"])
             if fatigue:
                 phenotypes.append(fatigue)
-        
+
         # Compute appetite phenotype
         appetite = self._compute_appetite_phenotype(symptoms, context)
         if appetite:
             phenotypes.append(appetite)
-        
+
         # Compute weight velocity if we have history
         if history and demographics.get("weight_kg"):
             weight_velocity = self._compute_weight_velocity(
@@ -170,24 +170,24 @@ class PhenotypeAgent(BaseAgent):
             )
             if weight_velocity:
                 phenotypes.append(weight_velocity)
-        
+
         # Compute pain phenotype
         pain = self._compute_pain_phenotype(symptoms, context)
         if pain:
             phenotypes.append(pain)
-        
+
         # Compute overall clinical state
         clinical_state = self._compute_clinical_state(phenotypes)
-        
+
         # Calculate overall confidence
         if phenotypes:
             avg_confidence = sum(p.confidence for p in phenotypes) / len(phenotypes)
         else:
             avg_confidence = 0.5
-        
+
         # Generate explanation
         explanation = self._generate_explanation(phenotypes, clinical_state)
-        
+
         return self.create_response(
             request_id=request_id,
             data={
@@ -201,7 +201,7 @@ class PhenotypeAgent(BaseAgent):
             explanation=explanation,
             warnings=warnings,
         )
-    
+
     def _compute_fever_phenotype(
         self,
         vitals: Dict[str, Any],
@@ -211,10 +211,10 @@ class PhenotypeAgent(BaseAgent):
         temp = vitals.get("temperature")
         if temp is None:
             return None
-        
+
         # Determine fever presence
         is_fever = temp >= 38.0
-        
+
         # Calculate persistence from history
         persistence_hours = 0
         if history and is_fever:
@@ -224,7 +224,7 @@ class PhenotypeAgent(BaseAgent):
                     persistence_hours += 1  # Assuming hourly observations
                 else:
                     break
-        
+
         # Determine severity
         if temp >= 40.0:
             severity = "severe"
@@ -234,14 +234,14 @@ class PhenotypeAgent(BaseAgent):
             severity = "mild"
         else:
             severity = "normal"
-        
+
         # Increase severity for persistence
         thresholds = self.SEVERITY_THRESHOLDS["fever_persistence"]
         if persistence_hours >= thresholds["severe"]:
             severity = "severe"
         elif persistence_hours >= thresholds["moderate"] and severity != "severe":
             severity = "moderate"
-        
+
         return Phenotype(
             name="fever",
             value=temp,
@@ -255,7 +255,7 @@ class PhenotypeAgent(BaseAgent):
                 f"Persistence: {persistence_hours} hours",
             ],
         )
-    
+
     def _compute_respiratory_phenotype(
         self,
         symptoms: List[str],
@@ -264,7 +264,7 @@ class PhenotypeAgent(BaseAgent):
         """Compute respiratory effort score."""
         score = 0
         factors = []
-        
+
         # Symptom contributions
         respiratory_symptoms = {
             "difficulty_breathing": 3,
@@ -277,12 +277,12 @@ class PhenotypeAgent(BaseAgent):
             "cough": 1,
             "nasal_congestion": 0.5,
         }
-        
+
         for symptom, weight in respiratory_symptoms.items():
             if symptom in symptoms:
                 score += weight
                 factors.append(symptom.replace("_", " "))
-        
+
         # Vital sign contributions
         if "oxygen_saturation" in vitals:
             spo2 = vitals["oxygen_saturation"]
@@ -292,17 +292,17 @@ class PhenotypeAgent(BaseAgent):
             elif spo2 < 94:
                 score += 2
                 factors.append(f"Borderline O2 sat: {spo2}%")
-        
+
         if "respiratory_rate" in vitals:
             rr = vitals["respiratory_rate"]
             # This would ideally be age-adjusted
             if rr > 40:
                 score += 2
                 factors.append(f"Elevated respiratory rate: {rr}")
-        
+
         if score == 0:
             return None
-        
+
         # Determine severity
         thresholds = self.SEVERITY_THRESHOLDS["respiratory_effort"]
         if score >= thresholds["severe"]:
@@ -313,7 +313,7 @@ class PhenotypeAgent(BaseAgent):
             severity = "mild"
         else:
             severity = "normal"
-        
+
         return Phenotype(
             name="respiratory_effort",
             value=score,
@@ -323,7 +323,7 @@ class PhenotypeAgent(BaseAgent):
             description=f"Respiratory effort score: {score}",
             contributing_factors=factors,
         )
-    
+
     def _compute_dehydration_phenotype(
         self,
         symptoms: List[str],
@@ -332,7 +332,7 @@ class PhenotypeAgent(BaseAgent):
         """Compute dehydration severity score."""
         score = 0
         factors = []
-        
+
         # Symptom contributions
         dehydration_signs = {
             "decreased_urine": 2,
@@ -349,12 +349,12 @@ class PhenotypeAgent(BaseAgent):
             "diarrhea": 1,
             "thirst": 1,
         }
-        
+
         for sign, weight in dehydration_signs.items():
             if sign in symptoms:
                 score += weight
                 factors.append(sign.replace("_", " "))
-        
+
         # Elevated heart rate can indicate dehydration
         if "heart_rate" in vitals:
             hr = vitals["heart_rate"]
@@ -362,10 +362,10 @@ class PhenotypeAgent(BaseAgent):
             if hr > 160:
                 score += 1
                 factors.append(f"Tachycardia: {hr} bpm")
-        
+
         if score == 0:
             return None
-        
+
         # Determine severity
         thresholds = self.SEVERITY_THRESHOLDS["dehydration_score"]
         if score >= thresholds["severe"]:
@@ -376,7 +376,7 @@ class PhenotypeAgent(BaseAgent):
             severity = "mild"
         else:
             severity = "normal"
-        
+
         return Phenotype(
             name="dehydration",
             value=score,
@@ -386,13 +386,13 @@ class PhenotypeAgent(BaseAgent):
             description=f"Dehydration score: {score}",
             contributing_factors=factors,
         )
-    
+
     def _compute_symptom_burden(self, symptoms: List[str]) -> Phenotype:
         """Compute overall symptom burden."""
         # Weight symptoms by severity
         severe_symptoms = {"cyanosis", "unresponsive", "seizure", "difficulty_breathing"}
         moderate_symptoms = {"high_fever", "vomiting", "diarrhea", "severe_pain", "lethargy"}
-        
+
         score = 0
         for symptom in symptoms:
             if symptom in severe_symptoms:
@@ -401,7 +401,7 @@ class PhenotypeAgent(BaseAgent):
                 score += 2
             else:
                 score += 1
-        
+
         # Determine severity
         thresholds = self.SEVERITY_THRESHOLDS["symptom_burden"]
         if score >= thresholds["severe"]:
@@ -412,7 +412,7 @@ class PhenotypeAgent(BaseAgent):
             severity = "mild"
         else:
             severity = "normal"
-        
+
         return Phenotype(
             name="symptom_burden",
             value=score,
@@ -422,7 +422,7 @@ class PhenotypeAgent(BaseAgent):
             description=f"Symptom burden: {len(symptoms)} symptoms (weighted score: {score})",
             contributing_factors=symptoms[:5],  # Top 5 symptoms
         )
-    
+
     def _compute_fatigue_index(
         self,
         activity_levels: List[Dict[str, Any]],
@@ -430,14 +430,14 @@ class PhenotypeAgent(BaseAgent):
         """Compute fatigue/activity index from historical data."""
         if not activity_levels:
             return None
-        
+
         # Calculate average activity level (0-100)
         recent_levels = activity_levels[-24:]  # Last 24 readings
         if not recent_levels:
             return None
-        
+
         avg_activity = sum(a.get("level", 50) for a in recent_levels) / len(recent_levels)
-        
+
         # Determine severity (inverse - low activity = high fatigue)
         if avg_activity < 20:
             severity = "severe"
@@ -451,12 +451,12 @@ class PhenotypeAgent(BaseAgent):
         else:
             severity = "normal"
             fatigue_value = 20
-        
+
         # Determine trend
         if len(activity_levels) >= 2:
             recent = sum(a.get("level", 50) for a in activity_levels[-6:]) / min(6, len(activity_levels))
             older = sum(a.get("level", 50) for a in activity_levels[-12:-6]) / min(6, len(activity_levels) - 6) if len(activity_levels) > 6 else recent
-            
+
             if recent < older - 10:
                 trend = "worsening"
             elif recent > older + 10:
@@ -465,7 +465,7 @@ class PhenotypeAgent(BaseAgent):
                 trend = "stable"
         else:
             trend = "unknown"
-        
+
         return Phenotype(
             name="fatigue_index",
             value=fatigue_value,
@@ -476,7 +476,7 @@ class PhenotypeAgent(BaseAgent):
             description=f"Fatigue index: {fatigue_value}% (based on activity levels)",
             contributing_factors=[f"Average activity: {avg_activity:.0f}%"],
         )
-    
+
     def _compute_appetite_phenotype(
         self,
         symptoms: List[str],
@@ -485,7 +485,7 @@ class PhenotypeAgent(BaseAgent):
         """Compute appetite/feeding phenotype."""
         score = 100  # Start at 100% normal
         factors = []
-        
+
         # Symptom contributions
         appetite_symptoms = {
             "poor_appetite": -30,
@@ -495,12 +495,12 @@ class PhenotypeAgent(BaseAgent):
             "vomiting": -30,
             "abdominal_pain": -15,
         }
-        
+
         for symptom, impact in appetite_symptoms.items():
             if symptom in symptoms:
                 score += impact
                 factors.append(symptom.replace("_", " "))
-        
+
         # Context contributions (meal tracking)
         if context and "meals" in context:
             recent_meals = context["meals"][-6:]  # Last 6 meals
@@ -508,9 +508,9 @@ class PhenotypeAgent(BaseAgent):
             if meals_eaten < 2:
                 score -= 30
                 factors.append(f"Only {meals_eaten}/6 recent meals eaten")
-        
+
         score = max(0, min(100, score))
-        
+
         if score >= 80:
             severity = "normal"
         elif score >= 60:
@@ -519,10 +519,10 @@ class PhenotypeAgent(BaseAgent):
             severity = "moderate"
         else:
             severity = "severe"
-        
+
         if severity == "normal" and not factors:
             return None
-        
+
         return Phenotype(
             name="appetite",
             value=score,
@@ -532,7 +532,7 @@ class PhenotypeAgent(BaseAgent):
             description=f"Appetite score: {score}%",
             contributing_factors=factors,
         )
-    
+
     def _compute_weight_velocity(
         self,
         current_weight: float,
@@ -549,18 +549,18 @@ class PhenotypeAgent(BaseAgent):
                 if weight:
                     week_ago_weight = weight
                     break
-        
+
         if week_ago_weight is None:
             return None
-        
+
         # Calculate change
         weight_change = current_weight - week_ago_weight
         velocity = weight_change / 7 * 7  # kg/week
-        
+
         # Determine severity based on weight loss
         # For children, significant weight loss is concerning
         pct_change = (weight_change / week_ago_weight) * 100
-        
+
         if pct_change < -5:
             severity = "severe"
         elif pct_change < -2:
@@ -569,10 +569,10 @@ class PhenotypeAgent(BaseAgent):
             severity = "mild"
         else:
             severity = "normal"
-        
+
         if severity == "normal":
             return None
-        
+
         return Phenotype(
             name="weight_velocity",
             value=velocity,
@@ -586,7 +586,7 @@ class PhenotypeAgent(BaseAgent):
                 f"Previous weight: {week_ago_weight:.1f}kg",
             ],
         )
-    
+
     def _compute_pain_phenotype(
         self,
         symptoms: List[str],
@@ -604,10 +604,10 @@ class PhenotypeAgent(BaseAgent):
             "throat_pain": 3,
             "sore_throat": 3,
         }
-        
+
         max_pain = 0
         pain_locations = []
-        
+
         for symptom, level in pain_symptoms.items():
             if symptom in symptoms:
                 max_pain = max(max_pain, level)
@@ -616,17 +616,17 @@ class PhenotypeAgent(BaseAgent):
                 else:
                     location = symptom.replace("_pain", "").replace("sore_", "")
                     pain_locations.append(location)
-        
+
         if max_pain == 0:
             return None
-        
+
         # Check for pain scores in context
         if context and "pain_scores" in context:
             recent_scores = context["pain_scores"][-3:]
             if recent_scores:
                 avg_score = sum(recent_scores) / len(recent_scores)
                 max_pain = max(max_pain, avg_score)
-        
+
         # Determine severity
         if max_pain >= 7:
             severity = "severe"
@@ -636,7 +636,7 @@ class PhenotypeAgent(BaseAgent):
             severity = "mild"
         else:
             severity = "normal"
-        
+
         return Phenotype(
             name="pain",
             value=max_pain,
@@ -646,7 +646,7 @@ class PhenotypeAgent(BaseAgent):
             description=f"Pain level: {max_pain}/10",
             contributing_factors=pain_locations[:3],
         )
-    
+
     def _compute_clinical_state(
         self,
         phenotypes: List[Phenotype],
@@ -654,7 +654,7 @@ class PhenotypeAgent(BaseAgent):
         """Compute overall clinical state summary."""
         severe_count = sum(1 for p in phenotypes if p.severity == "severe")
         moderate_count = sum(1 for p in phenotypes if p.severity == "moderate")
-        
+
         if severe_count >= 2:
             overall_state = "critical"
         elif severe_count >= 1 or moderate_count >= 3:
@@ -663,10 +663,10 @@ class PhenotypeAgent(BaseAgent):
             overall_state = "monitor_closely"
         else:
             overall_state = "stable"
-        
+
         # Find dominant concerns
         concerns = [p.name for p in phenotypes if p.severity in ("severe", "moderate")]
-        
+
         return {
             "overall_state": overall_state,
             "severe_count": severe_count,
@@ -674,7 +674,7 @@ class PhenotypeAgent(BaseAgent):
             "primary_concerns": concerns[:3],
             "recommendation": self._get_state_recommendation(overall_state),
         }
-    
+
     def _get_state_recommendation(self, state: str) -> str:
         """Get recommendation based on clinical state."""
         recommendations = {
@@ -684,7 +684,7 @@ class PhenotypeAgent(BaseAgent):
             "stable": "Continue home care and routine monitoring",
         }
         return recommendations.get(state, "Continue monitoring")
-    
+
     def _generate_explanation(
         self,
         phenotypes: List[Phenotype],
@@ -692,10 +692,10 @@ class PhenotypeAgent(BaseAgent):
     ) -> str:
         """Generate explanation of phenotype analysis."""
         lines = ["## Phenotype Analysis\n"]
-        
+
         lines.append(f"**Clinical State:** {clinical_state['overall_state'].replace('_', ' ').title()}")
         lines.append(f"**Recommendation:** {clinical_state['recommendation']}")
-        
+
         if phenotypes:
             lines.append("\n### Derived Phenotypes")
             for p in sorted(phenotypes, key=lambda x: {"severe": 0, "moderate": 1, "mild": 2, "normal": 3}.get(x.severity, 4)):
@@ -705,5 +705,5 @@ class PhenotypeAgent(BaseAgent):
                 lines.append(f"- Severity: {p.severity}")
                 if p.description:
                     lines.append(f"- {p.description}")
-        
+
         return "\n".join(lines)

@@ -37,7 +37,7 @@ class WeatherConditions:
     location: str
     timestamp: datetime
     source: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "temperature_f": self.temperature_f,
@@ -61,7 +61,7 @@ class WeatherAlert:
     description: str
     start: datetime
     end: Optional[datetime]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "event": self.event,
@@ -90,10 +90,10 @@ class WeatherService:
     Provides current conditions, forecasts, and weather alerts
     with health implications for children.
     """
-    
+
     NOAA_BASE_URL = "https://api.weather.gov"
     OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5"
-    
+
     # Temperature thresholds for health guidance
     TEMP_THRESHOLDS = {
         "extreme_cold": {"f": 32, "message": "Risk of hypothermia. Limit outdoor exposure."},
@@ -104,7 +104,7 @@ class WeatherService:
         "very_hot": {"f": 90, "message": "Heat caution. Avoid prolonged outdoor activity."},
         "extreme_hot": {"f": 100, "message": "Dangerous heat. Keep children indoors."},
     }
-    
+
     def __init__(
         self,
         noaa_api_key: Optional[str] = None,
@@ -117,9 +117,9 @@ class WeatherService:
         self.timeout_seconds = timeout_seconds
         self.cache_ttl_minutes = cache_ttl_minutes
         self._cache: Dict[str, tuple] = {}
-        
+
         logger.info("Initialized Weather service")
-    
+
     async def get_current_weather(
         self,
         zip_code: Optional[str] = None,
@@ -139,26 +139,26 @@ class WeatherService:
         """
         location_key = zip_code or f"{latitude},{longitude}"
         cache_key = f"current:{location_key}"
-        
+
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         try:
             if self.openweather_api_key:
                 result = await self._get_openweather_current(zip_code, latitude, longitude)
             else:
                 result = self._get_simulated_weather(location_key)
-            
+
             if result:
                 self._set_cached(cache_key, result)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Failed to get weather: {e}")
             return self._get_simulated_weather(location_key)
-    
+
     async def get_forecast(
         self,
         zip_code: Optional[str] = None,
@@ -180,24 +180,24 @@ class WeatherService:
         """
         location_key = zip_code or f"{latitude},{longitude}"
         cache_key = f"forecast:{location_key}"
-        
+
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         try:
             if self.openweather_api_key:
                 result = await self._get_openweather_forecast(zip_code, latitude, longitude)
             else:
                 result = self._get_simulated_forecast()
-            
+
             self._set_cached(cache_key, result)
             return result[:days]
-            
+
         except Exception as e:
             logger.error(f"Failed to get forecast: {e}")
             return self._get_simulated_forecast()[:days]
-    
+
     async def get_alerts(
         self,
         latitude: float,
@@ -214,20 +214,20 @@ class WeatherService:
             List of WeatherAlert objects
         """
         cache_key = f"alerts:{latitude},{longitude}"
-        
+
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         try:
             result = await self._get_noaa_alerts(latitude, longitude)
             self._set_cached(cache_key, result)
             return result
-            
+
         except Exception as e:
             logger.error(f"Failed to get weather alerts: {e}")
             return []
-    
+
     def get_health_guidance(
         self,
         weather: WeatherConditions,
@@ -248,7 +248,7 @@ class WeatherService:
             "recommendations": [],
             "symptoms_to_watch": [],
         }
-        
+
         # Temperature-based recommendations
         if weather.temperature_f >= 90:
             guidance["overall_risk"] = "high"
@@ -277,7 +277,7 @@ class WeatherService:
             guidance["symptoms_to_watch"].extend([
                 "Shivering", "Confusion", "Slurred speech",
             ])
-        
+
         # Humidity considerations
         if weather.humidity_percent > 80:
             guidance["recommendations"].append(
@@ -287,7 +287,7 @@ class WeatherService:
             guidance["recommendations"].append(
                 "Low humidity - ensure good hydration and consider using a humidifier indoors"
             )
-        
+
         # UV considerations
         if weather.uv_index and weather.uv_index >= 8:
             guidance["recommendations"].extend([
@@ -295,9 +295,9 @@ class WeatherService:
                 "Wear protective clothing and hat",
                 "Seek shade during midday hours",
             ])
-        
+
         return guidance
-    
+
     def _get_temperature_guidance(self, temp_f: float) -> Dict[str, Any]:
         """Get guidance for a specific temperature."""
         if temp_f >= 100:
@@ -342,7 +342,7 @@ class WeatherService:
                 "risk": "high",
                 "message": self.TEMP_THRESHOLDS["extreme_cold"]["message"],
             }
-    
+
     def _get_humidity_guidance(self, humidity: int) -> Dict[str, Any]:
         """Get guidance for humidity level."""
         if humidity > 80:
@@ -365,7 +365,7 @@ class WeatherService:
                 "category": "low",
                 "message": "Low humidity may cause dry skin and respiratory irritation.",
             }
-    
+
     async def _get_openweather_current(
         self,
         zip_code: Optional[str],
@@ -377,7 +377,7 @@ class WeatherService:
             "appid": self.openweather_api_key,
             "units": "imperial",
         }
-        
+
         if zip_code:
             params["zip"] = f"{zip_code},us"
         elif latitude and longitude:
@@ -385,16 +385,16 @@ class WeatherService:
             params["lon"] = longitude
         else:
             return None
-        
+
         url = f"{self.OPENWEATHER_BASE_URL}/weather?{urlencode(params)}"
-        
+
         response = await self._make_request(url)
-        
+
         if response:
             main = response.get("main", {})
             weather = response.get("weather", [{}])[0]
             wind = response.get("wind", {})
-            
+
             return WeatherConditions(
                 temperature_f=main.get("temp", 0),
                 feels_like_f=main.get("feels_like", 0),
@@ -409,9 +409,9 @@ class WeatherService:
                 timestamp=datetime.now(__import__("datetime").timezone.utc),
                 source="OpenWeatherMap",
             )
-        
+
         return None
-    
+
     async def _get_openweather_forecast(
         self,
         zip_code: Optional[str],
@@ -423,7 +423,7 @@ class WeatherService:
             "appid": self.openweather_api_key,
             "units": "imperial",
         }
-        
+
         if zip_code:
             params["zip"] = f"{zip_code},us"
         elif latitude and longitude:
@@ -431,11 +431,11 @@ class WeatherService:
             params["lon"] = longitude
         else:
             return []
-        
+
         url = f"{self.OPENWEATHER_BASE_URL}/forecast?{urlencode(params)}"
-        
+
         response = await self._make_request(url)
-        
+
         if response and response.get("list"):
             # Group by day
             daily = {}
@@ -452,7 +452,7 @@ class WeatherService:
                 daily[date]["humidity"].append(item["main"]["humidity"])
                 daily[date]["conditions"].append(item["weather"][0]["main"])
                 daily[date]["pop"].append(item.get("pop", 0) * 100)
-            
+
             forecasts = []
             for date, data in list(daily.items())[:7]:
                 forecasts.append(WeatherForecast(
@@ -463,11 +463,11 @@ class WeatherService:
                     precipitation_chance=int(max(data["pop"])),
                     humidity_percent=int(sum(data["humidity"]) / len(data["humidity"])),
                 ))
-            
+
             return forecasts
-        
+
         return []
-    
+
     async def _get_noaa_alerts(
         self,
         latitude: float,
@@ -475,9 +475,9 @@ class WeatherService:
     ) -> List[WeatherAlert]:
         """Get weather alerts from NOAA."""
         url = f"{self.NOAA_BASE_URL}/alerts/active?point={latitude},{longitude}"
-        
+
         response = await self._make_request(url)
-        
+
         alerts = []
         if response and response.get("features"):
             for feature in response["features"]:
@@ -490,15 +490,15 @@ class WeatherService:
                     start=datetime.fromisoformat(props.get("onset", datetime.now(__import__("datetime").timezone.utc).isoformat()).replace("Z", "+00:00")),
                     end=datetime.fromisoformat(props.get("ends").replace("Z", "+00:00")) if props.get("ends") else None,
                 ))
-        
+
         return alerts
-    
+
     async def _make_request(self, url: str) -> Optional[Dict[str, Any]]:
         """Make HTTP request."""
         # In production, would use aiohttp
         await asyncio.sleep(0.1)
         return None
-    
+
     def _get_simulated_weather(self, location: str) -> WeatherConditions:
         """Get simulated weather for testing."""
         return WeatherConditions(
@@ -515,7 +515,7 @@ class WeatherService:
             timestamp=datetime.now(__import__("datetime").timezone.utc),
             source="Simulated",
         )
-    
+
     def _get_simulated_forecast(self) -> List[WeatherForecast]:
         """Get simulated forecast for testing."""
         today = datetime.now(__import__("datetime").timezone.utc)
@@ -530,7 +530,7 @@ class WeatherService:
             )
             for i in range(5)
         ]
-    
+
     def _get_cached(self, key: str) -> Optional[Any]:
         """Get cached result if not expired."""
         if key in self._cache:
@@ -539,7 +539,7 @@ class WeatherService:
                 return result
             del self._cache[key]
         return None
-    
+
     def _set_cached(self, key: str, value: Any) -> None:
         """Set cached result."""
         self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))

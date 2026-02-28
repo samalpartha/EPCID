@@ -57,31 +57,31 @@ class RiskAssessment:
     risk_tier: str
     confidence: float
     confidence_interval: Tuple[float, float]
-    
+
     # Evidence and explanation
     primary_factors: List[str]
     secondary_factors: List[str]
     protective_factors: List[str]
     uncertainty_factors: List[str]
-    
+
     # Missing data that would improve assessment
     missing_data: List[str]
-    
+
     # Safety rule results
     safety_rules_triggered: List[str]
     safety_rule_override: bool
-    
+
     # Model contributions
     model_scores: Dict[str, float]
-    
+
     # Temporal context
     trend_direction: str  # improving, stable, worsening, unknown
     trend_confidence: float
-    
+
     # Metadata
     timestamp: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     assessment_version: str = "1.0"
-    
+
     def get_explanation(self) -> str:
         """Generate human-readable explanation."""
         lines = [
@@ -89,32 +89,32 @@ class RiskAssessment:
             f"**Confidence:** {self.confidence:.0%} ({self.confidence_interval[0]:.0%} - {self.confidence_interval[1]:.0%})",
             "",
         ]
-        
+
         if self.safety_rules_triggered:
             lines.append("### ⚠️ Safety Alerts")
             for rule in self.safety_rules_triggered:
                 lines.append(f"- {rule}")
             lines.append("")
-        
+
         if self.primary_factors:
             lines.append("### Primary Concerns")
             for factor in self.primary_factors:
                 lines.append(f"- {factor}")
             lines.append("")
-        
+
         if self.uncertainty_factors:
             lines.append("### Uncertainty Factors")
             for factor in self.uncertainty_factors:
                 lines.append(f"- {factor}")
             lines.append("")
-        
+
         if self.missing_data:
             lines.append("### Additional Data Would Help")
             for item in self.missing_data:
                 lines.append(f"- {item}")
-        
+
         return "\n".join(lines)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -149,33 +149,33 @@ class Decision:
     decision_type: DecisionType
     summary: str
     urgency: UrgencyLevel
-    
+
     # Risk assessment (if applicable)
     risk_assessment: Optional[RiskAssessment]
-    
+
     # Recommended actions
     recommended_actions: List[str]
     contraindicated_actions: List[str]
-    
+
     # Supporting information
     evidence: List[str]
     guidelines_referenced: List[str]
-    
+
     # Confidence and uncertainty
     confidence: float
     uncertainty_statement: str
-    
+
     # Safety disclaimers
     disclaimers: List[str]
-    
+
     # Follow-up
     follow_up_recommendations: List[str]
     escalation_criteria: List[str]
-    
+
     # Metadata
     timestamp: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -199,7 +199,7 @@ class Decision:
 
 class SafetyRule:
     """A safety rule that can trigger hard overrides."""
-    
+
     def __init__(
         self,
         name: str,
@@ -213,7 +213,7 @@ class SafetyRule:
         self.check_function = check_function
         self.override_to_risk = override_to_risk
         self.urgency = urgency
-    
+
     def check(self, context: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         """Check if rule is triggered. Returns (triggered, message)."""
         try:
@@ -230,14 +230,14 @@ class DecisionMaker:
     Synthesizes inputs from multiple agents into actionable,
     explainable decisions with appropriate uncertainty handling.
     """
-    
+
     # Standard disclaimers
     STANDARD_DISCLAIMERS = [
         "This assessment is for informational purposes only and does not constitute medical advice.",
         "Always consult with a qualified healthcare provider for medical decisions.",
         "If you believe this is an emergency, call 911 immediately.",
     ]
-    
+
     def __init__(
         self,
         enable_safety_rules: bool = True,
@@ -247,12 +247,12 @@ class DecisionMaker:
         self.enable_safety_rules = enable_safety_rules
         self.min_confidence_threshold = min_confidence_threshold
         self.uncertainty_penalty = uncertainty_penalty
-        
+
         # Initialize safety rules
         self.safety_rules = self._initialize_safety_rules()
-        
+
         logger.info("Initialized DecisionMaker")
-    
+
     def make_decision(
         self,
         context: Dict[str, Any],
@@ -271,12 +271,12 @@ class DecisionMaker:
             Decision object with recommendations and explanations
         """
         import uuid
-        
+
         logger.info(f"Making {decision_type.value} decision")
-        
+
         # Check safety rules first (hard overrides)
         safety_triggered, safety_messages, override_risk = self._check_safety_rules(context)
-        
+
         # Perform risk assessment
         risk_assessment = self._assess_risk(
             context,
@@ -285,23 +285,23 @@ class DecisionMaker:
             safety_messages,
             override_risk,
         )
-        
+
         # Determine urgency
         urgency = self._determine_urgency(risk_assessment, safety_triggered)
-        
+
         # Generate recommendations
         recommendations = self._generate_recommendations(
             risk_assessment,
             urgency,
             context,
         )
-        
+
         # Generate evidence summary
         evidence = self._summarize_evidence(agent_outputs, risk_assessment)
-        
+
         # Generate uncertainty statement
         uncertainty_statement = self._generate_uncertainty_statement(risk_assessment)
-        
+
         # Create decision
         decision = Decision(
             id=str(uuid.uuid4())[:12],
@@ -323,10 +323,10 @@ class DecisionMaker:
                 "agent_outputs_count": len(agent_outputs),
             },
         )
-        
+
         logger.info(f"Decision {decision.id}: {risk_assessment.risk_tier}, urgency={urgency.value}")
         return decision
-    
+
     def _check_safety_rules(
         self,
         context: Dict[str, Any],
@@ -334,29 +334,29 @@ class DecisionMaker:
         """Check all safety rules. Returns (triggered_rules, messages, override_risk)."""
         if not self.enable_safety_rules:
             return [], [], None
-        
+
         triggered = []
         messages = []
         override_risk = None
-        
+
         for rule in self.safety_rules:
             is_triggered, message = rule.check(context)
             if is_triggered:
                 triggered.append(rule.name)
                 if message:
                     messages.append(message)
-                
+
                 # Track highest risk override
                 if override_risk is None:
                     override_risk = rule.override_to_risk
                 elif rule.override_to_risk == RISK_CRITICAL:
                     override_risk = RISK_CRITICAL
-        
+
         if triggered:
             logger.warning(f"Safety rules triggered: {triggered}")
-        
+
         return triggered, messages, override_risk
-    
+
     def _assess_risk(
         self,
         context: Dict[str, Any],
@@ -367,19 +367,19 @@ class DecisionMaker:
     ) -> RiskAssessment:
         """Perform comprehensive risk assessment."""
         import uuid
-        
+
         # Collect model scores from agent outputs
         model_scores = {}
         if "risk_agent" in agent_outputs:
             risk_output = agent_outputs["risk_agent"]
             model_scores = risk_output.get("model_scores", {})
-        
+
         # Calculate base risk from model scores
         if model_scores:
             avg_score = sum(model_scores.values()) / len(model_scores)
         else:
             avg_score = 0.3  # Default low-moderate
-        
+
         # Determine risk tier
         if override_risk:
             risk_tier = override_risk
@@ -387,25 +387,25 @@ class DecisionMaker:
         else:
             risk_tier = self._score_to_tier(avg_score)
             safety_rule_override = False
-        
+
         # Calculate confidence
         confidence = self._calculate_confidence(context, agent_outputs, model_scores)
-        
+
         # Identify factors
         primary_factors = self._identify_primary_factors(context, agent_outputs)
         secondary_factors = self._identify_secondary_factors(context, agent_outputs)
         protective_factors = self._identify_protective_factors(context)
         uncertainty_factors = self._identify_uncertainty_factors(context, agent_outputs)
         missing_data = self._identify_missing_data(context)
-        
+
         # Calculate confidence interval
         ci_width = 0.15 + (0.1 * len(uncertainty_factors))
         ci_lower = max(0.0, confidence - ci_width)
         ci_upper = min(1.0, confidence + ci_width)
-        
+
         # Determine trend
         trend_direction, trend_confidence = self._analyze_trend(context)
-        
+
         return RiskAssessment(
             id=str(uuid.uuid4())[:12],
             child_id=context.get("child_id", "unknown"),
@@ -423,7 +423,7 @@ class DecisionMaker:
             trend_direction=trend_direction,
             trend_confidence=trend_confidence,
         )
-    
+
     def _score_to_tier(self, score: float) -> str:
         """Convert numerical score to risk tier."""
         if score >= 0.85:
@@ -434,7 +434,7 @@ class DecisionMaker:
             return RISK_MODERATE
         else:
             return RISK_LOW
-    
+
     def _calculate_confidence(
         self,
         context: Dict[str, Any],
@@ -443,27 +443,27 @@ class DecisionMaker:
     ) -> float:
         """Calculate overall confidence in the assessment."""
         confidence = 0.7  # Base confidence
-        
+
         # Boost for more data
         data_keys = ["symptoms", "vitals", "demographics", "history"]
         data_present = sum(1 for k in data_keys if k in context)
         confidence += data_present * 0.05
-        
+
         # Penalty for missing critical data
         if "vitals" not in context:
             confidence -= 0.15
         if "demographics" not in context:
             confidence -= 0.1
-        
+
         # Model agreement boosts confidence
         if model_scores and len(model_scores) > 1:
             scores = list(model_scores.values())
             variance = sum((s - sum(scores)/len(scores))**2 for s in scores) / len(scores)
             if variance < 0.05:
                 confidence += 0.1  # Models agree
-        
+
         return max(0.2, min(0.95, confidence))
-    
+
     def _determine_urgency(
         self,
         risk_assessment: RiskAssessment,
@@ -478,7 +478,7 @@ class DecisionMaker:
             return UrgencyLevel.SEMI_URGENT
         else:
             return UrgencyLevel.ROUTINE
-    
+
     def _generate_recommendations(
         self,
         risk_assessment: RiskAssessment,
@@ -493,7 +493,7 @@ class DecisionMaker:
             "escalation_criteria": [],
             "guidelines": [],
         }
-        
+
         if urgency == UrgencyLevel.EMERGENCY:
             recommendations["actions"] = [
                 "Call 911 or go to nearest emergency room immediately",
@@ -508,7 +508,7 @@ class DecisionMaker:
             recommendations["follow_up"] = [
                 "Follow up with pediatrician within 24-48 hours after ER visit",
             ]
-            
+
         elif urgency == UrgencyLevel.URGENT:
             recommendations["actions"] = [
                 "Contact pediatrician or nurse line within the next few hours",
@@ -526,7 +526,7 @@ class DecisionMaker:
                 "Unable to keep fluids down",
                 "Child becomes less responsive or very irritable",
             ]
-            
+
         elif urgency == UrgencyLevel.SEMI_URGENT:
             recommendations["actions"] = [
                 "Schedule appointment with pediatrician within 24 hours",
@@ -542,7 +542,7 @@ class DecisionMaker:
                 "Symptoms significantly worsen",
                 "Child unable to eat or drink",
             ]
-            
+
         else:  # ROUTINE or INFORMATIONAL
             recommendations["actions"] = [
                 "Continue home monitoring",
@@ -559,9 +559,9 @@ class DecisionMaker:
                 "Symptoms worsen instead of improving",
                 "Fever develops or increases",
             ]
-        
+
         return recommendations
-    
+
     def _summarize_evidence(
         self,
         agent_outputs: Dict[str, Any],
@@ -569,27 +569,27 @@ class DecisionMaker:
     ) -> List[str]:
         """Summarize evidence supporting the decision."""
         evidence = []
-        
+
         # Add primary factors
         for factor in risk_assessment.primary_factors[:3]:
             evidence.append(f"Observed: {factor}")
-        
+
         # Add model evidence
         for model, score in risk_assessment.model_scores.items():
             evidence.append(f"{model} risk score: {score:.0%}")
-        
+
         # Add safety rule evidence
         for rule in risk_assessment.safety_rules_triggered:
             evidence.append(f"Safety alert: {rule}")
-        
+
         return evidence
-    
+
     def _generate_uncertainty_statement(self, risk_assessment: RiskAssessment) -> str:
         """Generate explicit uncertainty statement."""
         confidence = risk_assessment.confidence
         factors = risk_assessment.uncertainty_factors
         missing = risk_assessment.missing_data
-        
+
         if confidence >= 0.85:
             qualifier = "high confidence"
         elif confidence >= 0.7:
@@ -598,17 +598,17 @@ class DecisionMaker:
             qualifier = "limited confidence"
         else:
             qualifier = "low confidence"
-        
+
         statement = f"This assessment is made with {qualifier} ({confidence:.0%}). "
-        
+
         if factors:
             statement += f"Uncertainty is increased due to: {', '.join(factors[:2])}. "
-        
+
         if missing:
             statement += f"The following additional data would improve accuracy: {', '.join(missing[:2])}."
-        
+
         return statement
-    
+
     def _generate_summary(
         self,
         risk_assessment: RiskAssessment,
@@ -621,14 +621,14 @@ class DecisionMaker:
             RISK_MODERATE: "Moderate concern warranting medical consultation",
             RISK_LOW: "Low concern - continue home monitoring",
         }
-        
+
         description = tier_descriptions.get(risk_assessment.risk_tier, "Assessment completed")
-        
+
         if risk_assessment.safety_rules_triggered:
             description = f"SAFETY ALERT: {description}"
-        
+
         return description
-    
+
     def _identify_primary_factors(
         self,
         context: Dict[str, Any],
@@ -636,35 +636,35 @@ class DecisionMaker:
     ) -> List[str]:
         """Identify primary risk factors."""
         factors = []
-        
+
         symptoms = context.get("symptoms", [])
         vitals = context.get("vitals", {})
-        
+
         # High fever
         temp = vitals.get("temperature", 0)
         if temp >= 39.0:
             factors.append(f"High fever: {temp}°C")
         elif temp >= 38.0:
             factors.append(f"Fever present: {temp}°C")
-        
+
         # Respiratory symptoms
         respiratory = ["difficulty_breathing", "rapid_breathing", "wheezing", "stridor"]
         if any(s in symptoms for s in respiratory):
             factors.append("Respiratory symptoms present")
-        
+
         # Dehydration signs
         dehydration = ["decreased_urine", "dry_mouth", "no_tears"]
         dehydration_count = sum(1 for s in dehydration if s in symptoms)
         if dehydration_count >= 2:
             factors.append(f"Multiple dehydration signs ({dehydration_count})")
-        
+
         # Duration
         duration = context.get("symptom_duration_hours", 0)
         if duration > 72:
             factors.append(f"Prolonged symptoms ({duration // 24} days)")
-        
+
         return factors
-    
+
     def _identify_secondary_factors(
         self,
         context: Dict[str, Any],
@@ -672,51 +672,51 @@ class DecisionMaker:
     ) -> List[str]:
         """Identify secondary contributing factors."""
         factors = []
-        
+
         symptoms = context.get("symptoms", [])
-        
+
         # GI symptoms
         gi = ["vomiting", "diarrhea", "abdominal_pain"]
         if any(s in symptoms for s in gi):
             factors.append("Gastrointestinal symptoms")
-        
+
         # Pain
         if "pain" in symptoms or "headache" in symptoms:
             factors.append("Pain reported")
-        
+
         # Poor appetite
         if "poor_appetite" in symptoms:
             factors.append("Decreased appetite")
-        
+
         return factors
-    
+
     def _identify_protective_factors(self, context: Dict[str, Any]) -> List[str]:
         """Identify protective factors that reduce risk."""
         factors = []
-        
+
         symptoms = context.get("symptoms", [])
         vitals = context.get("vitals", {})
         demographics = context.get("demographics", {})
-        
+
         # Normal hydration
         if "good_urine_output" in context or "well_hydrated" in symptoms:
             factors.append("Adequate hydration")
-        
+
         # Normal activity
         if context.get("activity_level") == "normal":
             factors.append("Normal activity level")
-        
+
         # Eating/drinking well
         if "eating_well" in context or "drinking_well" in context:
             factors.append("Maintaining oral intake")
-        
+
         # Age (older children generally more resilient)
         age_months = demographics.get("age_months", 0)
         if age_months > 24:
             factors.append("Age >2 years")
-        
+
         return factors
-    
+
     def _identify_uncertainty_factors(
         self,
         context: Dict[str, Any],
@@ -724,14 +724,14 @@ class DecisionMaker:
     ) -> List[str]:
         """Identify factors that increase uncertainty."""
         factors = []
-        
+
         # Missing data
         if "vitals" not in context:
             factors.append("No vital signs available")
-        
+
         if "symptom_duration_hours" not in context:
             factors.append("Unknown symptom duration")
-        
+
         # Model disagreement
         if "risk_agent" in agent_outputs:
             scores = agent_outputs["risk_agent"].get("model_scores", {})
@@ -740,63 +740,63 @@ class DecisionMaker:
                 max_score = max(scores.values())
                 if max_score - min_score > 0.3:
                     factors.append("Model predictions diverge")
-        
+
         # Limited history
         if not context.get("history"):
             factors.append("Limited medical history available")
-        
+
         return factors
-    
+
     def _identify_missing_data(self, context: Dict[str, Any]) -> List[str]:
         """Identify data that would improve the assessment."""
         missing = []
-        
+
         if "vitals" not in context:
             missing.append("Vital signs (temperature, heart rate)")
         elif "temperature" not in context.get("vitals", {}):
             missing.append("Temperature measurement")
-        
+
         if "symptom_duration_hours" not in context:
             missing.append("How long symptoms have been present")
-        
+
         if "medications" not in context:
             missing.append("Current medications")
-        
+
         if "history" not in context:
             missing.append("Medical history")
-        
+
         return missing
-    
+
     def _analyze_trend(
         self,
         context: Dict[str, Any],
     ) -> Tuple[str, float]:
         """Analyze symptom trend over time."""
         history = context.get("observation_history", [])
-        
+
         if len(history) < 2:
             return "unknown", 0.3
-        
+
         # Simple trend analysis based on severity scores
         severities = [obs.get("severity", 0.5) for obs in history]
-        
+
         if len(severities) >= 2:
             recent = sum(severities[-2:]) / 2
             earlier = sum(severities[:-2]) / max(1, len(severities) - 2)
-            
+
             if recent > earlier + 0.1:
                 return "worsening", 0.7
             elif recent < earlier - 0.1:
                 return "improving", 0.7
             else:
                 return "stable", 0.8
-        
+
         return "unknown", 0.3
-    
+
     def _initialize_safety_rules(self) -> List[SafetyRule]:
         """Initialize the safety rules for hard overrides."""
         rules = []
-        
+
         # Critical symptom rule
         def check_critical_symptoms(ctx: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
             symptoms = ctx.get("symptoms", [])
@@ -805,7 +805,7 @@ class DecisionMaker:
             if found:
                 return True, f"Critical symptom detected: {', '.join(found)}"
             return False, None
-        
+
         rules.append(SafetyRule(
             name="CRITICAL_SYMPTOM",
             description="Detects immediately life-threatening symptoms",
@@ -813,7 +813,7 @@ class DecisionMaker:
             override_to_risk=RISK_CRITICAL,
             urgency=UrgencyLevel.EMERGENCY,
         ))
-        
+
         # Infant fever rule
         def check_infant_fever(ctx: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
             age_months = ctx.get("demographics", {}).get("age_months", 99)
@@ -821,7 +821,7 @@ class DecisionMaker:
             if age_months < 3 and temp >= 38.0:
                 return True, f"Fever ({temp}°C) in infant under 3 months"
             return False, None
-        
+
         rules.append(SafetyRule(
             name="INFANT_FEVER",
             description="Fever in infant under 3 months requires immediate evaluation",
@@ -829,7 +829,7 @@ class DecisionMaker:
             override_to_risk=RISK_CRITICAL,
             urgency=UrgencyLevel.EMERGENCY,
         ))
-        
+
         # Severe dehydration rule
         def check_severe_dehydration(ctx: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
             symptoms = ctx.get("symptoms", [])
@@ -838,7 +838,7 @@ class DecisionMaker:
             if count >= 3:
                 return True, f"Multiple signs of severe dehydration ({count} signs)"
             return False, None
-        
+
         rules.append(SafetyRule(
             name="SEVERE_DEHYDRATION",
             description="Multiple signs of severe dehydration",
@@ -846,14 +846,14 @@ class DecisionMaker:
             override_to_risk=RISK_HIGH,
             urgency=UrgencyLevel.URGENT,
         ))
-        
+
         # High fever rule
         def check_high_fever(ctx: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
             temp = ctx.get("vitals", {}).get("temperature", 0)
             if temp >= 40.0:
                 return True, f"Very high fever: {temp}°C"
             return False, None
-        
+
         rules.append(SafetyRule(
             name="HIGH_FEVER",
             description="Very high fever (≥40°C) requiring evaluation",
@@ -861,5 +861,5 @@ class DecisionMaker:
             override_to_risk=RISK_HIGH,
             urgency=UrgencyLevel.URGENT,
         ))
-        
+
         return rules

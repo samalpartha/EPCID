@@ -133,7 +133,7 @@ def init_db():
     """
     # Import models to register them with Base
     from . import models  # noqa
-    
+
     # Create all tables
     Base.metadata.create_all(bind=engine)
 
@@ -143,7 +143,7 @@ async def init_async_db():
     Async version of database initialization.
     """
     from . import models  # noqa
-    
+
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

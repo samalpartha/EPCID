@@ -237,25 +237,25 @@ async def search_guidelines(
     """
     results = []
     query_lower = request.query.lower()
-    
+
     # Search curated guidelines
     for key, guideline in PEDIATRIC_GUIDELINES.items():
         # Calculate relevance
         relevance = 0.0
-        
+
         if key in query_lower:
             relevance = 0.9
         elif any(term in guideline["title"].lower() for term in query_lower.split()):
             relevance = 0.7
         elif any(term in guideline["content"].lower() for term in query_lower.split()):
             relevance = 0.5
-        
+
         # Check symptom match
         if request.symptoms:
             for symptom in request.symptoms:
                 if symptom.lower() in key or symptom.lower() in guideline["content"].lower():
                     relevance = max(relevance, 0.8)
-        
+
         if relevance > 0.3:
             source_data = guideline["source"]
             results.append(
@@ -275,13 +275,13 @@ async def search_guidelines(
                     warning_signs=guideline["warning_signs"],
                 )
             )
-    
+
     # Sort by relevance
     results.sort(key=lambda x: x.relevance_score, reverse=True)
-    
+
     # Limit results
     results = results[:request.max_results]
-    
+
     return GuidelinesResponse(
         query=request.query,
         results=results,

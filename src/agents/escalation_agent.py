@@ -85,7 +85,7 @@ class EscalationAgent(BaseAgent):
     Determines appropriate escalation paths based on risk tier
     and generates actionable guidance for caregivers.
     """
-    
+
     # Escalation paths by risk tier
     ESCALATION_PATHS = {
         RISK_CRITICAL: EscalationPath(
@@ -154,7 +154,7 @@ class EscalationAgent(BaseAgent):
             ],
         ),
     }
-    
+
     def __init__(
         self,
         config: Optional[AgentConfig] = None,
@@ -167,7 +167,7 @@ class EscalationAgent(BaseAgent):
             timeout_seconds=20,
         )
         super().__init__(config, **kwargs)
-    
+
     async def process(
         self,
         input_data: Dict[str, Any],
@@ -185,7 +185,7 @@ class EscalationAgent(BaseAgent):
         """
         import uuid
         request_id = str(uuid.uuid4())[:12]
-        
+
         # Extract data
         risk_tier = input_data.get("risk_tier", RISK_LOW)
         symptoms = input_data.get("symptoms", [])
@@ -193,10 +193,10 @@ class EscalationAgent(BaseAgent):
         medications = input_data.get("medications", [])
         demographics = input_data.get("demographics", {})
         has_attachments = input_data.get("has_image") or input_data.get("has_audio")
-        
+
         # Determine escalation path
         escalation_path = self._get_escalation_path(risk_tier)
-        
+
         # Generate visit packet
         visit_packet = self._generate_visit_packet(
             symptoms,
@@ -205,16 +205,16 @@ class EscalationAgent(BaseAgent):
             demographics,
             context,
         )
-        
+
         # Generate reminders
         reminders = self._generate_reminders(escalation_path, risk_tier)
-        
+
         # Generate action checklist
         checklist = self._generate_checklist(escalation_path, risk_tier)
-        
+
         # Generate when-to-escalate guidance
         escalation_criteria = self._generate_escalation_criteria(risk_tier)
-        
+
         # Format the guidance message
         guidance_message = self._format_guidance(
             escalation_path,
@@ -222,7 +222,7 @@ class EscalationAgent(BaseAgent):
             checklist,
             escalation_criteria,
         )
-        
+
         return self.create_response(
             request_id=request_id,
             data={
@@ -241,14 +241,14 @@ class EscalationAgent(BaseAgent):
             confidence=0.9,
             explanation=self._generate_explanation(escalation_path, risk_tier),
         )
-    
+
     def _get_escalation_path(self, risk_tier: str) -> EscalationPath:
         """Get appropriate escalation path for risk tier."""
         return self.ESCALATION_PATHS.get(
             risk_tier,
             self.ESCALATION_PATHS[RISK_LOW],
         )
-    
+
     def _generate_visit_packet(
         self,
         symptoms: List[str],
@@ -266,7 +266,7 @@ class EscalationAgent(BaseAgent):
                 "noted_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
                 "severity": "reported",
             })
-        
+
         # Add historical symptoms from context
         if context and "observation_history" in context:
             for obs in context["observation_history"][-5:]:
@@ -276,10 +276,10 @@ class EscalationAgent(BaseAgent):
                         "noted_at": obs.get("timestamp", ""),
                         "severity": "historical",
                     })
-        
+
         # Generate questions for provider
         questions = self._generate_provider_questions(symptoms, vitals)
-        
+
         # Format medications
         med_list = []
         for med in medications:
@@ -290,7 +290,7 @@ class EscalationAgent(BaseAgent):
                 med_list.append(med_str)
             else:
                 med_list.append(str(med))
-        
+
         # Build summary
         age_str = ""
         if demographics.get("age_months"):
@@ -299,15 +299,15 @@ class EscalationAgent(BaseAgent):
                 age_str = f"{months} months old"
             else:
                 age_str = f"{months // 12} years old"
-        
+
         summary = f"Child: {age_str}\n"
         summary += f"Current symptoms: {', '.join(symptoms[:5])}\n"
-        
+
         if vitals.get("temperature"):
             summary += f"Temperature: {vitals['temperature']}°C\n"
-        
+
         summary += f"Duration: {context.get('symptom_duration_hours', 'Unknown')} hours\n"
-        
+
         return VisitPacket(
             summary=summary,
             symptoms_timeline=symptoms_timeline,
@@ -316,7 +316,7 @@ class EscalationAgent(BaseAgent):
             questions_for_provider=questions,
             attachments=[],
         )
-    
+
     def _generate_provider_questions(
         self,
         symptoms: List[str],
@@ -328,25 +328,25 @@ class EscalationAgent(BaseAgent):
             "What warning signs should I watch for?",
             "When should I bring my child back if symptoms don't improve?",
         ]
-        
+
         # Symptom-specific questions
         if "fever" in symptoms or vitals.get("temperature", 0) >= 38:
             questions.append("Should I give fever medication, and if so, what and how much?")
-        
+
         if "vomiting" in symptoms or "diarrhea" in symptoms:
             questions.append("How can I prevent dehydration?")
             questions.append("When can my child resume normal eating?")
-        
+
         if "cough" in symptoms:
             questions.append("What can I do to help with the cough?")
             questions.append("Should I be concerned about the type of cough?")
-        
+
         if "rash" in symptoms:
             questions.append("Is this rash contagious?")
             questions.append("Should I apply any treatment to the rash?")
-        
+
         return questions[:6]  # Limit to 6 questions
-    
+
     def _generate_reminders(
         self,
         path: EscalationPath,
@@ -355,11 +355,11 @@ class EscalationAgent(BaseAgent):
         """Generate follow-up reminders."""
         reminders = []
         now = datetime.now(__import__("datetime").timezone.utc)
-        
+
         if path.urgency == "immediate":
             # No reminders for emergencies
             return []
-        
+
         if path.urgency == "urgent":
             reminders.append(Reminder(
                 id="remind_1",
@@ -369,7 +369,7 @@ class EscalationAgent(BaseAgent):
                 priority="high",
                 channels=[NotificationChannel.PUSH, NotificationChannel.SMS],
             ))
-        
+
         if path.urgency in ["urgent", "soon"]:
             reminders.append(Reminder(
                 id="remind_2",
@@ -379,7 +379,7 @@ class EscalationAgent(BaseAgent):
                 priority="medium",
                 channels=[NotificationChannel.PUSH],
             ))
-        
+
         # Symptom check reminders
         reminders.append(Reminder(
             id="remind_3",
@@ -389,7 +389,7 @@ class EscalationAgent(BaseAgent):
             priority="medium",
             channels=[NotificationChannel.PUSH],
         ))
-        
+
         # Temperature check for fever
         if risk_tier in [RISK_HIGH, RISK_MODERATE]:
             reminders.append(Reminder(
@@ -400,9 +400,9 @@ class EscalationAgent(BaseAgent):
                 priority="medium",
                 channels=[NotificationChannel.PUSH],
             ))
-        
+
         return reminders
-    
+
     def _generate_checklist(
         self,
         path: EscalationPath,
@@ -410,7 +410,7 @@ class EscalationAgent(BaseAgent):
     ) -> List[Dict[str, Any]]:
         """Generate action checklist."""
         checklist = []
-        
+
         # Primary action
         checklist.append({
             "item": path.primary_action,
@@ -418,7 +418,7 @@ class EscalationAgent(BaseAgent):
             "category": "action",
             "completed": False,
         })
-        
+
         # Preparation steps
         for step in path.preparation_steps:
             checklist.append({
@@ -427,7 +427,7 @@ class EscalationAgent(BaseAgent):
                 "category": "preparation",
                 "completed": False,
             })
-        
+
         # Monitoring tasks
         monitoring_tasks = [
             "Record temperature every 4 hours",
@@ -435,7 +435,7 @@ class EscalationAgent(BaseAgent):
             "Note any new symptoms",
             "Log medication doses given",
         ]
-        
+
         for task in monitoring_tasks[:3]:
             checklist.append({
                 "item": task,
@@ -443,13 +443,13 @@ class EscalationAgent(BaseAgent):
                 "category": "monitoring",
                 "completed": False,
             })
-        
+
         return checklist
-    
+
     def _generate_escalation_criteria(self, risk_tier: str) -> List[str]:
         """Generate criteria for when to escalate further."""
         criteria = []
-        
+
         # Universal criteria
         criteria.extend([
             "Difficulty breathing or rapid breathing",
@@ -458,7 +458,7 @@ class EscalationAgent(BaseAgent):
             "Severe or worsening headache with stiff neck",
             "Seizure",
         ])
-        
+
         # Risk-tier specific
         if risk_tier in [RISK_MODERATE, RISK_LOW]:
             criteria.extend([
@@ -468,9 +468,9 @@ class EscalationAgent(BaseAgent):
                 "Rash that doesn't fade when pressed (petechiae)",
                 "Child appears much sicker than expected",
             ])
-        
+
         return criteria
-    
+
     def _format_guidance(
         self,
         path: EscalationPath,
@@ -480,7 +480,7 @@ class EscalationAgent(BaseAgent):
     ) -> str:
         """Format the complete guidance message."""
         lines = []
-        
+
         # Header with urgency
         urgency_emoji = {
             "immediate": "🚨",
@@ -488,46 +488,46 @@ class EscalationAgent(BaseAgent):
             "soon": "📋",
             "routine": "📝",
         }
-        
+
         lines.append(f"# {urgency_emoji.get(path.urgency, '📋')} Care Guidance\n")
-        
+
         # Primary action
         lines.append(f"## Recommended Action: {path.primary_action}")
         lines.append(f"**Timeline:** {path.timeline}\n")
-        
+
         if path.phone_number:
             lines.append(f"**Phone:** {path.phone_number}\n")
-        
+
         # Secondary actions
         if path.secondary_actions:
             lines.append("### Additional Steps")
             for action in path.secondary_actions:
                 lines.append(f"- {action}")
             lines.append("")
-        
+
         # Visit preparation
         if path.urgency != "immediate":
             lines.append("### Prepare for Visit")
             for step in path.preparation_steps:
                 lines.append(f"☐ {step}")
             lines.append("")
-        
+
         # Symptom summary
         lines.append("### Current Symptom Summary")
         lines.append(packet.summary)
-        
+
         # When to escalate
         lines.append("### ⚠️ Seek Immediate Care If:")
         for criterion in escalation_criteria[:5]:
             lines.append(f"- {criterion}")
-        
+
         # Disclaimer
         lines.append("\n---")
         lines.append("*This guidance is not a substitute for professional medical advice. "
                     "When in doubt, seek medical evaluation.*")
-        
+
         return "\n".join(lines)
-    
+
     def _packet_to_dict(self, packet: VisitPacket) -> Dict[str, Any]:
         """Convert visit packet to dictionary."""
         return {
@@ -539,7 +539,7 @@ class EscalationAgent(BaseAgent):
             "attachments": packet.attachments,
             "generated_at": packet.generated_at.isoformat(),
         }
-    
+
     def _reminder_to_dict(self, reminder: Reminder) -> Dict[str, Any]:
         """Convert reminder to dictionary."""
         return {
@@ -551,7 +551,7 @@ class EscalationAgent(BaseAgent):
             "channels": [c.value for c in reminder.channels],
             "completed": reminder.completed,
         }
-    
+
     def _generate_explanation(
         self,
         path: EscalationPath,
@@ -559,17 +559,17 @@ class EscalationAgent(BaseAgent):
     ) -> str:
         """Generate explanation of escalation decision."""
         lines = ["## Escalation Analysis\n"]
-        
+
         lines.append(f"**Risk Tier:** {risk_tier}")
         lines.append(f"**Escalation Type:** {path.escalation_type.value}")
         lines.append(f"**Urgency:** {path.urgency}")
         lines.append(f"**Timeline:** {path.timeline}")
-        
+
         lines.append("\n### Rationale")
         lines.append(f"Based on the {risk_tier} risk assessment, the recommended "
                     f"course of action is to {path.primary_action.lower()}.")
-        
+
         if path.urgency == "immediate":
             lines.append("\n⚠️ **This situation requires immediate emergency response.**")
-        
+
         return "\n".join(lines)

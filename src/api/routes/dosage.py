@@ -58,18 +58,18 @@ class DoseCalculationResponse(BaseModel):
     medication: str
     weight_kg: float
     formulation: str
-    
+
     min_dose_mg: float
     max_dose_mg: float
     recommended_dose_mg: float
-    
+
     liquid_amount_ml: Optional[float] = None
     tablet_count: Optional[float] = None
-    
+
     frequency: str
     max_daily_doses: int
     warnings: List[str]
-    
+
     disclaimer: str
 
 
@@ -96,7 +96,7 @@ async def list_medications():
     """
     data = load_dosage_data()
     meds = data.get("medications", {})
-    
+
     items = []
     for med_id, med in meds.items():
         age_restrictions = med.get("age_restrictions", {})
@@ -104,7 +104,7 @@ async def list_medications():
             "under_6_months", 
             age_restrictions.get("under_2_years", "Check with doctor")
         )
-        
+
         items.append(MedicationListItem(
             id=med_id,
             name=med.get("brand_names", [med_id])[0] if med.get("brand_names") else med_id,
@@ -112,7 +112,7 @@ async def list_medications():
             uses=med.get("uses", []),
             age_restriction=restriction,
         ))
-    
+
     return MedicationsResponse(
         medications=items,
         disclaimer=data.get("disclaimer", "Always consult your healthcare provider."),
@@ -132,20 +132,20 @@ async def get_medication_info(medication_id: str):
     """
     data = load_dosage_data()
     meds = data.get("medications", {})
-    
+
     med = meds.get(medication_id)
     if not med:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Medication not found: {medication_id}"
         )
-    
+
     dose_per_kg = med.get("dose_per_kg", "")
     if isinstance(dose_per_kg, str):
         # Parse "10-15 mg/kg per dose" format
         parts = dose_per_kg.replace(" mg/kg per dose", "").split("-")
         dose_per_kg = {"min": float(parts[0]), "max": float(parts[-1])}
-    
+
     return MedicationInfo(
         id=medication_id,
         name=med.get("brand_names", [medication_id])[0] if med.get("brand_names") else medication_id,
@@ -173,14 +173,14 @@ async def calculate_dose(request: DoseCalculationRequest):
     """
     data = load_dosage_data()
     meds = data.get("medications", {})
-    
+
     med = meds.get(request.medication_id)
     if not med:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Medication not found: {request.medication_id}"
         )
-    
+
     # Parse dose per kg
     dose_per_kg = med.get("dose_per_kg", "10-15 mg/kg per dose")
     if isinstance(dose_per_kg, str):
@@ -190,40 +190,40 @@ async def calculate_dose(request: DoseCalculationRequest):
     else:
         min_dose_per_kg = dose_per_kg.get("min", 10)
         max_dose_per_kg = dose_per_kg.get("max", 15)
-    
+
     # Calculate doses
     min_dose_mg = round(request.weight_kg * min_dose_per_kg, 1)
     max_dose_mg = round(request.weight_kg * max_dose_per_kg, 1)
     recommended_mg = round((min_dose_mg + max_dose_mg) / 2, 1)
-    
+
     # Get formulation
     formulations = med.get("formulations", {})
     form_keys = list(formulations.keys())
-    
+
     if request.formulation_index >= len(form_keys):
         form_key = form_keys[0] if form_keys else "default"
     else:
         form_key = form_keys[request.formulation_index]
-    
+
     formulation = formulations.get(form_key, {})
     concentration = formulation.get("concentration", "160 mg/5 mL")
-    
+
     # Parse concentration
     liquid_amount_ml = None
     tablet_count = None
-    
+
     if "/mL" in concentration or "/5" in concentration:
         # Liquid formulation
         parts = concentration.replace(" ", "").split("/")
         mg_part = float(parts[0].replace("mg", ""))
         ml_part = float(parts[1].replace("mL", ""))
-        
+
         liquid_amount_ml = round((recommended_mg / mg_part) * ml_part, 1)
     elif "per tablet" in concentration or "mg" in concentration:
         # Tablet formulation
         mg_per_tablet = float(concentration.split(" ")[0].replace("mg", ""))
         tablet_count = round(recommended_mg / mg_per_tablet, 1)
-    
+
     return DoseCalculationResponse(
         medication=med.get("brand_names", [request.medication_id])[0],
         weight_kg=request.weight_kg,

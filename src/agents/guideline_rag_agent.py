@@ -94,7 +94,7 @@ class GuidelineRAGAgent(BaseAgent):
     - Never provides treatment instructions
     - Uses escalation language for high-risk situations
     """
-    
+
     # Educational content templates (simulating knowledge base)
     CONTENT_TEMPLATES = {
         "fever": {
@@ -228,7 +228,7 @@ class GuidelineRAGAgent(BaseAgent):
             "source_id": "cdc",
         },
     }
-    
+
     # Escalation messages
     ESCALATION_MESSAGES = {
         "critical": "⚠️ **IMPORTANT**: The symptoms described may indicate a serious condition. "
@@ -238,7 +238,7 @@ class GuidelineRAGAgent(BaseAgent):
         "moderate": "📋 We recommend consulting with your pediatrician about these symptoms. "
                    "Schedule an appointment within the next 24-48 hours.",
     }
-    
+
     def __init__(
         self,
         config: Optional[AgentConfig] = None,
@@ -255,9 +255,9 @@ class GuidelineRAGAgent(BaseAgent):
             },
         )
         super().__init__(config, **kwargs)
-        
+
         self.sources = {s.id: s for s in ALLOWED_SOURCES}
-    
+
     async def process(
         self,
         input_data: Dict[str, Any],
@@ -275,35 +275,35 @@ class GuidelineRAGAgent(BaseAgent):
         """
         import uuid
         request_id = str(uuid.uuid4())[:12]
-        
+
         # Extract query
         query = input_data.get("query", "")
         symptoms = input_data.get("symptoms", [])
         risk_tier = input_data.get("risk_tier") or (context or {}).get("risk_tier", "LOW")
         age_months = input_data.get("demographics", {}).get("age_months")
-        
+
         # Build search terms
         search_terms = self._extract_search_terms(query, symptoms)
-        
+
         # Retrieve relevant guidelines
         results = self._retrieve_guidelines(search_terms, age_months)
-        
+
         # Filter and rank results
         filtered_results = self._filter_results(results, age_months)
-        
+
         # Generate response with citations
         response_text = self._generate_response(
             filtered_results,
             risk_tier,
             query,
         )
-        
+
         # Add escalation message if needed
         escalation_message = self._get_escalation_message(risk_tier)
-        
+
         # Extract all citations
         citations = self._extract_citations(filtered_results)
-        
+
         return self.create_response(
             request_id=request_id,
             data={
@@ -317,7 +317,7 @@ class GuidelineRAGAgent(BaseAgent):
             confidence=0.85 if filtered_results else 0.5,
             explanation=self._generate_explanation(filtered_results, risk_tier),
         )
-    
+
     def _extract_search_terms(
         self,
         query: str,
@@ -325,21 +325,21 @@ class GuidelineRAGAgent(BaseAgent):
     ) -> List[str]:
         """Extract search terms from query and symptoms."""
         terms = []
-        
+
         # Add symptoms
         for symptom in symptoms:
             normalized = symptom.lower().replace("_", " ")
             terms.append(normalized)
-        
+
         # Extract keywords from query
         if query:
             # Simple keyword extraction
             words = re.findall(r'\b\w+\b', query.lower())
             medical_terms = [w for w in words if len(w) > 3]
             terms.extend(medical_terms[:5])
-        
+
         return list(set(terms))
-    
+
     def _retrieve_guidelines(
         self,
         search_terms: List[str],
@@ -347,7 +347,7 @@ class GuidelineRAGAgent(BaseAgent):
     ) -> List[GuidelineResult]:
         """Retrieve guidelines matching search terms."""
         results = []
-        
+
         for term in search_terms:
             # Check for matching content
             for key, template in self.CONTENT_TEMPLATES.items():
@@ -364,12 +364,12 @@ class GuidelineRAGAgent(BaseAgent):
                             url=source.url,
                         )
                         results.append(result)
-        
+
         # Sort by relevance
         results.sort(key=lambda r: r.relevance_score, reverse=True)
-        
+
         return results
-    
+
     def _filter_results(
         self,
         results: List[GuidelineResult],
@@ -378,25 +378,25 @@ class GuidelineRAGAgent(BaseAgent):
         """Filter and deduplicate results."""
         seen_titles = set()
         filtered = []
-        
+
         for result in results:
             # Skip duplicates
             if result.title in seen_titles:
                 continue
             seen_titles.add(result.title)
-            
+
             # Skip low relevance
             if result.relevance_score < 0.5:
                 continue
-            
+
             # Check age appropriateness (placeholder)
             # In production, would filter infant-specific content for older children, etc.
-            
+
             filtered.append(result)
-        
+
         # Limit to top 5
         return filtered[:5]
-    
+
     def _generate_response(
         self,
         results: List[GuidelineResult],
@@ -409,39 +409,39 @@ class GuidelineRAGAgent(BaseAgent):
                 "I couldn't find specific guidelines matching your query. "
                 "For medical concerns, please consult with your pediatrician."
             )
-        
+
         lines = []
-        
+
         # Add main disclaimer
         lines.append(
             "**📚 Educational Information**\n"
             "*This information is for educational purposes only and does not constitute medical advice.*\n"
         )
-        
+
         # Add content from top results
         for i, result in enumerate(results[:3]):
             lines.append(f"### {result.title}")
-            
+
             # Truncate content
             content = result.content
             if len(content) > 500:
                 content = content[:500] + "..."
-            
+
             lines.append(content)
             lines.append(f"\n*Source: {result.citation}*\n")
-        
+
         return "\n".join(lines)
-    
+
     def _get_escalation_message(self, risk_tier: str) -> Optional[str]:
         """Get appropriate escalation message for risk tier."""
         tier_lower = risk_tier.lower()
         return self.ESCALATION_MESSAGES.get(tier_lower)
-    
+
     def _extract_citations(self, results: List[GuidelineResult]) -> List[Dict[str, str]]:
         """Extract citations from results."""
         citations = []
         seen = set()
-        
+
         for result in results:
             if result.citation not in seen:
                 citations.append({
@@ -451,9 +451,9 @@ class GuidelineRAGAgent(BaseAgent):
                     "trust_level": result.source.trust_level,
                 })
                 seen.add(result.citation)
-        
+
         return citations
-    
+
     def _result_to_dict(self, result: GuidelineResult) -> Dict[str, Any]:
         """Convert GuidelineResult to dictionary."""
         return {
@@ -464,7 +464,7 @@ class GuidelineRAGAgent(BaseAgent):
             "citation": result.citation,
             "url": result.url,
         }
-    
+
     def _generate_explanation(
         self,
         results: List[GuidelineResult],
@@ -472,24 +472,24 @@ class GuidelineRAGAgent(BaseAgent):
     ) -> str:
         """Generate explanation of the retrieval process."""
         lines = ["## Guideline Retrieval\n"]
-        
+
         lines.append(f"**Results Found:** {len(results)}")
         lines.append(f"**Risk Context:** {risk_tier}")
-        
+
         if results:
             lines.append("\n### Sources Used")
             sources = set(r.source.name for r in results)
             for source in sources:
                 lines.append(f"- {source}")
-        
+
         lines.append("\n### Disclaimers Applied")
         lines.append("- All content from allowlisted sources only")
         lines.append("- Citations included for all information")
         lines.append("- No treatment instructions provided")
-        
+
         if risk_tier.upper() in ["CRITICAL", "HIGH"]:
             lines.append("- Escalation language included")
-        
+
         return "\n".join(lines)
 
 
@@ -509,6 +509,6 @@ def normalize_symptom_query(symptom: str) -> str:
         "can't breathe": "breathing",
         "runny poop": "diarrhea",
     }
-    
+
     lower = symptom.lower().strip()
     return mappings.get(lower, lower)

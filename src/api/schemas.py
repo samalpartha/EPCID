@@ -67,7 +67,7 @@ class UserResponse(BaseModel):
     is_active: bool = True
     is_verified: bool = False
     created_at: Optional[datetime] = None
-    
+
     class Config:
         from_attributes = True
 
@@ -78,7 +78,7 @@ class ChildBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     date_of_birth: datetime
     gender: Gender
-    
+
     @validator("date_of_birth")
     def validate_dob(cls, v):
         if v > datetime.now():
@@ -110,7 +110,7 @@ class ChildResponse(ChildBase):
     medications: List[str] = []
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -131,7 +131,7 @@ class SymptomCreate(SymptomBase):
         default=None,
         description="Additional measurements (e.g., temperature: 101.5)",
     )
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -155,7 +155,7 @@ class SymptomResponse(SymptomBase):
     recorded_at: datetime
     onset_time: Optional[datetime]
     measurements: Optional[Dict[str, Any]]
-    
+
     class Config:
         from_attributes = True
 
@@ -179,7 +179,7 @@ class AssessmentRequest(BaseModel):
     )
     include_guidelines: bool = True
     include_environmental: bool = True
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -220,29 +220,29 @@ class AssessmentResponse(BaseModel):
     risk_level: RiskLevel
     risk_score: float = Field(..., ge=0, le=1)
     confidence: float = Field(..., ge=0, le=1)
-    
+
     # Risk breakdown
     risk_factors: List[RiskFactor]
-    
+
     # Recommendations
     primary_recommendation: str
     secondary_recommendations: List[str]
-    
+
     # Flags
     red_flags: List[str]
     warning_signs: List[str]
-    
+
     # Explanations
     explanation: str
     clinical_reasoning: str
-    
+
     # Actions
     suggested_actions: List[str]
     when_to_seek_care: str
-    
+
     # Disclaimers
     disclaimers: List[str]
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -320,7 +320,7 @@ class LocationRequest(BaseModel):
     """Location for environmental data."""
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
-    
+
     class Config:
         json_schema_extra = {
             "example": {

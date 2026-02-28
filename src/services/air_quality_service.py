@@ -33,7 +33,7 @@ class AirQualityReading:
     location: str
     timestamp: datetime
     source: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "aqi": self.aqi,
@@ -64,10 +64,10 @@ class AirQualityService:
     Provides current conditions, forecasts, and health guidance
     based on air quality levels.
     """
-    
+
     AIRNOW_BASE_URL = "https://www.airnowapi.org/aq"
     OPENAQ_BASE_URL = "https://api.openaq.org/v2"
-    
+
     # AQI categories and health implications
     AQI_CATEGORIES = {
         (0, 50): {
@@ -113,7 +113,7 @@ class AirQualityService:
             "recommendation": "Stay indoors. Close windows. Use air purifier if available.",
         },
     }
-    
+
     def __init__(
         self,
         airnow_api_key: Optional[str] = None,
@@ -126,9 +126,9 @@ class AirQualityService:
         self.timeout_seconds = timeout_seconds
         self.cache_ttl_minutes = cache_ttl_minutes
         self._cache: Dict[str, tuple] = {}
-        
+
         logger.info("Initialized Air Quality service")
-    
+
     async def get_current_aqi(
         self,
         zip_code: Optional[str] = None,
@@ -148,11 +148,11 @@ class AirQualityService:
         """
         location_key = zip_code or f"{latitude},{longitude}"
         cache_key = f"current:{location_key}"
-        
+
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         try:
             if zip_code and self.airnow_api_key:
                 result = await self._get_airnow_current(zip_code)
@@ -160,16 +160,16 @@ class AirQualityService:
                 result = await self._get_openaq_current(latitude, longitude)
             else:
                 result = self._get_simulated_reading(location_key)
-            
+
             if result:
                 self._set_cached(cache_key, result)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Failed to get air quality: {e}")
             return self._get_simulated_reading(location_key)
-    
+
     async def get_forecast(
         self,
         zip_code: str,
@@ -184,24 +184,24 @@ class AirQualityService:
             List of AirQualityForecast objects
         """
         cache_key = f"forecast:{zip_code}"
-        
+
         cached = self._get_cached(cache_key)
         if cached:
             return cached
-        
+
         try:
             if self.airnow_api_key:
                 result = await self._get_airnow_forecast(zip_code)
             else:
                 result = self._get_simulated_forecast()
-            
+
             self._set_cached(cache_key, result)
             return result
-            
+
         except Exception as e:
             logger.error(f"Failed to get air quality forecast: {e}")
             return self._get_simulated_forecast()
-    
+
     def get_health_guidance(self, aqi: int) -> Dict[str, str]:
         """
         Get health guidance for an AQI value.
@@ -215,10 +215,10 @@ class AirQualityService:
         for (low, high), guidance in self.AQI_CATEGORIES.items():
             if low <= aqi <= high:
                 return guidance
-        
+
         # Above 500
         return self.AQI_CATEGORIES[(301, 500)]
-    
+
     def get_pediatric_guidance(self, aqi: int) -> Dict[str, Any]:
         """
         Get pediatric-specific guidance for an AQI value.
@@ -230,16 +230,16 @@ class AirQualityService:
             Dict with pediatric guidance
         """
         base = self.get_health_guidance(aqi)
-        
+
         pediatric = {
             **base,
             "pediatric_risk": self._get_pediatric_risk_level(aqi),
             "outdoor_activity": self._get_outdoor_activity_guidance(aqi),
             "symptoms_to_watch": self._get_symptoms_to_watch(aqi),
         }
-        
+
         return pediatric
-    
+
     async def _get_airnow_current(self, zip_code: str) -> Optional[AirQualityReading]:
         """Get current AQI from AirNow API."""
         params = {
@@ -248,11 +248,11 @@ class AirQualityService:
             "distance": 25,
             "API_KEY": self.airnow_api_key,
         }
-        
+
         url = f"{self.AIRNOW_BASE_URL}/observation/zipCode/current?{urlencode(params)}"
-        
+
         response = await self._make_request(url)
-        
+
         if response and len(response) > 0:
             data = response[0]
             return AirQualityReading(
@@ -265,9 +265,9 @@ class AirQualityService:
                 timestamp=datetime.now(__import__("datetime").timezone.utc),
                 source="AirNow",
             )
-        
+
         return None
-    
+
     async def _get_airnow_forecast(self, zip_code: str) -> List[AirQualityForecast]:
         """Get forecast from AirNow API."""
         params = {
@@ -276,11 +276,11 @@ class AirQualityService:
             "distance": 25,
             "API_KEY": self.airnow_api_key,
         }
-        
+
         url = f"{self.AIRNOW_BASE_URL}/forecast/zipCode?{urlencode(params)}"
-        
+
         response = await self._make_request(url)
-        
+
         forecasts = []
         if response:
             for data in response:
@@ -291,9 +291,9 @@ class AirQualityService:
                     pollutant=data.get("ParameterName", "PM2.5"),
                     discussion=data.get("Discussion"),
                 ))
-        
+
         return forecasts
-    
+
     async def _get_openaq_current(
         self,
         latitude: float,
@@ -307,23 +307,23 @@ class AirQualityService:
             "order_by": "datetime",
             "sort": "desc",
         }
-        
+
         headers = {}
         if self.openaq_api_key:
             headers["X-API-Key"] = self.openaq_api_key
-        
+
         url = f"{self.OPENAQ_BASE_URL}/latest?{urlencode(params)}"
-        
+
         response = await self._make_request(url, headers)
-        
+
         if response and response.get("results"):
             data = response["results"][0]
             measurements = data.get("measurements", [{}])
             pm25 = next((m for m in measurements if m.get("parameter") == "pm25"), measurements[0])
-            
+
             # Convert PM2.5 to AQI
             aqi = self._pm25_to_aqi(pm25.get("value", 0))
-            
+
             return AirQualityReading(
                 aqi=aqi,
                 category=self.get_health_guidance(aqi)["category"],
@@ -334,9 +334,9 @@ class AirQualityService:
                 timestamp=datetime.now(__import__("datetime").timezone.utc),
                 source="OpenAQ",
             )
-        
+
         return None
-    
+
     async def _make_request(
         self,
         url: str,
@@ -346,7 +346,7 @@ class AirQualityService:
         # In production, would use aiohttp
         await asyncio.sleep(0.1)
         return None
-    
+
     def _pm25_to_aqi(self, pm25: float) -> int:
         """Convert PM2.5 concentration to AQI."""
         # EPA breakpoints for PM2.5 (24-hour)
@@ -359,14 +359,14 @@ class AirQualityService:
             (250.5, 350.4, 301, 400),
             (350.5, 500.4, 401, 500),
         ]
-        
+
         for c_low, c_high, i_low, i_high in breakpoints:
             if c_low <= pm25 <= c_high:
                 aqi = ((i_high - i_low) / (c_high - c_low)) * (pm25 - c_low) + i_low
                 return int(round(aqi))
-        
+
         return 500 if pm25 > 500 else 0
-    
+
     def _get_simulated_reading(self, location: str) -> AirQualityReading:
         """Get simulated air quality reading for testing."""
         # Simulate moderate air quality
@@ -380,7 +380,7 @@ class AirQualityService:
             timestamp=datetime.now(__import__("datetime").timezone.utc),
             source="Simulated",
         )
-    
+
     def _get_simulated_forecast(self) -> List[AirQualityForecast]:
         """Get simulated forecast for testing."""
         today = datetime.now(__import__("datetime").timezone.utc)
@@ -394,7 +394,7 @@ class AirQualityService:
             )
             for i in range(3)
         ]
-    
+
     def _get_pediatric_risk_level(self, aqi: int) -> str:
         """Get pediatric risk level for AQI."""
         if aqi <= 50:
@@ -407,7 +407,7 @@ class AirQualityService:
             return "high"
         else:
             return "very-high"
-    
+
     def _get_outdoor_activity_guidance(self, aqi: int) -> str:
         """Get outdoor activity guidance for children."""
         if aqi <= 50:
@@ -420,20 +420,20 @@ class AirQualityService:
             return "Avoid prolonged outdoor exertion; move activities indoors"
         else:
             return "All outdoor activities should be avoided"
-    
+
     def _get_symptoms_to_watch(self, aqi: int) -> List[str]:
         """Get symptoms to watch for based on AQI."""
         symptoms = []
-        
+
         if aqi > 100:
             symptoms.extend(["Coughing", "Throat irritation"])
         if aqi > 150:
             symptoms.extend(["Difficulty breathing", "Wheezing", "Chest tightness"])
         if aqi > 200:
             symptoms.extend(["Aggravated asthma", "Eye irritation", "Headache"])
-        
+
         return symptoms
-    
+
     def _get_cached(self, key: str) -> Optional[Any]:
         """Get cached result if not expired."""
         if key in self._cache:
@@ -442,7 +442,7 @@ class AirQualityService:
                 return result
             del self._cache[key]
         return None
-    
+
     def _set_cached(self, key: str, value: Any) -> None:
         """Set cached result."""
         self._cache[key] = (value, datetime.now(__import__("datetime").timezone.utc))

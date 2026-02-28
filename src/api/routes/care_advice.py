@@ -79,7 +79,7 @@ async def list_care_guides():
     """
     data = load_care_guides()
     guides = data.get("guides", {})
-    
+
     items = [
         CareGuideListItem(
             id=guide_id,
@@ -88,7 +88,7 @@ async def list_care_guides():
         )
         for guide_id, guide in guides.items()
     ]
-    
+
     return CareGuidesResponse(guides=items, total=len(items))
 
 
@@ -102,7 +102,7 @@ async def get_emergency_signs():
     """
     data = load_care_guides()
     emergency = data.get("emergency_signs", {})
-    
+
     return EmergencySignsResponse(
         title=emergency.get("title", "Emergency Warning Signs"),
         always_call_911=emergency.get("always_call_911", []),
@@ -123,14 +123,14 @@ async def get_care_guide(condition_id: str):
     """
     data = load_care_guides()
     guides = data.get("guides", {})
-    
+
     guide = guides.get(condition_id)
     if not guide:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Care guide not found for condition: {condition_id}"
         )
-    
+
     return CareGuide(
         id=condition_id,
         title=guide.get("title", condition_id),
@@ -156,15 +156,15 @@ async def search_care_guides(query: str):
     """
     data = load_care_guides()
     guides = data.get("guides", {})
-    
+
     query_lower = query.lower()
     results = []
-    
+
     for guide_id, guide in guides.items():
         # Search in title and summary
         title = guide.get("title", "").lower()
         summary = guide.get("summary", "").lower()
-        
+
         if query_lower in title or query_lower in summary:
             results.append(
                 CareGuideListItem(
@@ -173,5 +173,5 @@ async def search_care_guides(query: str):
                     summary=guide.get("summary", ""),
                 )
             )
-    
+
     return {"query": query, "results": results, "total": len(results)}

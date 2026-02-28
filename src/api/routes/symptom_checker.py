@@ -113,9 +113,9 @@ async def start_symptom_checker(
     with age-appropriate warnings and guidance.
     """
     session_id = str(uuid4())
-    
+
     warnings = []
-    
+
     # Age-specific warnings
     if request.age_months < 3:
         warnings.append(
@@ -127,7 +127,7 @@ async def start_symptom_checker(
             "Note: Infants 3-6 months old need prompt medical attention for "
             "fevers above 101°F (38.3°C)."
         )
-    
+
     session = {
         "session_id": session_id,
         "user_id": current_user.get("id"),
@@ -138,9 +138,9 @@ async def start_symptom_checker(
         "symptoms": [],
         "warnings": warnings,
     }
-    
+
     sessions[session_id] = session
-    
+
     return SymptomCheckerStartResponse(
         session_id=session_id,
         age_months=request.age_months,
@@ -167,41 +167,41 @@ async def add_symptoms(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
+
     # Verify user owns session
     if session.get("user_id") != current_user.get("id"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access this session"
         )
-    
+
     # Add symptoms
     session["symptoms"].extend([s.dict() for s in request.symptoms])
-    
+
     # Check for red flags
     red_flags = []
     immediate_escalation = False
-    
+
     critical_symptoms = [
         "unresponsive", "seizure", "severe_difficulty_breathing", 
         "blue_lips", "not_breathing", "apnea", "severe_abdominal_pain",
         "bloody_vomit", "currant_jelly_stool", "petechiae"
     ]
-    
+
     for symptom in request.symptoms:
         if symptom.symptom_id in critical_symptoms:
             red_flags.append(f"Critical: {symptom.name}")
             immediate_escalation = True
         elif symptom.severity == "severe":
             red_flags.append(f"Severe: {symptom.name}")
-    
+
     # Check infant fever
     if session["age_months"] < 3:
         fever_symptoms = ["fever", "high_fever"]
         if any(s.symptom_id in fever_symptoms for s in request.symptoms):
             red_flags.append("Critical: Any fever in infant under 3 months")
             immediate_escalation = True
-    
+
     return AddSymptomsResponse(
         session_id=request.session_id,
         symptoms_count=len(session["symptoms"]),
@@ -227,19 +227,19 @@ async def get_triage(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
+
     if session.get("user_id") != current_user.get("id"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized"
         )
-    
+
     symptoms = session["symptoms"]
     age_months = session["age_months"]
-    
+
     # Calculate triage
     triage = calculate_triage(symptoms, age_months)
-    
+
     return TriageResponse(
         session_id=request.session_id,
         triage=triage,
@@ -261,13 +261,13 @@ async def delete_session(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
+
     if session.get("user_id") != current_user.get("id"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized"
         )
-    
+
     del sessions[session_id]
     return {"message": "Session deleted"}
 
@@ -287,13 +287,13 @@ def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendat
     reasons = []
     recommendations = []
     warning_signs = []
-    
+
     disclaimer = (
         "This is not a substitute for professional medical advice, diagnosis, "
         "or treatment. If you think your child may have a medical emergency, "
         "call 911 immediately."
     )
-    
+
     # Critical symptoms - Call 911
     critical_symptoms = {
         "unresponsive", "seizure", "severe_difficulty_breathing", "apnea",
@@ -301,7 +301,7 @@ def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendat
         "currant_jelly_stool", "petechiae", "purpura", "mottled_skin",
         "drooling", "stiff_neck"
     }
-    
+
     # High priority symptoms - Call Now
     high_priority = {
         "difficulty_breathing", "high_fever", "lethargy", "confusion",
@@ -309,10 +309,10 @@ def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendat
         "sunken_fontanelle", "vomiting_projectile", "inconsolable",
         "grunting", "stridor", "nasal_flaring", "retractions"
     }
-    
+
     symptom_ids = {s["symptom_id"] for s in symptoms}
     severe_symptoms = {s["symptom_id"] for s in symptoms if s.get("severity") == "severe"}
-    
+
     # Check for critical
     critical_found = symptom_ids & critical_symptoms
     if critical_found:
@@ -330,7 +330,7 @@ def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendat
             warning_signs_to_watch=[],
             disclaimer=disclaimer,
         )
-    
+
     # Infant fever check
     if age_months < 3 and ("fever" in symptom_ids or "high_fever" in symptom_ids):
         return TriageRecommendation(
@@ -346,7 +346,7 @@ def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendat
             warning_signs_to_watch=[],
             disclaimer=disclaimer,
         )
-    
+
     # Check for high priority
     high_found = symptom_ids & high_priority
     if high_found or severe_symptoms:
@@ -355,7 +355,7 @@ def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendat
             reasons.append(f"Urgent symptoms: {', '.join(high_found)}")
         if severe_symptoms:
             reasons.append(f"Severe symptoms reported: {', '.join(severe_symptoms)}")
-        
+
         return TriageRecommendation(
             level="call_now",
             title="Call Your Doctor Now",
@@ -375,18 +375,18 @@ def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendat
             ],
             disclaimer=disclaimer,
         )
-    
+
     # Check for moderate - call within 24 hours
     prolonged = any(s.get("duration") in [">3_days", ">1_week"] for s in symptoms)
     moderate_symptoms = {s["symptom_id"] for s in symptoms if s.get("severity") == "moderate"}
-    
+
     if len(moderate_symptoms) >= 2 or prolonged:
         reasons = []
         if moderate_symptoms:
             reasons.append(f"Multiple moderate symptoms: {', '.join(moderate_symptoms)}")
         if prolonged:
             reasons.append("Symptoms lasting more than expected")
-        
+
         return TriageRecommendation(
             level="call_24_hours",
             title="Call Within 24 Hours",
@@ -406,10 +406,10 @@ def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendat
             ],
             disclaimer=disclaimer,
         )
-    
+
     # Home care
     reasons = [s.get("name", s["symptom_id"]) for s in symptoms[:3]]
-    
+
     return TriageRecommendation(
         level="home_care",
         title="Home Care",

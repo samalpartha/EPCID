@@ -35,7 +35,7 @@ def upgrade() -> None:
         sa.Column('preferences', sa.JSON(), nullable=True),
     )
     op.create_index('ix_users_email', 'users', ['email'])
-    
+
     # Children table
     op.create_table(
         'children',
@@ -52,7 +52,7 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(), nullable=False),
     )
     op.create_index('ix_children_user_id', 'children', ['user_id'])
-    
+
     # Symptoms table
     op.create_table(
         'symptoms',
@@ -71,7 +71,7 @@ def upgrade() -> None:
     op.create_index('ix_symptoms_recorded_at', 'symptoms', ['recorded_at'])
     op.create_index('ix_symptoms_child_recorded', 'symptoms', ['child_id', 'recorded_at'])
     op.create_index('ix_symptoms_type_recorded', 'symptoms', ['symptom_type', 'recorded_at'])
-    
+
     # Assessments table
     op.create_table(
         'assessments',
@@ -100,7 +100,7 @@ def upgrade() -> None:
     op.create_index('ix_assessments_created_at', 'assessments', ['created_at'])
     op.create_index('ix_assessments_child_created', 'assessments', ['child_id', 'created_at'])
     op.create_index('ix_assessments_risk_created', 'assessments', ['risk_level', 'created_at'])
-    
+
     # Audit logs table
     op.create_table(
         'audit_logs',
@@ -123,7 +123,7 @@ def upgrade() -> None:
     op.create_index('ix_audit_user_timestamp', 'audit_logs', ['user_id', 'timestamp'])
     op.create_index('ix_audit_action_timestamp', 'audit_logs', ['action', 'timestamp'])
     op.create_index('ix_audit_resource', 'audit_logs', ['resource_type', 'resource_id'])
-    
+
     # Refresh tokens table
     op.create_table(
         'refresh_tokens',
@@ -140,7 +140,7 @@ def upgrade() -> None:
     op.create_index('ix_refresh_tokens_user_id', 'refresh_tokens', ['user_id'])
     op.create_index('ix_refresh_tokens_token_hash', 'refresh_tokens', ['token_hash'])
     op.create_index('ix_refresh_tokens_user_expires', 'refresh_tokens', ['user_id', 'expires_at'])
-    
+
     # Environment data table
     op.create_table(
         'environment_data',
@@ -169,7 +169,7 @@ def downgrade() -> None:
     op.drop_table('symptoms')
     op.drop_table('children')
     op.drop_table('users')
-    
+
     # Drop enums
     op.execute("DROP TYPE IF EXISTS gender")
     op.execute("DROP TYPE IF EXISTS symptom_severity")

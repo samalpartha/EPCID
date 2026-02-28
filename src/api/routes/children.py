@@ -56,7 +56,7 @@ async def create_child(
     """
     child_id = f"child-{uuid4().hex[:8]}"
     now = datetime.now(__import__("datetime").timezone.utc)
-    
+
     child_data = {
         "id": child_id,
         "user_id": current_user["id"],
@@ -70,9 +70,9 @@ async def create_child(
         "created_at": now,
         "updated_at": now,
     }
-    
+
     fake_children_db[child_id] = child_data
-    
+
     return ChildResponse(**child_data)
 
 
@@ -91,11 +91,11 @@ async def list_children(
         for child in fake_children_db.values()
         if child["user_id"] == current_user["id"]
     ]
-    
+
     # Update ages
     for child in user_children:
         child.age_months = calculate_age_months(child.date_of_birth)
-    
+
     return user_children
 
 
@@ -111,22 +111,22 @@ async def get_child(
 ):
     """Get a specific child by ID."""
     child = fake_children_db.get(child_id)
-    
+
     if not child:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Child not found",
         )
-    
+
     if child["user_id"] != current_user["id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
         )
-    
+
     # Update age
     child["age_months"] = calculate_age_months(child["date_of_birth"])
-    
+
     return ChildResponse(**child)
 
 
@@ -143,29 +143,29 @@ async def update_child(
 ):
     """Update a child's profile."""
     child = fake_children_db.get(child_id)
-    
+
     if not child:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Child not found",
         )
-    
+
     if child["user_id"] != current_user["id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
         )
-    
+
     # Update fields
     update_data = update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         child[key] = value
-    
+
     child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
     child["age_months"] = calculate_age_months(child["date_of_birth"])
-    
+
     fake_children_db[child_id] = child
-    
+
     return ChildResponse(**child)
 
 
@@ -181,21 +181,21 @@ async def delete_child(
 ):
     """Delete a child profile."""
     child = fake_children_db.get(child_id)
-    
+
     if not child:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Child not found",
         )
-    
+
     if child["user_id"] != current_user["id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
         )
-    
+
     del fake_children_db[child_id]
-    
+
     return None
 
 
@@ -212,14 +212,14 @@ async def add_condition(
 ):
     """Add a medical condition."""
     child = fake_children_db.get(child_id)
-    
+
     if not child or child["user_id"] != current_user["id"]:
         raise HTTPException(status_code=404, detail="Child not found")
-    
+
     if condition not in child["medical_conditions"]:
         child["medical_conditions"].append(condition)
         child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
-    
+
     child["age_months"] = calculate_age_months(child["date_of_birth"])
     return ChildResponse(**child)
 
@@ -236,14 +236,14 @@ async def remove_condition(
 ):
     """Remove a medical condition."""
     child = fake_children_db.get(child_id)
-    
+
     if not child or child["user_id"] != current_user["id"]:
         raise HTTPException(status_code=404, detail="Child not found")
-    
+
     if condition in child["medical_conditions"]:
         child["medical_conditions"].remove(condition)
         child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
-    
+
     child["age_months"] = calculate_age_months(child["date_of_birth"])
     return ChildResponse(**child)
 
@@ -260,14 +260,14 @@ async def add_allergy(
 ):
     """Add an allergy."""
     child = fake_children_db.get(child_id)
-    
+
     if not child or child["user_id"] != current_user["id"]:
         raise HTTPException(status_code=404, detail="Child not found")
-    
+
     if allergy not in child["allergies"]:
         child["allergies"].append(allergy)
         child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
-    
+
     child["age_months"] = calculate_age_months(child["date_of_birth"])
     return ChildResponse(**child)
 
@@ -284,13 +284,13 @@ async def add_medication(
 ):
     """Add a medication."""
     child = fake_children_db.get(child_id)
-    
+
     if not child or child["user_id"] != current_user["id"]:
         raise HTTPException(status_code=404, detail="Child not found")
-    
+
     if medication not in child["medications"]:
         child["medications"].append(medication)
         child["updated_at"] = datetime.now(__import__("datetime").timezone.utc)
-    
+
     child["age_months"] = calculate_age_months(child["date_of_birth"])
     return ChildResponse(**child)

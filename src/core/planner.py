@@ -73,17 +73,17 @@ class Task:
     completed_at: Optional[datetime] = None
     error_message: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def can_execute(self, completed_tasks: Set[str]) -> bool:
         """Check if all dependencies are satisfied."""
         return all(dep in completed_tasks for dep in self.dependencies)
-    
+
     def duration(self) -> Optional[timedelta]:
         """Calculate task execution duration."""
         if self.started_at and self.completed_at:
             return self.completed_at - self.started_at
         return None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -119,7 +119,7 @@ class Goal:
     priority: TaskPriority = TaskPriority.MEDIUM
     created_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -149,12 +149,12 @@ class Plan:
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     @property
     def completed_tasks(self) -> Set[str]:
         """Get IDs of completed tasks."""
         return {t.id for t in self.tasks if t.status == TaskStatus.COMPLETED}
-    
+
     @property
     def pending_tasks(self) -> List[Task]:
         """Get tasks that are ready to execute."""
@@ -162,7 +162,7 @@ class Plan:
             t for t in self.tasks
             if t.status == TaskStatus.PENDING and t.can_execute(self.completed_tasks)
         ]
-    
+
     @property
     def progress(self) -> float:
         """Calculate plan completion progress (0-1)."""
@@ -170,7 +170,7 @@ class Plan:
             return 1.0
         completed = sum(1 for t in self.tasks if t.status == TaskStatus.COMPLETED)
         return completed / len(self.tasks)
-    
+
     @property
     def is_complete(self) -> bool:
         """Check if all tasks are completed."""
@@ -178,7 +178,7 @@ class Plan:
             t.status in [TaskStatus.COMPLETED, TaskStatus.SKIPPED]
             for t in self.tasks
         )
-    
+
     @property
     def has_failed(self) -> bool:
         """Check if any critical task has failed."""
@@ -186,14 +186,14 @@ class Plan:
             t.status == TaskStatus.FAILED and t.priority == TaskPriority.CRITICAL
             for t in self.tasks
         )
-    
+
     def get_next_tasks(self, max_parallel: int = 3) -> List[Task]:
         """Get the next tasks to execute, respecting dependencies and parallelism."""
         ready = self.pending_tasks
         # Sort by priority
         ready.sort(key=lambda t: t.priority.value)
         return ready[:max_parallel]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -215,7 +215,7 @@ class Planner:
     Uses domain knowledge to create safe, efficient execution plans
     for clinical support workflows.
     """
-    
+
     def __init__(
         self,
         max_tasks_per_plan: int = 20,
@@ -225,43 +225,43 @@ class Planner:
         self.max_tasks_per_plan = max_tasks_per_plan
         self.default_timeout = default_timeout
         self.enable_safety_checks = enable_safety_checks
-        
+
         # Task templates for common goals
         self._task_templates = self._initialize_templates()
-        
+
         logger.info(f"Initialized Planner: max_tasks={max_tasks_per_plan}")
-    
+
     def create_plan(self, goal: Goal) -> Plan:
         """Create an execution plan for a goal."""
         logger.info(f"Creating plan for goal: {goal.goal_type.value}")
-        
+
         # Decompose goal into tasks
         tasks = self._decompose_goal(goal)
-        
+
         # Add safety checks if enabled
         if self.enable_safety_checks:
             tasks = self._add_safety_tasks(tasks, goal)
-        
+
         # Order tasks by dependencies and priority
         tasks = self._order_tasks(tasks)
-        
+
         # Validate the plan
         self._validate_plan(tasks)
-        
+
         plan = Plan(
             id=str(uuid.uuid4())[:8],
             goal=goal,
             tasks=tasks,
         )
-        
+
         logger.info(f"Created plan {plan.id} with {len(tasks)} tasks")
         return plan
-    
+
     def _decompose_goal(self, goal: Goal) -> List[Task]:
         """Decompose a goal into individual tasks."""
         templates = self._task_templates.get(goal.goal_type, [])
         tasks = []
-        
+
         for i, template in enumerate(templates):
             task = Task(
                 id=f"{goal.id}-{i:02d}",
@@ -275,13 +275,13 @@ class Planner:
                 metadata={"goal_id": goal.id},
             )
             tasks.append(task)
-        
+
         return tasks
-    
+
     def _add_safety_tasks(self, tasks: List[Task], goal: Goal) -> List[Task]:
         """Add safety validation tasks to the plan."""
         safety_tasks = []
-        
+
         # Add input validation task at the beginning
         validation_task = Task(
             id=f"{goal.id}-safety-00",
@@ -294,13 +294,13 @@ class Planner:
             input_data=dict(goal.context),
         )
         safety_tasks.append(validation_task)
-        
+
         # Update dependencies of first task to depend on validation
         if tasks:
             for task in tasks:
                 if not task.dependencies:
                     task.dependencies.append(validation_task.id)
-        
+
         # Add audit task at the end
         audit_task = Task(
             id=f"{goal.id}-safety-99",
@@ -311,25 +311,25 @@ class Planner:
             dependencies=[t.id for t in tasks],
             timeout_seconds=5,
         )
-        
+
         return safety_tasks + tasks + [audit_task]
-    
+
     def _order_tasks(self, tasks: List[Task]) -> List[Task]:
         """Order tasks by dependencies and priority using topological sort."""
         # Build dependency graph
         task_map = {t.id: t for t in tasks}
         in_degree = {t.id: len(t.dependencies) for t in tasks}
-        
+
         # Find tasks with no dependencies
         queue = [t for t in tasks if in_degree[t.id] == 0]
         queue.sort(key=lambda t: t.priority.value)
-        
+
         ordered = []
         while queue:
             # Get highest priority task
             task = queue.pop(0)
             ordered.append(task)
-            
+
             # Update dependencies
             for other_task in tasks:
                 if task.id in other_task.dependencies:
@@ -337,30 +337,30 @@ class Planner:
                     if in_degree[other_task.id] == 0:
                         queue.append(other_task)
                         queue.sort(key=lambda t: t.priority.value)
-        
+
         # Check for cycles
         if len(ordered) != len(tasks):
             logger.error("Dependency cycle detected in task plan")
             raise ValueError("Task dependencies contain a cycle")
-        
+
         return ordered
-    
+
     def _validate_plan(self, tasks: List[Task]) -> None:
         """Validate that the plan is executable."""
         if len(tasks) > self.max_tasks_per_plan:
             raise ValueError(f"Plan exceeds maximum tasks: {len(tasks)} > {self.max_tasks_per_plan}")
-        
+
         # Check all dependencies reference valid tasks
         task_ids = {t.id for t in tasks}
         for task in tasks:
             for dep in task.dependencies:
                 if dep not in task_ids:
                     raise ValueError(f"Task {task.id} has invalid dependency: {dep}")
-    
+
     def replan(self, plan: Plan, failed_task: Task) -> Plan:
         """Create a recovery plan after task failure."""
         logger.info(f"Replanning after task {failed_task.id} failed")
-        
+
         # Check if we can retry the failed task
         if failed_task.retries < failed_task.max_retries:
             failed_task.retries += 1
@@ -368,13 +368,13 @@ class Planner:
             failed_task.error_message = None
             logger.info(f"Retrying task {failed_task.id} (attempt {failed_task.retries})")
             return plan
-        
+
         # If critical task failed, mark plan as failed
         if failed_task.priority == TaskPriority.CRITICAL:
             plan.status = TaskStatus.FAILED
             logger.error(f"Critical task {failed_task.id} failed, marking plan as failed")
             return plan
-        
+
         # Skip non-critical failed task and dependent tasks
         failed_task.status = TaskStatus.SKIPPED
         for task in plan.tasks:
@@ -382,9 +382,9 @@ class Planner:
                 if task.priority != TaskPriority.CRITICAL:
                     task.status = TaskStatus.SKIPPED
                     logger.info(f"Skipping task {task.id} due to dependency failure")
-        
+
         return plan
-    
+
     def _initialize_templates(self) -> Dict[GoalType, List[Dict[str, Any]]]:
         """Initialize task templates for common goals."""
         return {
@@ -621,7 +621,7 @@ class Planner:
                 },
             ],
         }
-    
+
     def estimate_duration(self, plan: Plan) -> timedelta:
         """Estimate total plan duration."""
         # Simple estimate: sum of timeouts for non-parallel tasks
@@ -629,42 +629,42 @@ class Planner:
         critical_path = self._find_critical_path(plan)
         total_seconds = sum(t.timeout_seconds for t in critical_path)
         return timedelta(seconds=total_seconds)
-    
+
     def _find_critical_path(self, plan: Plan) -> List[Task]:
         """Find the critical path through the task graph."""
         # Simplified: just return tasks with most dependencies
         task_map = {t.id: t for t in plan.tasks}
-        
+
         # Calculate longest path to each task
         longest_path: Dict[str, List[Task]] = {}
-        
+
         def get_longest_path(task_id: str) -> List[Task]:
             if task_id in longest_path:
                 return longest_path[task_id]
-            
+
             task = task_map.get(task_id)
             if not task:
                 return []
-            
+
             if not task.dependencies:
                 longest_path[task_id] = [task]
                 return [task]
-            
+
             # Find longest path among dependencies
             max_path: List[Task] = []
             for dep_id in task.dependencies:
                 dep_path = get_longest_path(dep_id)
                 if len(dep_path) > len(max_path):
                     max_path = dep_path
-            
+
             longest_path[task_id] = max_path + [task]
             return longest_path[task_id]
-        
+
         # Find task with longest path
         max_path: List[Task] = []
         for task in plan.tasks:
             path = get_longest_path(task.id)
             if len(path) > len(max_path):
                 max_path = path
-        
+
         return max_path

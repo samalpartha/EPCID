@@ -44,19 +44,19 @@ class AgentConfig:
     timeout_seconds: int = 30
     max_retries: int = 3
     require_explainability: bool = True
-    
+
     # Memory settings
     use_short_term_memory: bool = True
     use_episodic_memory: bool = False
     use_semantic_memory: bool = False
-    
+
     # Reasoning settings
     enable_reasoning: bool = True
     reasoning_strategy: str = "chain_of_thought"
-    
+
     # Custom settings
     custom_config: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -82,36 +82,36 @@ class AgentResponse:
     agent_name: str
     request_id: str
     status: AgentStatus
-    
+
     # Output data
     data: Dict[str, Any] = field(default_factory=dict)
-    
+
     # Explainability
     explanation: Optional[str] = None
     reasoning_chain: Optional[ReasoningChain] = None
     evidence: List[str] = field(default_factory=list)
-    
+
     # Confidence and uncertainty
     confidence: float = 0.0
     uncertainty_factors: List[str] = field(default_factory=list)
-    
+
     # Warnings and errors
     warnings: List[str] = field(default_factory=list)
     error_message: Optional[str] = None
-    
+
     # Timing
     started_at: datetime = field(default_factory=lambda: datetime.now(__import__("datetime").timezone.utc))
     completed_at: Optional[datetime] = None
     duration_ms: Optional[float] = None
-    
+
     # Metadata
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     @property
     def success(self) -> bool:
         """Check if the agent completed successfully."""
         return self.status == AgentStatus.COMPLETED
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -129,7 +129,7 @@ class AgentResponse:
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
             "duration_ms": self.duration_ms,
         }
-    
+
     def finalize(self) -> "AgentResponse":
         """Mark the response as complete and calculate duration."""
         self.completed_at = datetime.now(__import__("datetime").timezone.utc)
@@ -153,7 +153,7 @@ class BaseAgent(ABC):
     - Integrates with the memory and reasoning systems
     - Logs all actions for audit
     """
-    
+
     def __init__(
         self,
         config: AgentConfig,
@@ -163,22 +163,22 @@ class BaseAgent(ABC):
         self.config = config
         self.memory = memory or Memory()
         self.reasoning_engine = reasoning_engine or ReasoningEngine()
-        
+
         self._status = AgentStatus.IDLE
         self._logger = logging.getLogger(f"epcid.agents.{config.name}")
-        
+
         self._logger.info(f"Initialized {config.name} agent")
-    
+
     @property
     def name(self) -> str:
         """Get agent name."""
         return self.config.name
-    
+
     @property
     def status(self) -> AgentStatus:
         """Get current agent status."""
         return self._status
-    
+
     @abstractmethod
     async def process(
         self,
@@ -198,7 +198,7 @@ class BaseAgent(ABC):
             AgentResponse with results and explanation
         """
         pass
-    
+
     async def run(
         self,
         input_data: Dict[str, Any],
@@ -215,63 +215,63 @@ class BaseAgent(ABC):
             request_id=request_id,
             status=AgentStatus.PROCESSING,
         )
-        
+
         self._status = AgentStatus.PROCESSING
         self._logger.info(f"Starting request {request_id}")
-        
+
         try:
             # Check if agent is enabled
             if not self.config.enabled:
                 response.status = AgentStatus.FAILED
                 response.error_message = f"Agent {self.name} is disabled"
                 return response.finalize()
-            
+
             # Load context from memory if enabled
             if self.config.use_short_term_memory:
                 memory_context = self._load_memory_context(input_data)
                 context = {**(context or {}), **memory_context}
-            
+
             # Run with timeout
             result = await asyncio.wait_for(
                 self.process(input_data, context),
                 timeout=self.config.timeout_seconds,
             )
-            
+
             # Store result in memory
             if self.config.use_short_term_memory:
                 self._store_in_memory(result)
-            
+
             response = result
             response.status = AgentStatus.COMPLETED
             self._status = AgentStatus.COMPLETED
-            
+
         except asyncio.TimeoutError:
             response.status = AgentStatus.TIMEOUT
             response.error_message = f"Agent timed out after {self.config.timeout_seconds}s"
             self._status = AgentStatus.TIMEOUT
             self._logger.error(f"Request {request_id} timed out")
-            
+
         except Exception as e:
             response.status = AgentStatus.FAILED
             response.error_message = str(e)
             self._status = AgentStatus.FAILED
             self._logger.error(f"Request {request_id} failed: {e}", exc_info=True)
-        
+
         finally:
             response = response.finalize()
             self._log_response(response)
-        
+
         return response
-    
+
     def _load_memory_context(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Load relevant context from memory."""
         context = {}
-        
+
         # Get recent observations
         recent = self.memory.short_term.get_recent(10)
         if recent:
             context["recent_observations"] = [item.content for item in recent]
-        
+
         # Get child-specific context if child_id is present
         child_id = input_data.get("child_id")
         if child_id and self.config.use_episodic_memory:
@@ -281,9 +281,9 @@ class BaseAgent(ABC):
                     {"type": ep.event_type, "outcome": ep.outcome}
                     for ep in episodes
                 ]
-        
+
         return context
-    
+
     def _store_in_memory(self, response: AgentResponse) -> None:
         """Store agent response in memory."""
         self.memory.store(
@@ -299,7 +299,7 @@ class BaseAgent(ABC):
             },
             importance=response.confidence,
         )
-    
+
     def _log_response(self, response: AgentResponse) -> None:
         """Log the agent response for audit."""
         level = logging.INFO if response.success else logging.WARNING
@@ -310,7 +310,7 @@ class BaseAgent(ABC):
             f"confidence={response.confidence:.2f}, "
             f"duration={response.duration_ms:.0f}ms"
         )
-    
+
     def reason(
         self,
         context: Dict[str, Any],
@@ -329,9 +329,9 @@ class BaseAgent(ABC):
                 supporting_evidence=[],
                 contradicting_evidence=[],
             )
-        
+
         return self.reasoning_engine.reason(context, goal)
-    
+
     def create_response(
         self,
         request_id: str,
@@ -350,7 +350,7 @@ class BaseAgent(ABC):
             explanation=explanation,
             **kwargs,
         )
-    
+
     def validate_input(
         self,
         input_data: Dict[str, Any],
@@ -359,7 +359,7 @@ class BaseAgent(ABC):
         """Validate that required fields are present in input."""
         missing = [f for f in required_fields if f not in input_data]
         return len(missing) == 0, missing
-    
+
     def get_config_value(self, key: str, default: Any = None) -> Any:
         """Get a value from custom config."""
         return self.config.custom_config.get(key, default)

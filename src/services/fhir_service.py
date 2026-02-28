@@ -32,7 +32,7 @@ class FHIRPatient:
     birth_date: Optional[str]
     gender: Optional[str]
     age_months: Optional[int]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -53,7 +53,7 @@ class FHIRObservation:
     unit: Optional[str]
     effective_date: Optional[str]
     status: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -73,7 +73,7 @@ class FHIRCondition:
     display: str
     clinical_status: str
     onset_date: Optional[str]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -93,7 +93,7 @@ class FHIRMedication:
     dosage: Optional[str]
     status: str
     authored_on: Optional[str]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -111,7 +111,7 @@ class FHIRImmunization:
     vaccine_display: str
     occurrence_date: Optional[str]
     status: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -128,10 +128,10 @@ class FHIRService:
     Provides access to patient health records with proper
     OAuth2 authentication and scope handling.
     """
-    
+
     # SMART Health IT Sandbox
     DEFAULT_SANDBOX_URL = "https://launch.smarthealthit.org/v/r4/fhir"
-    
+
     # Common LOINC codes for vital signs
     VITAL_SIGN_CODES = {
         "8310-5": "body_temperature",
@@ -144,7 +144,7 @@ class FHIRService:
         "8480-6": "systolic_bp",
         "8462-4": "diastolic_bp",
     }
-    
+
     def __init__(
         self,
         base_url: Optional[str] = None,
@@ -158,9 +158,9 @@ class FHIRService:
         self.timeout_seconds = timeout_seconds
         self._access_token: Optional[str] = None
         self._token_expiry: Optional[datetime] = None
-        
+
         logger.info(f"Initialized FHIR service: {self.base_url}")
-    
+
     async def get_patient(self, patient_id: str) -> Optional[FHIRPatient]:
         """
         Get patient demographics.
@@ -174,16 +174,16 @@ class FHIRService:
         try:
             url = f"{self.base_url}/Patient/{patient_id}"
             response = await self._make_request(url)
-            
+
             if response:
                 return self._parse_patient(response)
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Failed to get patient: {e}")
             return None
-    
+
     async def get_observations(
         self,
         patient_id: str,
@@ -211,19 +211,19 @@ class FHIRService:
                 "_count": limit,
                 "_sort": "-date",
             }
-            
+
             if category:
                 params["category"] = category
-            
+
             if code:
                 params["code"] = code
-            
+
             if date_from:
                 params["date"] = f"ge{date_from}"
-            
+
             url = f"{self.base_url}/Observation?{urlencode(params)}"
             response = await self._make_request(url)
-            
+
             observations = []
             if response and response.get("entry"):
                 for entry in response["entry"]:
@@ -231,13 +231,13 @@ class FHIRService:
                     obs = self._parse_observation(resource)
                     if obs:
                         observations.append(obs)
-            
+
             return observations
-            
+
         except Exception as e:
             logger.error(f"Failed to get observations: {e}")
             return []
-    
+
     async def get_vital_signs(
         self,
         patient_id: str,
@@ -258,7 +258,7 @@ class FHIRService:
             category="vital-signs",
             date_from=date_from,
         )
-        
+
         vitals = {}
         for obs in observations:
             vital_name = self.VITAL_SIGN_CODES.get(obs.code)
@@ -268,9 +268,9 @@ class FHIRService:
                     "unit": obs.unit,
                     "date": obs.effective_date,
                 }
-        
+
         return vitals
-    
+
     async def get_conditions(
         self,
         patient_id: str,
@@ -291,13 +291,13 @@ class FHIRService:
                 "patient": patient_id,
                 "_count": 50,
             }
-            
+
             if clinical_status:
                 params["clinical-status"] = clinical_status
-            
+
             url = f"{self.base_url}/Condition?{urlencode(params)}"
             response = await self._make_request(url)
-            
+
             conditions = []
             if response and response.get("entry"):
                 for entry in response["entry"]:
@@ -305,13 +305,13 @@ class FHIRService:
                     cond = self._parse_condition(resource)
                     if cond:
                         conditions.append(cond)
-            
+
             return conditions
-            
+
         except Exception as e:
             logger.error(f"Failed to get conditions: {e}")
             return []
-    
+
     async def get_medications(
         self,
         patient_id: str,
@@ -332,13 +332,13 @@ class FHIRService:
                 "patient": patient_id,
                 "_count": 50,
             }
-            
+
             if status:
                 params["status"] = status
-            
+
             url = f"{self.base_url}/MedicationRequest?{urlencode(params)}"
             response = await self._make_request(url)
-            
+
             medications = []
             if response and response.get("entry"):
                 for entry in response["entry"]:
@@ -346,13 +346,13 @@ class FHIRService:
                     med = self._parse_medication(resource)
                     if med:
                         medications.append(med)
-            
+
             return medications
-            
+
         except Exception as e:
             logger.error(f"Failed to get medications: {e}")
             return []
-    
+
     async def get_immunizations(
         self,
         patient_id: str,
@@ -371,10 +371,10 @@ class FHIRService:
                 "patient": patient_id,
                 "_count": 100,
             }
-            
+
             url = f"{self.base_url}/Immunization?{urlencode(params)}"
             response = await self._make_request(url)
-            
+
             immunizations = []
             if response and response.get("entry"):
                 for entry in response["entry"]:
@@ -382,13 +382,13 @@ class FHIRService:
                     imm = self._parse_immunization(resource)
                     if imm:
                         immunizations.append(imm)
-            
+
             return immunizations
-            
+
         except Exception as e:
             logger.error(f"Failed to get immunizations: {e}")
             return []
-    
+
     async def get_comprehensive_record(
         self,
         patient_id: str,
@@ -408,7 +408,7 @@ class FHIRService:
         conditions_task = self.get_conditions(patient_id)
         medications_task = self.get_medications(patient_id)
         immunizations_task = self.get_immunizations(patient_id)
-        
+
         patient, vitals, conditions, medications, immunizations = await asyncio.gather(
             patient_task,
             vitals_task,
@@ -416,7 +416,7 @@ class FHIRService:
             medications_task,
             immunizations_task,
         )
-        
+
         return {
             "patient": patient.to_dict() if patient else None,
             "vitals": vitals,
@@ -425,7 +425,7 @@ class FHIRService:
             "immunizations": [i.to_dict() for i in immunizations],
             "retrieved_at": datetime.now(__import__("datetime").timezone.utc).isoformat(),
         }
-    
+
     async def _make_request(self, url: str) -> Optional[Dict[str, Any]]:
         """Make authenticated request to FHIR server."""
         # In production, would use aiohttp with OAuth2:
@@ -434,10 +434,10 @@ class FHIRService:
         #     async with session.get(url, headers=headers, timeout=self.timeout_seconds) as response:
         #         if response.status == 200:
         #             return await response.json()
-        
+
         await asyncio.sleep(0.1)
         return None
-    
+
     def _parse_patient(self, resource: Dict[str, Any]) -> FHIRPatient:
         """Parse Patient resource."""
         # Extract name
@@ -446,7 +446,7 @@ class FHIRService:
         given = " ".join(name_parts.get("given", []))
         family = name_parts.get("family", "")
         full_name = f"{given} {family}".strip()
-        
+
         # Calculate age
         birth_date = resource.get("birthDate")
         age_months = None
@@ -457,7 +457,7 @@ class FHIRService:
                 age_months = age_days // 30
             except:
                 pass
-        
+
         return FHIRPatient(
             id=resource.get("id", ""),
             name=full_name or "Unknown",
@@ -465,17 +465,17 @@ class FHIRService:
             gender=resource.get("gender"),
             age_months=age_months,
         )
-    
+
     def _parse_observation(self, resource: Dict[str, Any]) -> Optional[FHIRObservation]:
         """Parse Observation resource."""
         code_concept = resource.get("code", {})
         codings = code_concept.get("coding", [{}])
         coding = codings[0] if codings else {}
-        
+
         # Extract value
         value = None
         unit = None
-        
+
         if "valueQuantity" in resource:
             value = resource["valueQuantity"].get("value")
             unit = resource["valueQuantity"].get("unit")
@@ -483,7 +483,7 @@ class FHIRService:
             value = resource["valueString"]
         elif "valueCodeableConcept" in resource:
             value = resource["valueCodeableConcept"].get("text")
-        
+
         return FHIRObservation(
             id=resource.get("id", ""),
             code=coding.get("code", ""),
@@ -493,17 +493,17 @@ class FHIRService:
             effective_date=resource.get("effectiveDateTime"),
             status=resource.get("status", ""),
         )
-    
+
     def _parse_condition(self, resource: Dict[str, Any]) -> Optional[FHIRCondition]:
         """Parse Condition resource."""
         code_concept = resource.get("code", {})
         codings = code_concept.get("coding", [{}])
         coding = codings[0] if codings else {}
-        
+
         clinical_status = resource.get("clinicalStatus", {})
         status_codings = clinical_status.get("coding", [{}])
         status = status_codings[0].get("code", "") if status_codings else ""
-        
+
         return FHIRCondition(
             id=resource.get("id", ""),
             code=coding.get("code", ""),
@@ -511,18 +511,18 @@ class FHIRService:
             clinical_status=status,
             onset_date=resource.get("onsetDateTime"),
         )
-    
+
     def _parse_medication(self, resource: Dict[str, Any]) -> Optional[FHIRMedication]:
         """Parse MedicationRequest resource."""
         # Medication can be a reference or codeable concept
         medication = resource.get("medicationCodeableConcept", {})
         codings = medication.get("coding", [{}])
         coding = codings[0] if codings else {}
-        
+
         # Extract dosage
         dosage_instructions = resource.get("dosageInstruction", [{}])
         dosage = dosage_instructions[0].get("text") if dosage_instructions else None
-        
+
         return FHIRMedication(
             id=resource.get("id", ""),
             medication_code=coding.get("code", ""),
@@ -531,13 +531,13 @@ class FHIRService:
             status=resource.get("status", ""),
             authored_on=resource.get("authoredOn"),
         )
-    
+
     def _parse_immunization(self, resource: Dict[str, Any]) -> Optional[FHIRImmunization]:
         """Parse Immunization resource."""
         vaccine = resource.get("vaccineCode", {})
         codings = vaccine.get("coding", [{}])
         coding = codings[0] if codings else {}
-        
+
         return FHIRImmunization(
             id=resource.get("id", ""),
             vaccine_code=coding.get("code", ""),
