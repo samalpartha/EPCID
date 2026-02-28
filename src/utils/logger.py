@@ -79,7 +79,7 @@ def setup_logging(
     Args:
         level: Log level (DEBUG, INFO, WARNING, ERROR)
         json_format: Use JSON formatting
-        log_file: Optional file path for logging
+        log_file: str | None file path for logging
 
     Returns:
         Root logger
@@ -191,9 +191,9 @@ class AuditLogger:
             event_type: Type of event (e.g., "risk_assessment")
             action: Action performed
             outcome: Outcome of the action
-            child_id: Optional child identifier
-            user_id: Optional user identifier
-            session_id: Optional session identifier
+            child_id: str | None child identifier
+            user_id: str | None user identifier
+            session_id: str | None session identifier
             details: Additional event details
         """
         extra = {

@@ -126,7 +126,7 @@ class GeoExposureAgent(BaseAgent):
 
         Args:
             input_data: Contains environmental data and symptoms
-            context: Optional context with location or history
+            context: str | None context with location or history
 
         Returns:
             AgentResponse with exposure analysis and recommendations

@@ -140,7 +140,7 @@ class InputValidator:
 
         Args:
             data: Input data to validate
-            context: Optional context (e.g., age for range validation)
+            context: str | None context (e.g., age for range validation)
 
         Returns:
             List of ValidationResult objects
@@ -461,7 +461,7 @@ def validate_or_raise(
     Args:
         validator: InputValidator instance
         data: Data to validate
-        context: Optional context
+        context: str | None context
 
     Returns:
         Validated data

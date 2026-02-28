@@ -197,7 +197,7 @@ class BaseAgent(ABC):
 
         Args:
             input_data: The input data to process
-            context: Optional context from previous agents or memory
+            context: str | None context from previous agents or memory
 
         Returns:
             AgentResponse with results and explanation

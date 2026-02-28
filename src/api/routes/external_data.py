@@ -130,7 +130,7 @@ async def get_disease_activity(
     Get current disease activity for a state.
 
     - **state**: Two-letter state code (e.g., "CA", "NY")
-    - **diseases**: Optional filter for specific diseases (influenza, rsv, covid, strep)
+    - **diseases**: str | None filter for specific diseases (influenza, rsv, covid, strep)
     """
     from ...services.cdc_service import CDCService, DiseaseType
 

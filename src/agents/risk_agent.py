@@ -154,7 +154,7 @@ class RiskAgent(BaseAgent):
 
         Args:
             input_data: Normalized and phenotyped data
-            context: Optional historical context
+            context: str | None historical context
 
         Returns:
             AgentResponse with risk tier and explanation

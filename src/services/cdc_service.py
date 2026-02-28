@@ -175,7 +175,7 @@ class CDCService:
 
         Args:
             state: Two-letter state code
-            zip_code: Optional zip code for local alerts
+            zip_code: str | None zip code for local alerts
 
         Returns:
             List of alert dictionaries

@@ -269,7 +269,7 @@ class GuidelineRAGAgent(BaseAgent):
 
         Args:
             input_data: Contains query or symptoms to look up
-            context: Optional context including risk tier
+            context: str | None context including risk tier
 
         Returns:
             AgentResponse with guidelines and citations

@@ -184,7 +184,7 @@ class EscalationAgent(BaseAgent):
 
         Args:
             input_data: Contains risk assessment and patient data
-            context: Optional additional context
+            context: str | None additional context
 
         Returns:
             AgentResponse with escalation path and materials

@@ -112,7 +112,7 @@ async def register(request: RegisterRequest) -> TokenResponse:
     - **email**: Valid email address (must be unique)
     - **password**: Minimum 8 characters
     - **full_name**: User's full name
-    - **phone**: Optional phone number
+    - **phone**: str | None phone number
     """
     # Check if user exists
     if request.email in fake_users_db:

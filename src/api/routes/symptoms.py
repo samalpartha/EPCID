@@ -41,7 +41,7 @@ async def create_symptom(
     - **child_id**: ID of the child
     - **symptom_type**: Type of symptom (fever, cough, etc.)
     - **severity**: mild, moderate, or severe
-    - **measurements**: Optional measurements (temperature, etc.)
+    - **measurements**: str | None measurements (temperature, etc.)
     - **onset_time**: When the symptom started
     - **notes**: Additional notes
     """

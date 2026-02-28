@@ -195,7 +195,7 @@ class IngestionAgent(BaseAgent):
 
         Args:
             input_data: Raw input data with various types
-            context: Optional processing context
+            context: str | None processing context
 
         Returns:
             AgentResponse with normalized data

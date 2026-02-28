@@ -256,7 +256,7 @@ class MedlinePlusService:
 
         Args:
             lab_name: Name of the lab test
-            loinc_code: Optional LOINC code
+            loinc_code: str | None LOINC code
             language: Language for results
 
         Returns:

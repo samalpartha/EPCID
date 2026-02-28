@@ -182,7 +182,7 @@ class MedicationSafetyAgent(BaseAgent):
 
         Args:
             input_data: Contains medications and symptoms
-            context: Optional additional context
+            context: str | None additional context
 
         Returns:
             AgentResponse with medication safety information

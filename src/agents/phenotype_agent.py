@@ -112,7 +112,7 @@ class PhenotypeAgent(BaseAgent):
 
         Args:
             input_data: Normalized data from ingestion agent
-            context: Optional context with historical data
+            context: str | None context with historical data
 
         Returns:
             AgentResponse with computed phenotypes
