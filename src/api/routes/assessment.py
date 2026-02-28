@@ -106,8 +106,9 @@ async def run_assessment_pipeline(
                 }
             )
             environmental_context = env_res.data
-
         # Step 6: Generate escalation recommendations
+        _ = guidelines_content
+        _ = environmental_context
         escalation_res = await escalation_agent.process(
             {
                 "risk_level": risk_result.get("risk_level", "low"),
