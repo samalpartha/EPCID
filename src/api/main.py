@@ -10,6 +10,7 @@ Production-ready FastAPI server with:
 - OpenAPI documentation
 """
 
+import os
 import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
@@ -386,4 +387,6 @@ app.openapi = custom_openapi  # type: ignore[method-assign]
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8081)
+    host = os.getenv("API_HOST", "0.0.0.0")  # nosec B104
+    port = int(os.getenv("API_PORT", "8081"))
+    uvicorn.run(app, host=host, port=port)
