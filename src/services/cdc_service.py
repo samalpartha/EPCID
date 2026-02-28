@@ -374,7 +374,7 @@ class CDCService:
             disease=disease,
             region=self._state_to_region(state),
             state=state,
-            activity_level=cast(ActivityLevel, data['activity_level']),
+            activity_level=cast(ActivityLevel, data["activity_level"]),
             trend=data["trend"],
             week_number=current_week,
             year=datetime.now().year,

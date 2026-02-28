@@ -10,8 +10,9 @@ Implements token bucket algorithm with:
 
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware

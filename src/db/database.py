@@ -5,14 +5,13 @@ SQLAlchemy async database setup with connection pooling.
 """
 
 import os
-from collections.abc import AsyncGenerator
-from typing import Any, Generator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 # Database URL from environment
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/epcid.db")

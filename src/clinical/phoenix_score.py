@@ -23,8 +23,8 @@ References:
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-
 from typing import Any
+
 from .vital_signs import VitalSignNormalizer
 
 logger = logging.getLogger("epcid.clinical.phoenix")

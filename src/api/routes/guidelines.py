@@ -5,6 +5,7 @@ Clinical guidelines and health education endpoints.
 """
 
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends
 
@@ -22,9 +23,6 @@ router = APIRouter()
 
 # Initialize service
 medlineplus = MedlinePlusService()
-
-
-from typing import Any
 
 # Curated pediatric guidelines database
 PEDIATRIC_GUIDELINES: dict[str, dict[str, Any]] = {

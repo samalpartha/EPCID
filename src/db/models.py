@@ -6,7 +6,6 @@ SQLAlchemy ORM models for all database entities.
 
 import enum
 from datetime import datetime
-from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import (

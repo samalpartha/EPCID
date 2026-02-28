@@ -6,7 +6,6 @@ With Redis caching for improved performance.
 """
 
 from datetime import datetime
-
 from typing import Any, cast
 
 from fastapi import APIRouter, Depends, Query
@@ -125,7 +124,9 @@ async def get_air_quality(
             "category": get_aqi_category(aqi),
             "dominant_pollutant": data.pollutant if data else "pm25",
             "pollutants": {
-                "pm25": getattr(data, "value", 15.0) if data and data.pollutant == "PM2.5" else 15.0,
+                "pm25": (
+                    getattr(data, "value", 15.0) if data and data.pollutant == "PM2.5" else 15.0
+                ),
                 "pm10": 25.0,
                 "o3": 30.0,
                 "no2": 10.0,

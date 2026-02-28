@@ -9,6 +9,7 @@ JWT-based authentication endpoints:
 """
 
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -82,8 +83,6 @@ class PasswordResetRequest(BaseModel):
 
     email: EmailStr
 
-
-from typing import Any
 
 # Simulated user database (replace with real DB in production)
 fake_users_db: dict[str, dict[str, Any]] = {
@@ -345,6 +344,3 @@ async def request_password_reset(request: PasswordResetRequest) -> dict[str, str
     # In production, send email with reset link
     # Always return success to prevent email enumeration
     return {"message": "If this email exists, a reset link will be sent."}
-
-
-

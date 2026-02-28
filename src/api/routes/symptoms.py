@@ -5,6 +5,7 @@ Symptom logging and tracking endpoints.
 """
 
 from datetime import datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -18,9 +19,6 @@ from ...api.schemas import (
 )
 
 router = APIRouter()
-
-
-from typing import Any
 
 # Simulated database
 fake_symptoms_db: dict[str, dict[str, Any]] = {}

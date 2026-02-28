@@ -134,7 +134,7 @@ class RiskAgent(BaseAgent):
         self.pews_calculator: Any = None
         self.physical_exam_assessor: Any = None
         self.vital_normalizer: Any = None
-        
+
         if self.enable_clinical_scoring:
             self.phoenix_calculator = PhoenixScoreCalculator()
             self.pews_calculator = PEWSCalculator()
