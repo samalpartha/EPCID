@@ -7,7 +7,7 @@ common over-the-counter pediatric medications.
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -21,28 +21,28 @@ class MedicationInfo(BaseModel):
     """Information about a medication."""
     id: str
     name: str
-    brand_names: List[str]
-    uses: List[str]
-    dose_per_kg: Dict[str, float]
+    brand_names: list[str]
+    uses: list[str]
+    dose_per_kg: dict[str, float]
     max_daily_doses: int
     frequency: str
-    age_restrictions: Dict[str, str]
-    warnings: List[str]
-    formulations: List[Dict[str, Any]]
+    age_restrictions: dict[str, str]
+    warnings: list[str]
+    formulations: list[dict[str, Any]]
 
 
 class MedicationListItem(BaseModel):
     """Summary item for listing medications."""
     id: str
     name: str
-    brand_names: List[str]
-    uses: List[str]
+    brand_names: list[str]
+    uses: list[str]
     age_restriction: str
 
 
 class MedicationsResponse(BaseModel):
     """Response with list of available medications."""
-    medications: List[MedicationListItem]
+    medications: list[MedicationListItem]
     disclaimer: str
 
 
@@ -63,23 +63,23 @@ class DoseCalculationResponse(BaseModel):
     max_dose_mg: float
     recommended_dose_mg: float
 
-    liquid_amount_ml: Optional[float] = None
-    tablet_count: Optional[float] = None
+    liquid_amount_ml: float | None = None
+    tablet_count: float | None = None
 
     frequency: str
     max_daily_doses: int
-    warnings: List[str]
+    warnings: list[str]
 
     disclaimer: str
 
 
 # ============== Load Dosage Data ==============
 
-def load_dosage_data() -> Dict[str, Any]:
+def load_dosage_data() -> dict[str, Any]:
     """Load dosage data from JSON file."""
     try:
         data_path = Path(__file__).parent.parent.parent / "data" / "dosage_tables.json"
-        with open(data_path, "r") as f:
+        with open(data_path) as f:
             return json.load(f)
     except FileNotFoundError:
         return {"medications": {}, "disclaimer": "Always consult your healthcare provider."}
@@ -91,7 +91,7 @@ def load_dosage_data() -> Dict[str, Any]:
 async def list_medications():
     """
     List all available medications with dosing information.
-    
+
     Returns medication names, uses, and age restrictions.
     """
     data = load_dosage_data()
@@ -101,7 +101,7 @@ async def list_medications():
     for med_id, med in meds.items():
         age_restrictions = med.get("age_restrictions", {})
         restriction = age_restrictions.get(
-            "under_6_months", 
+            "under_6_months",
             age_restrictions.get("under_2_years", "Check with doctor")
         )
 
@@ -123,10 +123,10 @@ async def list_medications():
 async def get_medication_info(medication_id: str):
     """
     Get detailed information about a specific medication.
-    
+
     Args:
         medication_id: The medication identifier (e.g., 'acetaminophen', 'ibuprofen')
-        
+
     Returns:
         Complete medication information including formulations and warnings.
     """
@@ -164,10 +164,10 @@ async def get_medication_info(medication_id: str):
 async def calculate_dose(request: DoseCalculationRequest):
     """
     Calculate medication dose based on weight.
-    
+
     Args:
         request: Medication ID, weight in kg, and formulation selection
-        
+
     Returns:
         Calculated dose with liquid/tablet amounts and warnings.
     """
@@ -247,11 +247,11 @@ async def convert_weight(
 ):
     """
     Convert weight between pounds and kilograms.
-    
+
     Args:
         value: Weight value
         from_unit: Source unit ('lbs' or 'kg')
-        
+
     Returns:
         Converted weight value.
     """

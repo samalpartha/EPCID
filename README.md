@@ -64,7 +64,7 @@ graph TD
         Ext[FDA/CDC/Weather APIs]
     end
 
-    # Flows
+    %% Flows
     Web & Mobile --> WAF --> CDN --> Gateway
     Gateway --> Auth & Clinical & Symptom & Agents
     Auth & Clinical & Symptom & Agents <--> DB

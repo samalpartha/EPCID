@@ -6,10 +6,10 @@ JWT authentication and password hashing utilities.
 
 import os
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
-from jose import JWTError, jwt
 import bcrypt
+from jose import JWTError, jwt
 
 # Configuration
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "epcid-development-secret-key-change-in-production")
@@ -38,16 +38,16 @@ def get_password_hash(password: str) -> str:
 
 
 def create_access_token(
-    data: Dict[str, Any],
-    expires_delta: Optional[timedelta] = None,
+    data: dict[str, Any],
+    expires_delta: timedelta | None = None,
 ) -> str:
     """
     Create a JWT access token.
-    
+
     Args:
         data: Payload data to encode
         expires_delta: Optional custom expiration time
-        
+
     Returns:
         Encoded JWT token
     """
@@ -68,16 +68,16 @@ def create_access_token(
 
 
 def create_refresh_token(
-    data: Dict[str, Any],
-    expires_delta: Optional[timedelta] = None,
+    data: dict[str, Any],
+    expires_delta: timedelta | None = None,
 ) -> str:
     """
     Create a JWT refresh token.
-    
+
     Args:
         data: Payload data to encode
         expires_delta: Optional custom expiration time
-        
+
     Returns:
         Encoded JWT refresh token
     """
@@ -97,30 +97,30 @@ def create_refresh_token(
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def decode_token(token: str) -> Dict[str, Any]:
+def decode_token(token: str) -> dict[str, Any]:
     """
     Decode and validate a JWT token.
-    
+
     Args:
         token: JWT token string
-        
+
     Returns:
         Decoded payload
-        
+
     Raises:
         JWTError: If token is invalid or expired
     """
     return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
 
-def verify_token(token: str, token_type: str = "access") -> Optional[Dict[str, Any]]:
+def verify_token(token: str, token_type: str = "access") -> dict[str, Any] | None:
     """
     Verify a token and return the payload if valid.
-    
+
     Args:
         token: JWT token string
         token_type: Expected token type ("access" or "refresh")
-        
+
     Returns:
         Decoded payload if valid, None otherwise
     """

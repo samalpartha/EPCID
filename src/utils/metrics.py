@@ -9,14 +9,14 @@ Performance and clinical metrics collection:
 - Safety rule trigger rates
 """
 
+import logging
+import statistics
 import time
 from collections import defaultdict
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
-from contextlib import contextmanager
-import statistics
-import logging
+from typing import Any, Optional
 
 logger = logging.getLogger("epcid.utils.metrics")
 
@@ -26,7 +26,7 @@ class MetricValue:
     """A single metric value with timestamp."""
     value: float
     timestamp: datetime
-    labels: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
 
 
 class Timer:
@@ -35,8 +35,8 @@ class Timer:
     def __init__(self, name: str, collector: Optional["MetricsCollector"] = None):
         self.name = name
         self.collector = collector
-        self.start_time: Optional[float] = None
-        self.end_time: Optional[float] = None
+        self.start_time: float | None = None
+        self.end_time: float | None = None
 
     def __enter__(self) -> "Timer":
         self.start_time = time.perf_counter()
@@ -61,7 +61,7 @@ class Timer:
 class Counter:
     """Simple counter metric."""
 
-    def __init__(self, name: str, labels: Optional[Dict[str, str]] = None):
+    def __init__(self, name: str, labels: dict[str, str] | None = None):
         self.name = name
         self.labels = labels or {}
         self._count = 0
@@ -83,7 +83,7 @@ class Counter:
 class MetricsCollector:
     """
     Central metrics collection for EPCID.
-    
+
     Collects:
     - Latency histograms
     - Counters
@@ -99,14 +99,14 @@ class MetricsCollector:
         self.retention_minutes = retention_minutes
 
         # Metric storage
-        self._latencies: Dict[str, List[MetricValue]] = defaultdict(list)
-        self._counters: Dict[str, Counter] = {}
-        self._gauges: Dict[str, MetricValue] = {}
-        self._histograms: Dict[str, List[float]] = defaultdict(list)
+        self._latencies: dict[str, list[MetricValue]] = defaultdict(list)
+        self._counters: dict[str, Counter] = {}
+        self._gauges: dict[str, MetricValue] = {}
+        self._histograms: dict[str, list[float]] = defaultdict(list)
 
         # Risk assessment metrics
-        self._risk_assessments: List[Dict[str, Any]] = []
-        self._safety_triggers: List[Dict[str, Any]] = []
+        self._risk_assessments: list[dict[str, Any]] = []
+        self._safety_triggers: list[dict[str, Any]] = []
 
         logger.info("Initialized MetricsCollector")
 
@@ -114,7 +114,7 @@ class MetricsCollector:
         self,
         operation: str,
         latency_ms: float,
-        labels: Optional[Dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> None:
         """Record a latency observation."""
         self._latencies[operation].append(MetricValue(
@@ -125,7 +125,7 @@ class MetricsCollector:
         self._cleanup_old_metrics()
 
     @contextmanager
-    def time(self, operation: str, labels: Optional[Dict[str, str]] = None):
+    def time(self, operation: str, labels: dict[str, str] | None = None):
         """Context manager for timing operations."""
         start = time.perf_counter()
         try:
@@ -138,7 +138,7 @@ class MetricsCollector:
         self,
         name: str,
         amount: int = 1,
-        labels: Optional[Dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> None:
         """Increment a counter."""
         key = self._make_key(name, labels)
@@ -150,7 +150,7 @@ class MetricsCollector:
         self,
         name: str,
         value: float,
-        labels: Optional[Dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> None:
         """Set a gauge value."""
         key = self._make_key(name, labels)
@@ -176,7 +176,7 @@ class MetricsCollector:
         risk_tier: str,
         confidence: float,
         latency_ms: float,
-        triggered_rules: List[str],
+        triggered_rules: list[str],
     ) -> None:
         """Record a risk assessment for analysis."""
         self._risk_assessments.append({
@@ -214,7 +214,7 @@ class MetricsCollector:
     def get_latency_stats(
         self,
         operation: str,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Get latency statistics for an operation."""
         values = [m.value for m in self._latencies.get(operation, [])]
 
@@ -243,7 +243,7 @@ class MetricsCollector:
     def get_counter_value(
         self,
         name: str,
-        labels: Optional[Dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> int:
         """Get counter value."""
         key = self._make_key(name, labels)
@@ -252,8 +252,8 @@ class MetricsCollector:
     def get_gauge_value(
         self,
         name: str,
-        labels: Optional[Dict[str, str]] = None,
-    ) -> Optional[float]:
+        labels: dict[str, str] | None = None,
+    ) -> float | None:
         """Get gauge value."""
         key = self._make_key(name, labels)
         metric = self._gauges.get(key)
@@ -262,7 +262,7 @@ class MetricsCollector:
     def get_risk_tier_distribution(
         self,
         window_minutes: int = 60,
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """Get risk tier distribution for recent assessments."""
         cutoff = datetime.now(__import__('datetime').timezone.utc) - timedelta(minutes=window_minutes)
 
@@ -275,7 +275,7 @@ class MetricsCollector:
 
     def get_safety_trigger_rate(
         self,
-        rule_name: Optional[str] = None,
+        rule_name: str | None = None,
         window_minutes: int = 60,
     ) -> float:
         """Get safety rule trigger rate per hour."""
@@ -290,7 +290,7 @@ class MetricsCollector:
         # Calculate rate per hour
         return len(triggers) * (60 / window_minutes)
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of all metrics."""
         return {
             "latency": {
@@ -312,7 +312,7 @@ class MetricsCollector:
     def _make_key(
         self,
         name: str,
-        labels: Optional[Dict[str, str]],
+        labels: dict[str, str] | None,
     ) -> str:
         """Create a key from name and labels."""
         if not labels:
@@ -321,7 +321,7 @@ class MetricsCollector:
         label_str = ",".join(f"{k}={v}" for k, v in sorted(labels.items()))
         return f"{name}{{{label_str}}}"
 
-    def _percentile(self, sorted_values: List[float], p: int) -> float:
+    def _percentile(self, sorted_values: list[float], p: int) -> float:
         """Calculate percentile from sorted values."""
         if not sorted_values:
             return 0.0
@@ -349,7 +349,7 @@ class MetricsCollector:
 
 
 # Global metrics collector instance
-_default_collector: Optional[MetricsCollector] = None
+_default_collector: MetricsCollector | None = None
 
 
 def get_metrics_collector() -> MetricsCollector:

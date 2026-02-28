@@ -6,24 +6,23 @@ This is the core intelligence endpoint that orchestrates all agents.
 """
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
+from ...agents.escalation_agent import EscalationAgent
+from ...agents.geo_exposure_agent import GeoExposureAgent
+from ...agents.guideline_rag_agent import GuidelineRAGAgent
+from ...agents.ingestion_agent import IngestionAgent
+from ...agents.phenotype_agent import PhenotypeAgent
+from ...agents.risk_agent import RiskAgent
+from ...api.dependencies import get_current_active_user
 from ...api.schemas import (
     AssessmentRequest,
     AssessmentResponse,
     RiskFactor,
     RiskLevel,
 )
-from ...api.dependencies import get_current_active_user
-from ...agents.ingestion_agent import IngestionAgent
-from ...agents.phenotype_agent import PhenotypeAgent
-from ...agents.risk_agent import RiskAgent
-from ...agents.guideline_rag_agent import GuidelineRAGAgent
-from ...agents.geo_exposure_agent import GeoExposureAgent
-from ...agents.escalation_agent import EscalationAgent
 from ...utils.explainability import ExplanationGenerator
 
 router = APIRouter()
@@ -177,7 +176,7 @@ async def run_assessment_pipeline(
 
         return response
 
-    except Exception as e:
+    except Exception:
         # Return safe fallback response on error
         return AssessmentResponse(
             id=assessment_id,
@@ -211,7 +210,7 @@ async def run_assessment_pipeline(
     summary="Run risk assessment",
     description="""
     Run a comprehensive risk assessment for a child based on reported symptoms.
-    
+
     This endpoint orchestrates multiple AI agents to:
     1. Normalize and validate symptom data
     2. Extract clinical phenotypes
@@ -219,7 +218,7 @@ async def run_assessment_pipeline(
     4. Retrieve relevant guidelines
     5. Check environmental factors
     6. Generate actionable recommendations
-    
+
     ⚠️ **Important**: This is NOT a diagnostic tool. Always consult a healthcare provider.
     """,
 )
@@ -230,7 +229,7 @@ async def create_assessment(
 ):
     """
     Run a comprehensive risk assessment.
-    
+
     The assessment combines:
     - Symptom analysis
     - Age-appropriate risk factors
@@ -243,12 +242,12 @@ async def create_assessment(
 
 @router.get(
     "/",
-    response_model=List[AssessmentResponse],
+    response_model=list[AssessmentResponse],
     summary="List assessments",
     description="Get previous assessments for the current user.",
 )
 async def list_assessments(
-    child_id: Optional[str] = None,
+    child_id: str | None = None,
     limit: int = 20,
     current_user: dict = Depends(get_current_active_user),
 ):
@@ -306,12 +305,12 @@ async def get_assessment(
 )
 async def quick_assessment(
     child_id: str,
-    symptoms: List[str],
+    symptoms: list[str],
     current_user: dict = Depends(get_current_active_user),
 ):
     """
     Run a quick assessment with just symptom types.
-    
+
     Useful for fast triaging. For comprehensive assessment,
     use the full /assessment endpoint.
     """
@@ -339,7 +338,7 @@ async def quick_assessment(
 
 @router.get(
     "/child/{child_id}/history",
-    response_model=List[AssessmentResponse],
+    response_model=list[AssessmentResponse],
     summary="Get child assessment history",
     description="Get assessment history for a specific child.",
 )

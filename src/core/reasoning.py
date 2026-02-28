@@ -9,13 +9,12 @@ Implements structured reasoning capabilities for the agentic platform:
 Critical for explainable clinical decision support.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
-import logging
-import json
+from typing import Any
 
 logger = logging.getLogger("epcid.core.reasoning")
 
@@ -56,14 +55,14 @@ class ReasoningStep:
     """A single step in the reasoning process."""
     step_number: int
     description: str
-    input_data: Dict[str, Any]
-    output_data: Dict[str, Any]
+    input_data: dict[str, Any]
+    output_data: dict[str, Any]
     rationale: str
     confidence: float
     timestamp: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "step_number": self.step_number,
@@ -82,14 +81,14 @@ class ReasoningChain:
     """A complete chain of reasoning steps."""
     id: str
     reasoning_type: ReasoningType
-    steps: List[ReasoningStep]
+    steps: list[ReasoningStep]
     final_conclusion: str
     overall_confidence: float
-    uncertainty_factors: List[str]
-    supporting_evidence: List[str]
-    contradicting_evidence: List[str]
+    uncertainty_factors: list[str]
+    supporting_evidence: list[str]
+    contradicting_evidence: list[str]
     created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def get_explanation(self) -> str:
         """Generate human-readable explanation of reasoning."""
@@ -108,18 +107,18 @@ class ReasoningChain:
         lines.append(f"**Overall Confidence:** {self.overall_confidence:.0%}")
 
         if self.uncertainty_factors:
-            lines.append(f"\n**Uncertainty Factors:**")
+            lines.append("\n**Uncertainty Factors:**")
             for factor in self.uncertainty_factors:
                 lines.append(f"- {factor}")
 
         if self.supporting_evidence:
-            lines.append(f"\n**Supporting Evidence:**")
+            lines.append("\n**Supporting Evidence:**")
             for evidence in self.supporting_evidence:
                 lines.append(f"- {evidence}")
 
         return "\n".join(lines)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -141,14 +140,14 @@ class ReasoningStrategy(ABC):
     @abstractmethod
     def reason(
         self,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         goal: str,
     ) -> ReasoningChain:
         """Execute reasoning with the given context and goal."""
         pass
 
     @abstractmethod
-    def validate(self, chain: ReasoningChain) -> Tuple[bool, List[str]]:
+    def validate(self, chain: ReasoningChain) -> tuple[bool, list[str]]:
         """Validate a reasoning chain. Returns (is_valid, issues)."""
         pass
 
@@ -156,7 +155,7 @@ class ReasoningStrategy(ABC):
 class ChainOfThought(ReasoningStrategy):
     """
     Chain-of-Thought reasoning implementation.
-    
+
     Breaks down complex reasoning into explicit, sequential steps.
     Critical for explainability in clinical decision support.
     """
@@ -174,16 +173,16 @@ class ChainOfThought(ReasoningStrategy):
 
     def reason(
         self,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         goal: str,
     ) -> ReasoningChain:
         """Execute chain-of-thought reasoning."""
         import hashlib
 
-        steps: List[ReasoningStep] = []
-        uncertainty_factors: List[str] = []
-        supporting_evidence: List[str] = []
-        contradicting_evidence: List[str] = []
+        steps: list[ReasoningStep] = []
+        uncertainty_factors: list[str] = []
+        supporting_evidence: list[str] = []
+        contradicting_evidence: list[str] = []
 
         # Step 1: Analyze available data
         step1 = self._analyze_data(context)
@@ -233,7 +232,7 @@ class ChainOfThought(ReasoningStrategy):
         logger.info(f"Completed chain-of-thought reasoning: {chain.id}, confidence={overall_confidence:.2f}")
         return chain
 
-    def _analyze_data(self, context: Dict[str, Any]) -> ReasoningStep:
+    def _analyze_data(self, context: dict[str, Any]) -> ReasoningStep:
         """Analyze available data for completeness and quality."""
         input_data = {
             "data_sources": list(context.keys()),
@@ -270,8 +269,8 @@ class ChainOfThought(ReasoningStrategy):
 
     def _identify_patterns(
         self,
-        context: Dict[str, Any],
-        previous_output: Dict[str, Any],
+        context: dict[str, Any],
+        previous_output: dict[str, Any],
     ) -> ReasoningStep:
         """Identify clinical patterns in the data."""
         patterns_found = []
@@ -288,7 +287,7 @@ class ChainOfThought(ReasoningStrategy):
         respiratory_symptoms = ["cough", "wheezing", "difficulty_breathing", "rapid_breathing"]
         if any(s in symptoms for s in respiratory_symptoms):
             patterns_found.append("respiratory_symptoms")
-            supporting_evidence.append(f"Respiratory symptoms present")
+            supporting_evidence.append("Respiratory symptoms present")
 
         # Check for GI concerns
         gi_symptoms = ["vomiting", "diarrhea", "abdominal_pain", "poor_appetite"]
@@ -311,8 +310,8 @@ class ChainOfThought(ReasoningStrategy):
 
     def _apply_clinical_rules(
         self,
-        context: Dict[str, Any],
-        previous_output: Dict[str, Any],
+        context: dict[str, Any],
+        previous_output: dict[str, Any],
     ) -> ReasoningStep:
         """Apply clinical safety rules and guidelines."""
         rules_triggered = []
@@ -363,8 +362,8 @@ class ChainOfThought(ReasoningStrategy):
 
     def _assess_uncertainty(
         self,
-        context: Dict[str, Any],
-        previous_steps: List[ReasoningStep],
+        context: dict[str, Any],
+        previous_steps: list[ReasoningStep],
     ) -> ReasoningStep:
         """Assess uncertainty in the reasoning process."""
         uncertainty_factors = []
@@ -405,8 +404,8 @@ class ChainOfThought(ReasoningStrategy):
 
     def _synthesize_conclusion(
         self,
-        context: Dict[str, Any],
-        previous_steps: List[ReasoningStep],
+        context: dict[str, Any],
+        previous_steps: list[ReasoningStep],
         goal: str,
     ) -> ReasoningStep:
         """Synthesize final conclusion from reasoning steps."""
@@ -453,7 +452,7 @@ class ChainOfThought(ReasoningStrategy):
             confidence=avg_confidence,
         )
 
-    def _get_recommendations(self, risk_tier: str) -> List[str]:
+    def _get_recommendations(self, risk_tier: str) -> list[str]:
         """Get recommendations based on risk tier."""
         recommendations = {
             "CRITICAL": [
@@ -479,7 +478,7 @@ class ChainOfThought(ReasoningStrategy):
         }
         return recommendations.get(risk_tier, recommendations["LOW"])
 
-    def _calculate_overall_confidence(self, steps: List[ReasoningStep]) -> float:
+    def _calculate_overall_confidence(self, steps: list[ReasoningStep]) -> float:
         """Calculate overall confidence from all steps."""
         if not steps:
             return 0.5
@@ -497,7 +496,7 @@ class ChainOfThought(ReasoningStrategy):
 
         return weighted_sum / total_weight if total_weight > 0 else 0.5
 
-    def validate(self, chain: ReasoningChain) -> Tuple[bool, List[str]]:
+    def validate(self, chain: ReasoningChain) -> tuple[bool, list[str]]:
         """Validate a reasoning chain."""
         issues = []
 
@@ -526,7 +525,7 @@ class ChainOfThought(ReasoningStrategy):
 class SelfConsistency(ReasoningStrategy):
     """
     Self-Consistency reasoning implementation.
-    
+
     Generates multiple reasoning paths and validates through consensus.
     Improves reliability through diversity of reasoning approaches.
     """
@@ -535,7 +534,7 @@ class SelfConsistency(ReasoningStrategy):
         self,
         num_samples: int = 3,
         consensus_threshold: float = 0.6,
-        base_strategy: Optional[ReasoningStrategy] = None,
+        base_strategy: ReasoningStrategy | None = None,
     ):
         self.num_samples = num_samples
         self.consensus_threshold = consensus_threshold
@@ -544,14 +543,14 @@ class SelfConsistency(ReasoningStrategy):
 
     def reason(
         self,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         goal: str,
     ) -> ReasoningChain:
         """Execute self-consistency reasoning with multiple paths."""
         import hashlib
 
         # Generate multiple reasoning chains
-        chains: List[ReasoningChain] = []
+        chains: list[ReasoningChain] = []
         for i in range(self.num_samples):
             # Add slight variation to encourage diverse reasoning
             varied_context = self._add_variation(context, i)
@@ -610,7 +609,7 @@ class SelfConsistency(ReasoningStrategy):
         logger.info(f"Completed self-consistency reasoning: consensus={consensus_rate:.2f}")
         return result
 
-    def _add_variation(self, context: Dict[str, Any], sample_idx: int) -> Dict[str, Any]:
+    def _add_variation(self, context: dict[str, Any], sample_idx: int) -> dict[str, Any]:
         """Add slight variation to context for diverse reasoning."""
         # For now, just return the context as-is
         # In a full implementation, this could:
@@ -621,7 +620,7 @@ class SelfConsistency(ReasoningStrategy):
         varied["_sample_idx"] = sample_idx
         return varied
 
-    def _find_consensus(self, conclusions: List[str]) -> Tuple[str, float]:
+    def _find_consensus(self, conclusions: list[str]) -> tuple[str, float]:
         """Find consensus among conclusions."""
         if not conclusions:
             return "Unable to determine", 0.0
@@ -647,7 +646,7 @@ class SelfConsistency(ReasoningStrategy):
         consensus_rate = count / len(conclusions)
         return consensus_conclusion, consensus_rate
 
-    def validate(self, chain: ReasoningChain) -> Tuple[bool, List[str]]:
+    def validate(self, chain: ReasoningChain) -> tuple[bool, list[str]]:
         """Validate a self-consistency reasoning chain."""
         issues = []
 
@@ -666,7 +665,7 @@ class SelfConsistency(ReasoningStrategy):
 class ReasoningEngine:
     """
     Central reasoning engine that orchestrates different strategies.
-    
+
     Provides a unified interface for reasoning across the platform,
     with support for multiple strategies and automatic selection.
     """
@@ -680,7 +679,7 @@ class ReasoningEngine:
         self.enable_reflection = enable_reflection
 
         # Initialize strategies
-        self.strategies: Dict[ReasoningType, ReasoningStrategy] = {
+        self.strategies: dict[ReasoningType, ReasoningStrategy] = {
             ReasoningType.CHAIN_OF_THOUGHT: ChainOfThought(),
             ReasoningType.SELF_CONSISTENCY: SelfConsistency(),
         }
@@ -689,9 +688,9 @@ class ReasoningEngine:
 
     def reason(
         self,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         goal: str,
-        strategy: Optional[ReasoningType] = None,
+        strategy: ReasoningType | None = None,
     ) -> ReasoningChain:
         """Execute reasoning with specified or default strategy."""
         strategy = strategy or self.default_strategy
@@ -709,7 +708,7 @@ class ReasoningEngine:
 
         return chain
 
-    def _reflect(self, chain: ReasoningChain, context: Dict[str, Any]) -> ReasoningChain:
+    def _reflect(self, chain: ReasoningChain, context: dict[str, Any]) -> ReasoningChain:
         """Apply reflection to verify and potentially revise reasoning."""
         # Validate the chain
         strategy = self.strategies.get(chain.reasoning_type)
@@ -732,9 +731,9 @@ class ReasoningEngine:
 
     def compare_strategies(
         self,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         goal: str,
-    ) -> Dict[str, ReasoningChain]:
+    ) -> dict[str, ReasoningChain]:
         """Run multiple strategies and compare results."""
         results = {}
         for strategy_type, strategy in self.strategies.items():

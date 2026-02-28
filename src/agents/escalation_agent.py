@@ -11,15 +11,14 @@ Automations and care navigation:
 This agent helps caregivers navigate the healthcare system effectively.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 from enum import Enum
-import logging
-import json
+from typing import Any
 
-from .base_agent import BaseAgent, AgentConfig, AgentResponse
-from .. import RISK_LOW, RISK_MODERATE, RISK_HIGH, RISK_CRITICAL
+from .. import RISK_CRITICAL, RISK_HIGH, RISK_LOW, RISK_MODERATE
+from .base_agent import AgentConfig, AgentResponse, BaseAgent
 
 logger = logging.getLogger("epcid.agents.escalation")
 
@@ -48,21 +47,21 @@ class EscalationPath:
     escalation_type: EscalationType
     urgency: str  # immediate, urgent, soon, routine
     primary_action: str
-    secondary_actions: List[str]
+    secondary_actions: list[str]
     timeline: str
-    phone_number: Optional[str] = None
-    preparation_steps: List[str] = field(default_factory=list)
+    phone_number: str | None = None
+    preparation_steps: list[str] = field(default_factory=list)
 
 
 @dataclass
 class VisitPacket:
     """Prepared packet for healthcare visit."""
     summary: str
-    symptoms_timeline: List[Dict[str, Any]]
-    vital_signs: Dict[str, Any]
-    medications: List[str]
-    questions_for_provider: List[str]
-    attachments: List[Dict[str, str]]
+    symptoms_timeline: list[dict[str, Any]]
+    vital_signs: dict[str, Any]
+    medications: list[str]
+    questions_for_provider: list[str]
+    attachments: list[dict[str, str]]
     generated_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
 
 
@@ -74,14 +73,14 @@ class Reminder:
     description: str
     due_at: datetime
     priority: str
-    channels: List[NotificationChannel]
+    channels: list[NotificationChannel]
     completed: bool = False
 
 
 class EscalationAgent(BaseAgent):
     """
     Agent responsible for escalation and workflow automation.
-    
+
     Determines appropriate escalation paths based on risk tier
     and generates actionable guidance for caregivers.
     """
@@ -157,7 +156,7 @@ class EscalationAgent(BaseAgent):
 
     def __init__(
         self,
-        config: Optional[AgentConfig] = None,
+        config: AgentConfig | None = None,
         **kwargs,
     ):
         config = config or AgentConfig(
@@ -170,16 +169,16 @@ class EscalationAgent(BaseAgent):
 
     async def process(
         self,
-        input_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> AgentResponse:
         """
         Generate escalation guidance and care navigation.
-        
+
         Args:
             input_data: Contains risk assessment and patient data
             context: Optional additional context
-            
+
         Returns:
             AgentResponse with escalation path and materials
         """
@@ -192,7 +191,7 @@ class EscalationAgent(BaseAgent):
         vitals = input_data.get("vitals", {})
         medications = input_data.get("medications", [])
         demographics = input_data.get("demographics", {})
-        has_attachments = input_data.get("has_image") or input_data.get("has_audio")
+        input_data.get("has_image") or input_data.get("has_audio")
 
         # Determine escalation path
         escalation_path = self._get_escalation_path(risk_tier)
@@ -251,11 +250,11 @@ class EscalationAgent(BaseAgent):
 
     def _generate_visit_packet(
         self,
-        symptoms: List[str],
-        vitals: Dict[str, Any],
-        medications: List,
-        demographics: Dict[str, Any],
-        context: Optional[Dict[str, Any]],
+        symptoms: list[str],
+        vitals: dict[str, Any],
+        medications: list,
+        demographics: dict[str, Any],
+        context: dict[str, Any] | None,
     ) -> VisitPacket:
         """Generate a visit preparation packet."""
         # Build symptoms timeline
@@ -319,9 +318,9 @@ class EscalationAgent(BaseAgent):
 
     def _generate_provider_questions(
         self,
-        symptoms: List[str],
-        vitals: Dict[str, Any],
-    ) -> List[str]:
+        symptoms: list[str],
+        vitals: dict[str, Any],
+    ) -> list[str]:
         """Generate relevant questions to ask the provider."""
         questions = [
             "What is the likely cause of these symptoms?",
@@ -351,7 +350,7 @@ class EscalationAgent(BaseAgent):
         self,
         path: EscalationPath,
         risk_tier: str,
-    ) -> List[Reminder]:
+    ) -> list[Reminder]:
         """Generate follow-up reminders."""
         reminders = []
         now = datetime.now(__import__('datetime').timezone.utc)
@@ -407,7 +406,7 @@ class EscalationAgent(BaseAgent):
         self,
         path: EscalationPath,
         risk_tier: str,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Generate action checklist."""
         checklist = []
 
@@ -446,7 +445,7 @@ class EscalationAgent(BaseAgent):
 
         return checklist
 
-    def _generate_escalation_criteria(self, risk_tier: str) -> List[str]:
+    def _generate_escalation_criteria(self, risk_tier: str) -> list[str]:
         """Generate criteria for when to escalate further."""
         criteria = []
 
@@ -475,8 +474,8 @@ class EscalationAgent(BaseAgent):
         self,
         path: EscalationPath,
         packet: VisitPacket,
-        checklist: List[Dict],
-        escalation_criteria: List[str],
+        checklist: list[dict],
+        escalation_criteria: list[str],
     ) -> str:
         """Format the complete guidance message."""
         lines = []
@@ -528,7 +527,7 @@ class EscalationAgent(BaseAgent):
 
         return "\n".join(lines)
 
-    def _packet_to_dict(self, packet: VisitPacket) -> Dict[str, Any]:
+    def _packet_to_dict(self, packet: VisitPacket) -> dict[str, Any]:
         """Convert visit packet to dictionary."""
         return {
             "summary": packet.summary,
@@ -540,7 +539,7 @@ class EscalationAgent(BaseAgent):
             "generated_at": packet.generated_at.isoformat(),
         }
 
-    def _reminder_to_dict(self, reminder: Reminder) -> Dict[str, Any]:
+    def _reminder_to_dict(self, reminder: Reminder) -> dict[str, Any]:
         """Convert reminder to dictionary."""
         return {
             "id": reminder.id,

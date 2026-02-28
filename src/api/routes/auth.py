@@ -8,21 +8,20 @@ JWT-based authentication endpoints:
 - Password management
 """
 
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr, Field
 
-from ...api.schemas import Token, TokenData, UserCreate, UserResponse
-from ...api.dependencies import get_current_user, get_current_active_user
+from ...api.dependencies import get_current_active_user
+from ...api.schemas import UserResponse
 from ...api.security import (
     create_access_token,
     create_refresh_token,
-    verify_password,
-    get_password_hash,
     decode_token,
+    get_password_hash,
+    verify_password,
 )
 
 router = APIRouter()
@@ -40,7 +39,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, description="Minimum 8 characters")
     full_name: str = Field(..., min_length=2, max_length=100)
-    phone: Optional[str] = None
+    phone: str | None = None
 
     class Config:
         json_schema_extra = {
@@ -102,7 +101,7 @@ fake_users_db = {
 async def register(request: RegisterRequest):
     """
     Register a new user account.
-    
+
     - **email**: Valid email address (must be unique)
     - **password**: Minimum 8 characters
     - **full_name**: User's full name
@@ -160,7 +159,7 @@ async def register(request: RegisterRequest):
 async def login(request: LoginRequest):
     """
     Authenticate and receive access tokens.
-    
+
     Returns both access_token and refresh_token.
     Access token expires in 1 hour, refresh token in 7 days.
     """
@@ -218,7 +217,7 @@ async def login_form(form_data: OAuth2PasswordRequestForm = Depends()):
 async def refresh_token(request: RefreshRequest):
     """
     Refresh an access token using a valid refresh token.
-    
+
     The refresh token must be valid and not expired.
     """
     try:
@@ -256,11 +255,11 @@ async def refresh_token(request: RefreshRequest):
             ),
         )
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
-        )
+        ) from None
 
 
 @router.get(
@@ -289,7 +288,7 @@ async def get_me(current_user: dict = Depends(get_current_active_user)):
 async def logout(current_user: dict = Depends(get_current_active_user)):
     """
     Logout the current user.
-    
+
     Note: In a production system, this would add the token to a blacklist.
     The client should discard the tokens after calling this endpoint.
     """
@@ -329,7 +328,7 @@ async def change_password(
 async def request_password_reset(request: PasswordResetRequest):
     """
     Request a password reset.
-    
+
     If the email exists, a reset link will be sent.
     Always returns 202 to prevent email enumeration.
     """

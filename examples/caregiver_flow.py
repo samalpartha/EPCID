@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 """
 EPCID Caregiver Flow Example
 
@@ -16,7 +17,7 @@ safe, explainable clinical decision support.
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 # Configure logging
 logging.basicConfig(
@@ -26,22 +27,22 @@ logging.basicConfig(
 logger = logging.getLogger("epcid.example.caregiver")
 
 # Import EPCID components
+from src.agents.escalation_agent import EscalationAgent
+from src.agents.guideline_rag_agent import GuidelineRAGAgent
 from src.agents.ingestion_agent import IngestionAgent
 from src.agents.phenotype_agent import PhenotypeAgent
 from src.agents.risk_agent import RiskAgent
-from src.agents.guideline_rag_agent import GuidelineRAGAgent
-from src.agents.escalation_agent import EscalationAgent
 from src.core.memory import Memory
 from src.core.reasoning import ReasoningEngine
 from src.utils.explainability import ExplanationGenerator
 
 
 async def caregiver_symptom_check(
-    input_data: Dict[str, Any],
-) -> Dict[str, Any]:
+    input_data: dict[str, Any],
+) -> dict[str, Any]:
     """
     Complete caregiver symptom check workflow.
-    
+
     Args:
         input_data: Dict containing:
             - child_id: Unique identifier for the child
@@ -50,7 +51,7 @@ async def caregiver_symptom_check(
             - vitals: Temperature, etc.
             - medications: Current medications (optional)
             - symptom_duration: How long symptoms have been present
-            
+
     Returns:
         Complete assessment with guidance
     """

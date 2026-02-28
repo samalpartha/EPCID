@@ -6,20 +6,19 @@ With Redis caching for improved performance.
 """
 
 from datetime import datetime
-from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 
-from ...api.schemas import (
-    LocationRequest,
-    AirQualityResponse,
-    WeatherResponse,
-    EnvironmentResponse,
-)
 from ...api.dependencies import get_optional_user
+from ...api.schemas import (
+    AirQualityResponse,
+    EnvironmentResponse,
+    LocationRequest,
+    WeatherResponse,
+)
 from ...services.air_quality_service import AirQualityService
-from ...services.weather_service import WeatherService
 from ...services.cache_service import get_cache
+from ...services.weather_service import WeatherService
 
 router = APIRouter()
 
@@ -62,7 +61,7 @@ def get_aqi_health_implications(aqi: int) -> str:
         return "Health warning of emergency conditions: everyone is more likely to be affected."
 
 
-def get_aqi_pediatric_advisory(aqi: int) -> Optional[str]:
+def get_aqi_pediatric_advisory(aqi: int) -> str | None:
     """Get pediatric-specific advisory from AQI."""
     if aqi <= 50:
         return None
@@ -99,11 +98,11 @@ def get_aqi_recommendation(aqi: int) -> str:
 async def get_air_quality(
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
-    current_user: Optional[dict] = Depends(get_optional_user),
+    current_user: dict | None = Depends(get_optional_user),
 ):
     """
     Get air quality data for a location.
-    
+
     Returns AQI, pollutant levels, and health recommendations.
     Results are cached in Redis for 30 minutes.
     """
@@ -141,7 +140,7 @@ async def get_air_quality(
 
         return AirQualityResponse(**response_data)
 
-    except Exception as e:
+    except Exception:
         # Return default data on error
         return AirQualityResponse(
             aqi=50,
@@ -165,11 +164,11 @@ async def get_air_quality(
 async def get_weather(
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
-    current_user: Optional[dict] = Depends(get_optional_user),
+    current_user: dict | None = Depends(get_optional_user),
 ):
     """
     Get weather data for a location.
-    
+
     Returns temperature, conditions, and health considerations.
     Results are cached in Redis for 15 minutes.
     """
@@ -227,7 +226,7 @@ async def get_weather(
 
         return WeatherResponse(**response_data)
 
-    except Exception as e:
+    except Exception:
         return WeatherResponse(
             temperature=72.0,
             feels_like=72.0,
@@ -250,11 +249,11 @@ async def get_weather(
 )
 async def get_environment(
     location: LocationRequest,
-    current_user: Optional[dict] = Depends(get_optional_user),
+    current_user: dict | None = Depends(get_optional_user),
 ):
     """
     Get comprehensive environmental data for a location.
-    
+
     Combines air quality and weather data with health recommendations.
     """
     # Get both data sources
@@ -309,7 +308,7 @@ async def get_environment(
 async def get_health_risks(
     latitude: float = Query(..., ge=-90, le=90),
     longitude: float = Query(..., ge=-180, le=180),
-    symptoms: Optional[str] = Query(None, description="Comma-separated symptoms"),
+    symptoms: str | None = Query(None, description="Comma-separated symptoms"),
 ):
     """
     Analyze environmental factors that may be contributing to symptoms.

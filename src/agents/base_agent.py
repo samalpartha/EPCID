@@ -10,17 +10,17 @@ Provides common functionality for:
 - Error handling
 """
 
+import asyncio
+import logging
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TypeVar, Generic
 from enum import Enum
-import logging
-import asyncio
-import uuid
+from typing import Any, TypeVar
 
-from ..core.memory import Memory, MemoryType, MemoryItem
-from ..core.reasoning import ReasoningEngine, ReasoningChain
+from ..core.memory import Memory, MemoryType
+from ..core.reasoning import ReasoningChain, ReasoningEngine
 
 logger = logging.getLogger("epcid.agents")
 
@@ -55,9 +55,9 @@ class AgentConfig:
     reasoning_strategy: str = "chain_of_thought"
 
     # Custom settings
-    custom_config: Dict[str, Any] = field(default_factory=dict)
+    custom_config: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -75,7 +75,7 @@ class AgentConfig:
 class AgentResponse:
     """
     Standardized response from an agent.
-    
+
     All agents return this structure to ensure consistency
     and explainability across the platform.
     """
@@ -84,35 +84,35 @@ class AgentResponse:
     status: AgentStatus
 
     # Output data
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
 
     # Explainability
-    explanation: Optional[str] = None
-    reasoning_chain: Optional[ReasoningChain] = None
-    evidence: List[str] = field(default_factory=list)
+    explanation: str | None = None
+    reasoning_chain: ReasoningChain | None = None
+    evidence: list[str] = field(default_factory=list)
 
     # Confidence and uncertainty
     confidence: float = 0.0
-    uncertainty_factors: List[str] = field(default_factory=list)
+    uncertainty_factors: list[str] = field(default_factory=list)
 
     # Warnings and errors
-    warnings: List[str] = field(default_factory=list)
-    error_message: Optional[str] = None
+    warnings: list[str] = field(default_factory=list)
+    error_message: str | None = None
 
     # Timing
     started_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
-    completed_at: Optional[datetime] = None
-    duration_ms: Optional[float] = None
+    completed_at: datetime | None = None
+    duration_ms: float | None = None
 
     # Metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def success(self) -> bool:
         """Check if the agent completed successfully."""
         return self.status == AgentStatus.COMPLETED
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "agent_name": self.agent_name,
@@ -145,7 +145,7 @@ T = TypeVar('T', bound='BaseAgent')
 class BaseAgent(ABC):
     """
     Abstract base class for all EPCID agents.
-    
+
     Agents are specialized components that perform specific tasks
     in the clinical decision support workflow. Each agent:
     - Has a specific responsibility
@@ -157,8 +157,8 @@ class BaseAgent(ABC):
     def __init__(
         self,
         config: AgentConfig,
-        memory: Optional[Memory] = None,
-        reasoning_engine: Optional[ReasoningEngine] = None,
+        memory: Memory | None = None,
+        reasoning_engine: ReasoningEngine | None = None,
     ):
         self.config = config
         self.memory = memory or Memory()
@@ -182,18 +182,18 @@ class BaseAgent(ABC):
     @abstractmethod
     async def process(
         self,
-        input_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> AgentResponse:
         """
         Process input and produce a response.
-        
+
         This is the main method that each agent must implement.
-        
+
         Args:
             input_data: The input data to process
             context: Optional context from previous agents or memory
-            
+
         Returns:
             AgentResponse with results and explanation
         """
@@ -201,12 +201,12 @@ class BaseAgent(ABC):
 
     async def run(
         self,
-        input_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> AgentResponse:
         """
         Run the agent with error handling and logging.
-        
+
         This wraps the process() method with common functionality.
         """
         request_id = str(uuid.uuid4())[:12]
@@ -245,7 +245,7 @@ class BaseAgent(ABC):
             response.status = AgentStatus.COMPLETED
             self._status = AgentStatus.COMPLETED
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             response.status = AgentStatus.TIMEOUT
             response.error_message = f"Agent timed out after {self.config.timeout_seconds}s"
             self._status = AgentStatus.TIMEOUT
@@ -263,7 +263,7 @@ class BaseAgent(ABC):
 
         return response
 
-    def _load_memory_context(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _load_memory_context(self, input_data: dict[str, Any]) -> dict[str, Any]:
         """Load relevant context from memory."""
         context = {}
 
@@ -313,7 +313,7 @@ class BaseAgent(ABC):
 
     def reason(
         self,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         goal: str,
     ) -> ReasoningChain:
         """Invoke the reasoning engine."""
@@ -335,9 +335,9 @@ class BaseAgent(ABC):
     def create_response(
         self,
         request_id: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         confidence: float,
-        explanation: Optional[str] = None,
+        explanation: str | None = None,
         **kwargs,
     ) -> AgentResponse:
         """Helper to create a standardized response."""
@@ -353,9 +353,9 @@ class BaseAgent(ABC):
 
     def validate_input(
         self,
-        input_data: Dict[str, Any],
-        required_fields: List[str],
-    ) -> tuple[bool, List[str]]:
+        input_data: dict[str, Any],
+        required_fields: list[str],
+    ) -> tuple[bool, list[str]]:
         """Validate that required fields are present in input."""
         missing = [f for f in required_fields if f not in input_data]
         return len(missing) == 0, missing

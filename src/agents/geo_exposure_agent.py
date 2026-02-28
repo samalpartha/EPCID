@@ -12,12 +12,12 @@ Correlates symptom flares with environmental exposure
 and generates preventive guidance.
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
 import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
 
-from .base_agent import BaseAgent, AgentConfig, AgentResponse
+from .base_agent import AgentConfig, AgentResponse, BaseAgent
 
 logger = logging.getLogger("epcid.agents.geo_exposure")
 
@@ -25,17 +25,17 @@ logger = logging.getLogger("epcid.agents.geo_exposure")
 @dataclass
 class EnvironmentalConditions:
     """Current environmental conditions."""
-    aqi: Optional[int] = None
-    aqi_category: Optional[str] = None
-    pm25: Optional[float] = None
-    ozone: Optional[float] = None
-    temperature_f: Optional[float] = None
-    humidity_percent: Optional[int] = None
-    uv_index: Optional[int] = None
-    pollen_level: Optional[str] = None
-    weather_condition: Optional[str] = None
+    aqi: int | None = None
+    aqi_category: str | None = None
+    pm25: float | None = None
+    ozone: float | None = None
+    temperature_f: float | None = None
+    humidity_percent: int | None = None
+    uv_index: int | None = None
+    pollen_level: str | None = None
+    weather_condition: str | None = None
     timestamp: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
-    location: Optional[str] = None
+    location: str | None = None
 
 
 @dataclass
@@ -46,13 +46,13 @@ class ExposureAlert:
     title: str
     description: str
     recommendation: str
-    related_symptoms: List[str]
+    related_symptoms: list[str]
 
 
 class GeoExposureAgent(BaseAgent):
     """
     Agent that analyzes environmental exposure risks.
-    
+
     Correlates environmental conditions with symptom patterns
     to identify potential exposure-related health impacts.
     """
@@ -61,13 +61,13 @@ class GeoExposureAgent(BaseAgent):
     AQI_CATEGORIES = {
         (0, 50): ("Good", "low", "Air quality is satisfactory"),
         (51, 100): ("Moderate", "low", "Acceptable; sensitive groups may be affected"),
-        (101, 150): ("Unhealthy for Sensitive Groups", "moderate", 
+        (101, 150): ("Unhealthy for Sensitive Groups", "moderate",
                      "Children may experience respiratory symptoms"),
-        (151, 200): ("Unhealthy", "high", 
+        (151, 200): ("Unhealthy", "high",
                      "Everyone may experience health effects; children at higher risk"),
-        (201, 300): ("Very Unhealthy", "severe", 
+        (201, 300): ("Very Unhealthy", "severe",
                      "Health alert: significant risk to children"),
-        (301, 500): ("Hazardous", "severe", 
+        (301, 500): ("Hazardous", "severe",
                      "Health emergency: avoid outdoor activity"),
     }
 
@@ -90,7 +90,7 @@ class GeoExposureAgent(BaseAgent):
 
     def __init__(
         self,
-        config: Optional[AgentConfig] = None,
+        config: AgentConfig | None = None,
         **kwargs,
     ):
         config = config or AgentConfig(
@@ -103,16 +103,16 @@ class GeoExposureAgent(BaseAgent):
 
     async def process(
         self,
-        input_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> AgentResponse:
         """
         Analyze environmental conditions and correlate with symptoms.
-        
+
         Args:
             input_data: Contains environmental data and symptoms
             context: Optional context with location or history
-            
+
         Returns:
             AgentResponse with exposure analysis and recommendations
         """
@@ -153,7 +153,7 @@ class GeoExposureAgent(BaseAgent):
             explanation=self._generate_explanation(conditions, alerts, correlations),
         )
 
-    def _parse_conditions(self, env_data: Dict[str, Any]) -> EnvironmentalConditions:
+    def _parse_conditions(self, env_data: dict[str, Any]) -> EnvironmentalConditions:
         """Parse environmental data into structured conditions."""
         aqi = env_data.get("aqi")
         aqi_category = None
@@ -177,7 +177,7 @@ class GeoExposureAgent(BaseAgent):
             location=env_data.get("zip_code"),
         )
 
-    def _generate_alerts(self, conditions: EnvironmentalConditions) -> List[ExposureAlert]:
+    def _generate_alerts(self, conditions: EnvironmentalConditions) -> list[ExposureAlert]:
         """Generate exposure alerts based on conditions."""
         alerts = []
 
@@ -191,10 +191,10 @@ class GeoExposureAgent(BaseAgent):
                     alert_type="air_quality",
                     severity=severity,
                     title=f"Air Quality Alert: {conditions.aqi_category}",
-                    description=f"Current AQI is {aqi}. " + 
+                    description=f"Current AQI is {aqi}. " +
                                (self._get_aqi_description(aqi)),
                     recommendation=self._get_aqi_recommendation(aqi),
-                    related_symptoms=["cough", "wheezing", "difficulty_breathing", 
+                    related_symptoms=["cough", "wheezing", "difficulty_breathing",
                                      "asthma_attack", "eye_irritation"],
                 ))
 
@@ -256,9 +256,9 @@ class GeoExposureAgent(BaseAgent):
 
     def _correlate_symptoms(
         self,
-        symptoms: List[str],
+        symptoms: list[str],
         conditions: EnvironmentalConditions,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Find correlations between symptoms and environmental factors."""
         correlations = []
 
@@ -296,7 +296,7 @@ class GeoExposureAgent(BaseAgent):
                         "factor": "pollen",
                         "value": conditions.pollen_level,
                         "strength": "moderate",
-                        "explanation": f"High pollen levels may be triggering allergic symptoms.",
+                        "explanation": "High pollen levels may be triggering allergic symptoms.",
                     })
 
                 if conditions.uv_index and conditions.uv_index >= 8:
@@ -313,9 +313,9 @@ class GeoExposureAgent(BaseAgent):
     def _generate_recommendations(
         self,
         conditions: EnvironmentalConditions,
-        alerts: List[ExposureAlert],
-        symptoms: List[str],
-    ) -> List[str]:
+        alerts: list[ExposureAlert],
+        symptoms: list[str],
+    ) -> list[str]:
         """Generate actionable recommendations."""
         recommendations = []
 
@@ -350,7 +350,7 @@ class GeoExposureAgent(BaseAgent):
     def _calculate_risk_score(
         self,
         conditions: EnvironmentalConditions,
-        alerts: List[ExposureAlert],
+        alerts: list[ExposureAlert],
     ) -> float:
         """Calculate overall environmental risk score (0-1)."""
         score = 0.0
@@ -412,7 +412,7 @@ class GeoExposureAgent(BaseAgent):
             return "Sensitive individuals should reduce prolonged outdoor activity."
         return "Generally safe for outdoor activity."
 
-    def _conditions_to_dict(self, conditions: EnvironmentalConditions) -> Dict[str, Any]:
+    def _conditions_to_dict(self, conditions: EnvironmentalConditions) -> dict[str, Any]:
         """Convert conditions to dictionary."""
         return {
             "aqi": conditions.aqi,
@@ -428,7 +428,7 @@ class GeoExposureAgent(BaseAgent):
             "timestamp": conditions.timestamp.isoformat(),
         }
 
-    def _alert_to_dict(self, alert: ExposureAlert) -> Dict[str, Any]:
+    def _alert_to_dict(self, alert: ExposureAlert) -> dict[str, Any]:
         """Convert alert to dictionary."""
         return {
             "alert_type": alert.alert_type,
@@ -442,8 +442,8 @@ class GeoExposureAgent(BaseAgent):
     def _generate_explanation(
         self,
         conditions: EnvironmentalConditions,
-        alerts: List[ExposureAlert],
-        correlations: List[Dict],
+        alerts: list[ExposureAlert],
+        correlations: list[dict],
     ) -> str:
         """Generate explanation of environmental analysis."""
         lines = ["## Environmental Analysis\n"]

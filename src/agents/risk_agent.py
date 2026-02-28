@@ -17,23 +17,23 @@ Clinical References:
 - Physical exam signs for pediatric SIRS (BMC Emergency Medicine)
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
-from enum import Enum
 import logging
-import math
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any
 
-from .base_agent import BaseAgent, AgentConfig, AgentResponse
-from .. import RISK_LOW, RISK_MODERATE, RISK_HIGH, RISK_CRITICAL
+from .. import RISK_CRITICAL, RISK_HIGH, RISK_LOW, RISK_MODERATE
+from .base_agent import AgentConfig, AgentResponse, BaseAgent
 
 # Import clinical scoring modules
 try:
-    from ..clinical.phoenix_score import PhoenixScoreCalculator, PhoenixScore, VentilationType
-    from ..clinical.pews import PEWSCalculator, PEWSScore, WorkOfBreathing, AVPU, CapillaryRefill
+    from ..clinical.pews import AVPU, PEWSCalculator, WorkOfBreathing
+    from ..clinical.phoenix_score import PhoenixScoreCalculator
     from ..clinical.physical_exam import (
-        PhysicalExamAssessor, PhysicalExamAssessment,
-        MentalStatus, PulseQuality, SkinPerfusion
+        MentalStatus,
+        PhysicalExamAssessor,
+        PulseQuality,
+        SkinPerfusion,
     )
     from ..clinical.vital_signs import VitalSignNormalizer
     CLINICAL_SCORING_AVAILABLE = True
@@ -61,7 +61,7 @@ class RiskRule:
     risk_tier: str
     priority: int  # Lower = higher priority
 
-    def evaluate(self, context: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+    def evaluate(self, context: dict[str, Any]) -> tuple[bool, str | None]:
         """Evaluate the rule. Returns (triggered, message)."""
         try:
             return self.condition(context)
@@ -78,26 +78,26 @@ class RiskScore:
     risk_tier: str
     confidence: float
     explanation: str
-    contributing_factors: List[str] = field(default_factory=list)
+    contributing_factors: list[str] = field(default_factory=list)
 
 
 class RiskAgent(BaseAgent):
     """
     Agent responsible for risk stratification.
-    
+
     Uses a layered approach:
     1. Safety rules (immediate override for critical conditions)
     2. Clinical scoring systems (Phoenix, PEWS, Physical Exam)
     3. Clinical rules (guideline-based logic)
     4. ML models (learned patterns from data)
     5. Ensemble synthesis with uncertainty
-    
+
     Always errs on the side of caution (high sensitivity).
     """
 
     def __init__(
         self,
-        config: Optional[AgentConfig] = None,
+        config: AgentConfig | None = None,
         enable_ml: bool = True,
         enable_clinical_scoring: bool = True,
         **kwargs,
@@ -132,16 +132,16 @@ class RiskAgent(BaseAgent):
 
     async def process(
         self,
-        input_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> AgentResponse:
         """
         Perform risk assessment on input data.
-        
+
         Args:
             input_data: Normalized and phenotyped data
             context: Optional historical context
-            
+
         Returns:
             AgentResponse with risk tier and explanation
         """
@@ -149,7 +149,6 @@ class RiskAgent(BaseAgent):
         request_id = str(uuid.uuid4())[:12]
 
         # Merge input with context
-        full_context = {**(context or {}), **input_data}
 
         # Extract key data
         normalized = input_data.get("normalized", input_data)
@@ -247,9 +246,9 @@ class RiskAgent(BaseAgent):
 
     def _build_assessment_context(
         self,
-        normalized: Dict[str, Any],
-        phenotypes: List[Dict],
-    ) -> Dict[str, Any]:
+        normalized: dict[str, Any],
+        phenotypes: list[dict],
+    ) -> dict[str, Any]:
         """Build unified context for risk assessment."""
         context = {
             "symptoms": normalized.get("symptoms", []),
@@ -277,11 +276,11 @@ class RiskAgent(BaseAgent):
 
     def _evaluate_clinical_scoring(
         self,
-        context: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Evaluate clinical scoring systems: Phoenix, PEWS, Physical Exam.
-        
+
         Returns combined assessment with recommendations for escalation.
         """
         result = {
@@ -489,7 +488,7 @@ class RiskAgent(BaseAgent):
                     if result["risk_level"] not in ["critical", "high"]:
                         result["risk_level"] = "moderate"
                     result["contributing_factors"].append(
-                        f"Physical exam: 1 sign present (RR 2.71)"
+                        "Physical exam: 1 sign present (RR 2.71)"
                     )
 
             except Exception as e:
@@ -500,13 +499,13 @@ class RiskAgent(BaseAgent):
     def _is_vasoactive(self, medication: str) -> bool:
         """Check if a medication is a vasoactive agent."""
         vasoactives = {
-            "dobutamine", "dopamine", "epinephrine", 
+            "dobutamine", "dopamine", "epinephrine",
             "milrinone", "norepinephrine", "vasopressin",
             "phenylephrine", "levophed"
         }
         return any(v in medication.lower() for v in vasoactives)
 
-    def _has_tachycardia(self, heart_rate: Optional[int], age_months: int) -> bool:
+    def _has_tachycardia(self, heart_rate: int | None, age_months: int) -> bool:
         """Check if heart rate indicates tachycardia for age."""
         if heart_rate is None:
             return False
@@ -528,8 +527,8 @@ class RiskAgent(BaseAgent):
     def _create_clinical_scoring_response(
         self,
         request_id: str,
-        clinical_result: Dict[str, Any],
-        context: Dict[str, Any],
+        clinical_result: dict[str, Any],
+        context: dict[str, Any],
     ) -> AgentResponse:
         """Create response when clinical scoring triggers immediate escalation."""
         risk_tier = RISK_CRITICAL if clinical_result["risk_level"] == "critical" else RISK_HIGH
@@ -585,7 +584,7 @@ class RiskAgent(BaseAgent):
             warnings=clinical_result.get("recommendations", [])[:3],
         )
 
-    def _evaluate_safety_rules(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _evaluate_safety_rules(self, context: dict[str, Any]) -> dict[str, Any]:
         """Evaluate safety rules for immediate override."""
         triggered_rules = []
         messages = []
@@ -612,7 +611,7 @@ class RiskAgent(BaseAgent):
             "risk_tier": max_risk,
         }
 
-    def _evaluate_clinical_rules(self, context: Dict[str, Any]) -> List[RiskScore]:
+    def _evaluate_clinical_rules(self, context: dict[str, Any]) -> list[RiskScore]:
         """Evaluate clinical guideline-based rules."""
         scores = []
         triggered_rules = []
@@ -664,7 +663,7 @@ class RiskAgent(BaseAgent):
 
         return scores
 
-    async def _evaluate_ml_models(self, context: Dict[str, Any]) -> List[RiskScore]:
+    async def _evaluate_ml_models(self, context: dict[str, Any]) -> list[RiskScore]:
         """Evaluate ML models for risk scoring."""
         scores = []
 
@@ -684,7 +683,7 @@ class RiskAgent(BaseAgent):
 
         return scores
 
-    def _simulate_tabular_model(self, context: Dict[str, Any]) -> RiskScore:
+    def _simulate_tabular_model(self, context: dict[str, Any]) -> RiskScore:
         """Simulate tabular model prediction (placeholder for real model)."""
         # Feature extraction
         features = []
@@ -740,7 +739,7 @@ class RiskAgent(BaseAgent):
             contributing_factors=features,
         )
 
-    def _simulate_temporal_model(self, context: Dict[str, Any]) -> RiskScore:
+    def _simulate_temporal_model(self, context: dict[str, Any]) -> RiskScore:
         """Simulate temporal model prediction."""
         # Would use LSTM/Transformer on time-series in production
         history = context.get("observation_history", [])
@@ -751,7 +750,7 @@ class RiskAgent(BaseAgent):
 
         if len(history) >= 2:
             # Compare recent vs older observations
-            recent = history[-3:] if len(history) >= 3 else history[-1:]
+            history[-3:] if len(history) >= 3 else history[-1:]
 
             # Check fever trend
             temps = [h.get("vitals", {}).get("temperature", 37) for h in history]
@@ -783,7 +782,7 @@ class RiskAgent(BaseAgent):
             contributing_factors=features,
         )
 
-    def _simulate_multimodal_model(self, context: Dict[str, Any]) -> RiskScore:
+    def _simulate_multimodal_model(self, context: dict[str, Any]) -> RiskScore:
         """Simulate multimodal model prediction."""
         # Would process images/audio in production
         score = 0.35
@@ -806,11 +805,11 @@ class RiskAgent(BaseAgent):
 
     def _synthesize_risk(
         self,
-        clinical_scores: List[RiskScore],
-        ml_scores: List[RiskScore],
-        context: Dict[str, Any],
-        clinical_scoring_result: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        clinical_scores: list[RiskScore],
+        ml_scores: list[RiskScore],
+        context: dict[str, Any],
+        clinical_scoring_result: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Synthesize final risk from all sources including clinical scoring."""
         all_scores = clinical_scores + ml_scores
 
@@ -915,7 +914,7 @@ class RiskAgent(BaseAgent):
             "uncertainty_factors": self._identify_uncertainty_factors(context, all_scores),
         }
 
-    def _clinical_scoring_to_score(self, result: Dict[str, Any]) -> float:
+    def _clinical_scoring_to_score(self, result: dict[str, Any]) -> float:
         """Convert clinical scoring result to 0-1 score."""
         score = 0.2  # Base score
 
@@ -946,7 +945,7 @@ class RiskAgent(BaseAgent):
 
         return min(1.0, score)
 
-    def _clinical_scoring_to_tier(self, result: Dict[str, Any]) -> str:
+    def _clinical_scoring_to_tier(self, result: dict[str, Any]) -> str:
         """Convert clinical scoring result to risk tier."""
         if result.get("meets_septic_shock_criteria"):
             return RISK_CRITICAL
@@ -964,8 +963,8 @@ class RiskAgent(BaseAgent):
 
     def _calculate_confidence_interval(
         self,
-        result: Dict[str, Any],
-    ) -> Tuple[float, float]:
+        result: dict[str, Any],
+    ) -> tuple[float, float]:
         """Calculate confidence interval for risk score."""
         score = result["score"]
         confidence = result["confidence"]
@@ -978,7 +977,7 @@ class RiskAgent(BaseAgent):
 
         return lower, upper
 
-    def _identify_missing_data(self, context: Dict[str, Any]) -> List[str]:
+    def _identify_missing_data(self, context: dict[str, Any]) -> list[str]:
         """Identify missing data that would improve assessment."""
         missing = []
 
@@ -1001,9 +1000,9 @@ class RiskAgent(BaseAgent):
 
     def _identify_uncertainty_factors(
         self,
-        context: Dict[str, Any],
-        scores: List[RiskScore],
-    ) -> List[str]:
+        context: dict[str, Any],
+        scores: list[RiskScore],
+    ) -> list[str]:
         """Identify factors increasing uncertainty."""
         factors = []
 
@@ -1029,8 +1028,8 @@ class RiskAgent(BaseAgent):
     def _create_safety_override_response(
         self,
         request_id: str,
-        safety_result: Dict[str, Any],
-        context: Dict[str, Any],
+        safety_result: dict[str, Any],
+        context: dict[str, Any],
     ) -> AgentResponse:
         """Create response when safety rule triggers."""
         risk_tier = safety_result["risk_tier"]
@@ -1072,11 +1071,11 @@ Please seek medical evaluation immediately.
 
     def _generate_explanation(
         self,
-        result: Dict[str, Any],
-        clinical_scores: List[RiskScore],
-        ml_scores: List[RiskScore],
-        safety_result: Dict[str, Any],
-        clinical_scoring_result: Optional[Dict[str, Any]] = None,
+        result: dict[str, Any],
+        clinical_scores: list[RiskScore],
+        ml_scores: list[RiskScore],
+        safety_result: dict[str, Any],
+        clinical_scoring_result: dict[str, Any] | None = None,
     ) -> str:
         """Generate explanation of risk assessment."""
         lines = ["## Risk Assessment\n"]
@@ -1171,7 +1170,7 @@ Please seek medical evaluation immediately.
 
         return "\n".join(lines)
 
-    def _initialize_rules(self) -> List[RiskRule]:
+    def _initialize_rules(self) -> list[RiskRule]:
         """Initialize risk assessment rules."""
         rules = []
 
@@ -1286,7 +1285,7 @@ Please seek medical evaluation immediately.
         # Severe dehydration
         def check_severe_dehydration(ctx):
             symptoms = ctx.get("symptoms", [])
-            physical_exam = ctx.get("physical_exam", {})
+            ctx.get("physical_exam", {})
 
             severe_signs = ["sunken_fontanelle", "sunken_eyes", "no_tears", "very_dry_mouth"]
             count = sum(1 for s in severe_signs if s in symptoms)
@@ -1333,7 +1332,7 @@ Please seek medical evaluation immediately.
             temp = ctx.get("vitals", {}).get("temperature", 37)
             duration = ctx.get("symptom_duration_hours", 0)
             if temp >= 38.0 and duration >= 72:
-                return True, f"Fever persisting >72 hours"
+                return True, "Fever persisting >72 hours"
             return False, None
 
         rules.append(RiskRule(
@@ -1388,7 +1387,7 @@ Please seek medical evaluation immediately.
             age = ctx.get("demographics", {}).get("age_months", 99)
             symptoms = ctx.get("symptoms", [])
             if age < 6 and len(symptoms) >= 2:
-                return True, f"Infant <6 months with multiple symptoms"
+                return True, "Infant <6 months with multiple symptoms"
             return False, None
 
         rules.append(RiskRule(

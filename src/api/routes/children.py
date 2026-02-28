@@ -5,19 +5,16 @@ Child profile management endpoints.
 """
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from ...api.dependencies import get_current_active_user
 from ...api.schemas import (
     ChildCreate,
     ChildResponse,
     ChildUpdate,
-    Gender,
-    PaginatedResponse,
 )
-from ...api.dependencies import get_current_active_user
 
 router = APIRouter()
 
@@ -46,7 +43,7 @@ async def create_child(
 ):
     """
     Create a new child profile.
-    
+
     - **name**: Child's name
     - **date_of_birth**: Date of birth
     - **gender**: Male, female, or other
@@ -78,7 +75,7 @@ async def create_child(
 
 @router.get(
     "/",
-    response_model=List[ChildResponse],
+    response_model=list[ChildResponse],
     summary="List children",
     description="Get all children associated with your account.",
 )

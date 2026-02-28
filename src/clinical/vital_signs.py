@@ -11,9 +11,7 @@ References:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 from enum import Enum
-import math
 
 
 class VitalSignStatus(Enum):
@@ -54,7 +52,7 @@ class VitalSignRange:
 
 
 # Age-specific reference ranges based on validated pediatric data
-VITAL_SIGN_RANGES: List[VitalSignRange] = [
+VITAL_SIGN_RANGES: list[VitalSignRange] = [
     # Newborn (0-1 month)
     VitalSignRange(
         age_min_months=0, age_max_months=1,
@@ -144,18 +142,18 @@ class AgeAdjustedVitals:
     age_months: int
 
     # Raw values
-    heart_rate: Optional[int] = None
-    respiratory_rate: Optional[int] = None
-    systolic_bp: Optional[int] = None
-    diastolic_bp: Optional[int] = None
-    mean_arterial_pressure: Optional[float] = None
-    oxygen_saturation: Optional[float] = None
-    temperature: Optional[float] = None
+    heart_rate: int | None = None
+    respiratory_rate: int | None = None
+    systolic_bp: int | None = None
+    diastolic_bp: int | None = None
+    mean_arterial_pressure: float | None = None
+    oxygen_saturation: float | None = None
+    temperature: float | None = None
 
     # Z-scores (standard deviations from mean)
-    hr_zscore: Optional[float] = None
-    rr_zscore: Optional[float] = None
-    sbp_zscore: Optional[float] = None
+    hr_zscore: float | None = None
+    rr_zscore: float | None = None
+    sbp_zscore: float | None = None
 
     # Status assessments
     hr_status: VitalSignStatus = VitalSignStatus.NORMAL
@@ -178,7 +176,7 @@ class AgeAdjustedVitals:
 class VitalSignNormalizer:
     """
     Normalizes vital signs based on age-specific reference ranges.
-    
+
     Provides z-score calculations and status assessments for
     pediatric vital signs, accounting for age-dependent normal values.
     """
@@ -197,16 +195,16 @@ class VitalSignNormalizer:
     def normalize(
         self,
         age_months: int,
-        heart_rate: Optional[int] = None,
-        respiratory_rate: Optional[int] = None,
-        systolic_bp: Optional[int] = None,
-        diastolic_bp: Optional[int] = None,
-        oxygen_saturation: Optional[float] = None,
-        temperature: Optional[float] = None,
+        heart_rate: int | None = None,
+        respiratory_rate: int | None = None,
+        systolic_bp: int | None = None,
+        diastolic_bp: int | None = None,
+        oxygen_saturation: float | None = None,
+        temperature: float | None = None,
     ) -> AgeAdjustedVitals:
         """
         Normalize vital signs for the given age.
-        
+
         Args:
             age_months: Child's age in months
             heart_rate: Heart rate in bpm
@@ -215,7 +213,7 @@ class VitalSignNormalizer:
             diastolic_bp: Diastolic blood pressure in mmHg
             oxygen_saturation: SpO2 percentage
             temperature: Temperature in Celsius
-            
+
         Returns:
             AgeAdjustedVitals with normalized values and status assessments
         """
@@ -325,7 +323,7 @@ class VitalSignNormalizer:
     ) -> float:
         """
         Calculate approximate z-score based on normal range.
-        
+
         Assumes normal range represents approximately ±2 SD from mean.
         """
         mean = (normal_low + normal_high) / 2

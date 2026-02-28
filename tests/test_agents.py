@@ -11,16 +11,15 @@ Tests for the EPCID agent system including:
 - EscalationAgent
 """
 
-import pytest
-import asyncio
-from datetime import datetime
 
-from src.agents.base_agent import AgentConfig, AgentStatus
+import pytest
+
+from src.agents.base_agent import AgentStatus
+from src.agents.escalation_agent import EscalationAgent
+from src.agents.guideline_rag_agent import GuidelineRAGAgent
 from src.agents.ingestion_agent import IngestionAgent
 from src.agents.phenotype_agent import PhenotypeAgent
 from src.agents.risk_agent import RiskAgent
-from src.agents.guideline_rag_agent import GuidelineRAGAgent
-from src.agents.escalation_agent import EscalationAgent
 from src.core.memory import Memory
 
 
@@ -413,7 +412,7 @@ class TestAgentIntegration:
     async def test_agent_memory_sharing(self, memory, sample_input):
         """Test that agents share memory correctly."""
         ingestion = IngestionAgent(memory=memory)
-        phenotype = PhenotypeAgent(memory=memory)
+        PhenotypeAgent(memory=memory)
 
         # Run ingestion
         await ingestion.run(sample_input)

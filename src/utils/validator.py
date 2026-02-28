@@ -9,11 +9,11 @@ Provides comprehensive input validation:
 - Safety validation
 """
 
-import re
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Type, Union
 import logging
+import re
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger("epcid.utils.validator")
 
@@ -21,7 +21,7 @@ logger = logging.getLogger("epcid.utils.validator")
 class ValidationError(Exception):
     """Raised when validation fails."""
 
-    def __init__(self, message: str, field: Optional[str] = None, value: Any = None):
+    def __init__(self, message: str, field: str | None = None, value: Any = None):
         super().__init__(message)
         self.field = field
         self.value = value
@@ -33,7 +33,7 @@ class ValidationResult:
     """Result of a validation check."""
     valid: bool
     field: str
-    message: Optional[str] = None
+    message: str | None = None
     value: Any = None
     normalized_value: Any = None
 
@@ -46,13 +46,13 @@ class ValidationRule:
     validator: Callable[[Any], bool]
     error_message: str
     required: bool = False
-    normalizer: Optional[Callable[[Any], Any]] = None
+    normalizer: Callable[[Any], Any] | None = None
 
 
 class InputValidator:
     """
     Comprehensive input validator for EPCID.
-    
+
     Validates:
     - Demographics (age, weight, height)
     - Vital signs (temperature, heart rate, etc.)
@@ -97,7 +97,7 @@ class InputValidator:
 
     def __init__(self, strict_mode: bool = False):
         self.strict_mode = strict_mode
-        self._custom_rules: List[ValidationRule] = []
+        self._custom_rules: list[ValidationRule] = []
 
     def add_rule(self, rule: ValidationRule) -> None:
         """Add a custom validation rule."""
@@ -105,16 +105,16 @@ class InputValidator:
 
     def validate_all(
         self,
-        data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
-    ) -> List[ValidationResult]:
+        data: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> list[ValidationResult]:
         """
         Validate all data fields.
-        
+
         Args:
             data: Input data to validate
             context: Optional context (e.g., age for range validation)
-            
+
         Returns:
             List of ValidationResult objects
         """
@@ -153,8 +153,8 @@ class InputValidator:
 
     def validate_demographics(
         self,
-        demographics: Dict[str, Any],
-    ) -> List[ValidationResult]:
+        demographics: dict[str, Any],
+    ) -> list[ValidationResult]:
         """Validate demographic data."""
         results = []
 
@@ -195,9 +195,9 @@ class InputValidator:
 
     def validate_vitals(
         self,
-        vitals: Dict[str, Any],
-        age_months: Optional[int] = None,
-    ) -> List[ValidationResult]:
+        vitals: dict[str, Any],
+        age_months: int | None = None,
+    ) -> list[ValidationResult]:
         """Validate vital signs."""
         results = []
 
@@ -269,8 +269,8 @@ class InputValidator:
 
     def validate_symptoms(
         self,
-        symptoms: Union[List[str], str],
-    ) -> List[ValidationResult]:
+        symptoms: list[str] | str,
+    ) -> list[ValidationResult]:
         """Validate symptom list."""
         results = []
 
@@ -293,8 +293,8 @@ class InputValidator:
 
     def validate_medications(
         self,
-        medications: List,
-    ) -> List[ValidationResult]:
+        medications: list,
+    ) -> list[ValidationResult]:
         """Validate medication list."""
         results = []
 
@@ -321,9 +321,9 @@ class InputValidator:
 
     def validate_required_fields(
         self,
-        data: Dict[str, Any],
-        required: List[str],
-    ) -> List[ValidationResult]:
+        data: dict[str, Any],
+        required: list[str],
+    ) -> list[ValidationResult]:
         """Validate that required fields are present."""
         results = []
 
@@ -339,9 +339,9 @@ class InputValidator:
 
     def _get_age_range(
         self,
-        ranges: Dict,
+        ranges: dict,
         age_months: int,
-    ) -> Optional[tuple]:
+    ) -> tuple | None:
         """Get the appropriate range for an age."""
         for (low, high), range_val in ranges.items():
             if low <= age_months < high:
@@ -395,20 +395,20 @@ class InputValidator:
 
 def validate_or_raise(
     validator: InputValidator,
-    data: Dict[str, Any],
-    context: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    data: dict[str, Any],
+    context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     Validate data and raise ValidationError if invalid.
-    
+
     Args:
         validator: InputValidator instance
         data: Data to validate
         context: Optional context
-        
+
     Returns:
         Validated data
-        
+
     Raises:
         ValidationError: If validation fails
     """

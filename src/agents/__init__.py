@@ -11,14 +11,14 @@ Specialized agents for pediatric health assessment:
 - EscalationAgent: Workflow and care navigation
 """
 
-from .base_agent import BaseAgent, AgentConfig, AgentResponse
+from .base_agent import AgentConfig, AgentResponse, BaseAgent
+from .escalation_agent import EscalationAgent
+from .geo_exposure_agent import GeoExposureAgent
+from .guideline_rag_agent import GuidelineRAGAgent
 from .ingestion_agent import IngestionAgent
+from .medication_safety_agent import MedicationSafetyAgent
 from .phenotype_agent import PhenotypeAgent
 from .risk_agent import RiskAgent
-from .guideline_rag_agent import GuidelineRAGAgent
-from .medication_safety_agent import MedicationSafetyAgent
-from .geo_exposure_agent import GeoExposureAgent
-from .escalation_agent import EscalationAgent
 
 __all__ = [
     "BaseAgent",

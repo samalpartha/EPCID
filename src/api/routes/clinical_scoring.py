@@ -7,7 +7,6 @@ Provides endpoints for clinical scoring systems:
 - Physical Exam Assessment
 """
 
-from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
@@ -22,24 +21,24 @@ class PhoenixScoreRequest(BaseModel):
     age_months: int = Field(..., ge=0, le=216)
 
     # Respiratory
-    spo2: Optional[float] = Field(None, ge=0, le=100)
-    pao2: Optional[float] = Field(None, ge=0)
-    fio2: Optional[float] = Field(None, ge=0.21, le=1.0)
+    spo2: float | None = Field(None, ge=0, le=100)
+    pao2: float | None = Field(None, ge=0)
+    fio2: float | None = Field(None, ge=0.21, le=1.0)
     on_invasive_ventilation: bool = False
 
     # Cardiovascular
-    systolic_bp: Optional[int] = Field(None, ge=0)
-    diastolic_bp: Optional[int] = Field(None, ge=0)
-    lactate: Optional[float] = Field(None, ge=0)
-    vasoactive_medications: List[str] = []
+    systolic_bp: int | None = Field(None, ge=0)
+    diastolic_bp: int | None = Field(None, ge=0)
+    lactate: float | None = Field(None, ge=0)
+    vasoactive_medications: list[str] = []
 
     # Coagulation
-    platelet_count: Optional[int] = Field(None, ge=0)
-    inr: Optional[float] = Field(None, ge=0)
+    platelet_count: int | None = Field(None, ge=0)
+    inr: float | None = Field(None, ge=0)
 
     # Neurological
-    gcs_total: Optional[int] = Field(None, ge=3, le=15)
-    avpu: Optional[str] = Field(None, pattern="^[AVPUavpu]$")
+    gcs_total: int | None = Field(None, ge=3, le=15)
+    avpu: str | None = Field(None, pattern="^[AVPUavpu]$")
     bilateral_fixed_pupils: bool = False
 
     # Clinical context
@@ -50,7 +49,7 @@ class PhoenixScoreComponent(BaseModel):
     """Individual component score."""
     score: int
     max_score: int
-    factors: List[str]
+    factors: list[str]
 
 
 class PhoenixScoreResponse(BaseModel):
@@ -67,8 +66,8 @@ class PhoenixScoreResponse(BaseModel):
 
     risk_level: str
     summary: str
-    recommendations: List[str]
-    missing_data: List[str]
+    recommendations: list[str]
+    missing_data: list[str]
     confidence: float
 
 
@@ -77,14 +76,14 @@ class PEWSRequest(BaseModel):
     age_months: int = Field(..., ge=0, le=216)
 
     # Cardiovascular
-    heart_rate: Optional[int] = Field(None, ge=0)
-    systolic_bp: Optional[int] = Field(None, ge=0)
-    capillary_refill_seconds: Optional[float] = Field(None, ge=0)
+    heart_rate: int | None = Field(None, ge=0)
+    systolic_bp: int | None = Field(None, ge=0)
+    capillary_refill_seconds: float | None = Field(None, ge=0)
     skin_color: str = "normal"  # normal, pale, mottled, grey
 
     # Respiratory
-    respiratory_rate: Optional[int] = Field(None, ge=0)
-    oxygen_saturation: Optional[float] = Field(None, ge=0, le=100)
+    respiratory_rate: int | None = Field(None, ge=0)
+    oxygen_saturation: float | None = Field(None, ge=0, le=100)
     oxygen_requirement: float = 0.21
     work_of_breathing: str = "normal"  # normal, mild, moderate, severe
     grunting: bool = False
@@ -101,7 +100,7 @@ class PEWSComponent(BaseModel):
     """Individual PEWS component score."""
     score: int
     max_score: int
-    factors: List[str]
+    factors: list[str]
 
 
 class PEWSResponse(BaseModel):
@@ -118,7 +117,7 @@ class PEWSResponse(BaseModel):
     rapid_response_threshold: bool
 
     interpretation: str
-    recommended_actions: List[str]
+    recommended_actions: list[str]
     confidence: float
 
 
@@ -126,14 +125,14 @@ class PhysicalExamRequest(BaseModel):
     """Request for physical exam assessment."""
     # Mental status
     mental_status: str = "normal"  # normal, mildly_altered, moderately_altered, severely_altered, unresponsive
-    gcs_total: Optional[int] = Field(None, ge=3, le=15)
-    avpu: Optional[str] = Field(None, pattern="^[AVPUavpu]$")
+    gcs_total: int | None = Field(None, ge=3, le=15)
+    avpu: str | None = Field(None, pattern="^[AVPUavpu]$")
 
     # Pulse quality
     pulse_quality: str = "normal"  # normal, slightly_weak, weak, thready, absent
 
     # Perfusion
-    capillary_refill_seconds: Optional[float] = Field(None, ge=0)
+    capillary_refill_seconds: float | None = Field(None, ge=0)
     skin_perfusion: str = "normal"  # normal, pale, mottled, cool, cold, cyanotic
 
     # Context
@@ -146,7 +145,7 @@ class ExamFindingResult(BaseModel):
     name: str
     present: bool
     severity: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class PhysicalExamResponse(BaseModel):
@@ -154,13 +153,13 @@ class PhysicalExamResponse(BaseModel):
     signs_present_count: int
     composite_relative_risk: float
 
-    findings: Dict[str, ExamFindingResult]
+    findings: dict[str, ExamFindingResult]
 
     risk_level: str
     organ_dysfunction_risk: str
 
-    summary: List[str]
-    recommendations: List[str]
+    summary: list[str]
+    recommendations: list[str]
     confidence: float
 
 
@@ -170,18 +169,18 @@ class PhysicalExamResponse(BaseModel):
 async def calculate_phoenix_score(request: PhoenixScoreRequest):
     """
     Calculate Phoenix Sepsis Score.
-    
+
     The Phoenix criteria (JAMA 2024) assess four organ systems:
     - Respiratory (0-3 points)
     - Cardiovascular (0-6 points)
     - Coagulation (0-2 points)
     - Neurological (0-2 points)
-    
+
     Sepsis: Phoenix Score >= 2 with suspected infection
     Septic Shock: Sepsis + Cardiovascular Score >= 1
     """
     try:
-        from ...clinical.phoenix_score import PhoenixScoreCalculator, VentilationType
+        from ...clinical.phoenix_score import PhoenixScoreCalculator
 
         calculator = PhoenixScoreCalculator()
 
@@ -261,19 +260,19 @@ async def calculate_phoenix_score(request: PhoenixScoreRequest):
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
             detail="Clinical scoring module not available"
-        )
+        ) from None
 
 
 @router.post("/pews", response_model=PEWSResponse)
 async def calculate_pews(request: PEWSRequest):
     """
     Calculate Pediatric Early Warning Score (PEWS).
-    
+
     PEWS assesses three domains:
     - Cardiovascular (0-3 points)
     - Respiratory (0-3 points)
     - Behavior/Neurological (0-3 points)
-    
+
     Score interpretation:
     - 0-2: Low risk, routine monitoring
     - 3-4: Moderate risk, increased monitoring
@@ -281,9 +280,7 @@ async def calculate_pews(request: PEWSRequest):
     - 7+: Critical, immediate senior review
     """
     try:
-        from ...clinical.pews import (
-            PEWSCalculator, WorkOfBreathing, AVPU, CapillaryRefill
-        )
+        from ...clinical.pews import AVPU, PEWSCalculator, WorkOfBreathing
 
         calculator = PEWSCalculator()
 
@@ -350,25 +347,28 @@ async def calculate_pews(request: PEWSRequest):
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
             detail="Clinical scoring module not available"
-        )
+        ) from None
 
 
 @router.post("/physical-exam", response_model=PhysicalExamResponse)
 async def assess_physical_exam(request: PhysicalExamRequest):
     """
     Assess physical exam findings for critical illness risk.
-    
+
     Evaluates four validated physical exam signs:
     - Altered mental status (Sensitivity 54%, Specificity 84%)
     - Abnormal peripheral pulse quality (Sensitivity 8%, Specificity 98%)
     - Prolonged capillary refill >2s (Sensitivity 23%, Specificity 91%)
     - Cold/mottled extremities (Sensitivity 15%, Specificity 95%)
-    
+
     Key finding: >=2 signs present = RR 4.98 for organ dysfunction
     """
     try:
         from ...clinical.physical_exam import (
-            PhysicalExamAssessor, MentalStatus, PulseQuality, SkinPerfusion
+            MentalStatus,
+            PhysicalExamAssessor,
+            PulseQuality,
+            SkinPerfusion,
         )
 
         assessor = PhysicalExamAssessor()
@@ -457,4 +457,4 @@ async def assess_physical_exam(request: PhysicalExamRequest):
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
             detail="Clinical scoring module not available"
-        )
+        ) from None

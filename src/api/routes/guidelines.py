@@ -5,17 +5,16 @@ Clinical guidelines and health education endpoints.
 """
 
 from datetime import datetime
-from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 
+from ...api.dependencies import get_optional_user
 from ...api.schemas import (
     GuidelineRequest,
     GuidelineResponse,
-    GuidelinesResponse,
     GuidelineSource,
+    GuidelinesResponse,
 )
-from ...api.dependencies import get_optional_user
 from ...services.medlineplus_service import MedlinePlusService
 
 router = APIRouter()
@@ -228,11 +227,11 @@ Children can become dehydrated quickly, especially during illness with fever, vo
 )
 async def search_guidelines(
     request: GuidelineRequest,
-    current_user: Optional[dict] = Depends(get_optional_user),
+    current_user: dict | None = Depends(get_optional_user),
 ):
     """
     Search for relevant pediatric guidelines.
-    
+
     Searches curated guidelines and MedlinePlus health topics.
     """
     results = []
@@ -368,7 +367,7 @@ async def get_dehydration_guidelines():
 
 @router.get(
     "/emergency-signs",
-    response_model=List[dict],
+    response_model=list[dict],
     summary="Get emergency warning signs",
     description="Get a list of emergency warning signs for quick reference.",
 )
@@ -434,7 +433,7 @@ async def get_emergency_signs():
 
 @router.get(
     "/topics",
-    response_model=List[dict],
+    response_model=list[dict],
     summary="Get available topics",
     description="Get list of available guideline topics.",
 )

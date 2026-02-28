@@ -5,18 +5,17 @@ Symptom logging and tracking endpoints.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from ...api.dependencies import get_current_active_user
 from ...api.schemas import (
     SymptomCreate,
+    SymptomHistory,
     SymptomResponse,
     SymptomSeverity,
-    SymptomHistory,
 )
-from ...api.dependencies import get_current_active_user
 
 router = APIRouter()
 
@@ -38,7 +37,7 @@ async def create_symptom(
 ):
     """
     Log a new symptom.
-    
+
     - **child_id**: ID of the child
     - **symptom_type**: Type of symptom (fever, cough, etc.)
     - **severity**: mild, moderate, or severe
@@ -68,13 +67,13 @@ async def create_symptom(
 
 @router.post(
     "/batch",
-    response_model=List[SymptomResponse],
+    response_model=list[SymptomResponse],
     status_code=status.HTTP_201_CREATED,
     summary="Log multiple symptoms",
     description="Record multiple symptoms at once.",
 )
 async def create_symptoms_batch(
-    symptoms: List[SymptomCreate],
+    symptoms: list[SymptomCreate],
     current_user: dict = Depends(get_current_active_user),
 ):
     """Log multiple symptoms in a single request."""
@@ -104,21 +103,21 @@ async def create_symptoms_batch(
 
 @router.get(
     "/",
-    response_model=List[SymptomResponse],
+    response_model=list[SymptomResponse],
     summary="List symptoms",
     description="Get symptoms with optional filters.",
 )
 async def list_symptoms(
-    child_id: Optional[str] = None,
-    symptom_type: Optional[str] = None,
-    severity: Optional[SymptomSeverity] = None,
-    since: Optional[datetime] = None,
+    child_id: str | None = None,
+    symptom_type: str | None = None,
+    severity: SymptomSeverity | None = None,
+    since: datetime | None = None,
     limit: int = Query(default=50, ge=1, le=200),
     current_user: dict = Depends(get_current_active_user),
 ):
     """
     List symptoms with optional filters.
-    
+
     - **child_id**: Filter by child
     - **symptom_type**: Filter by type
     - **severity**: Filter by severity
@@ -248,7 +247,7 @@ async def delete_symptom(
 
 @router.get(
     "/types/common",
-    response_model=List[dict],
+    response_model=list[dict],
     summary="Get common symptom types",
     description="Get a list of common pediatric symptom types.",
 )

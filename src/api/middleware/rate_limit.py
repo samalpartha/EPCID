@@ -11,8 +11,8 @@ Implements token bucket algorithm with:
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Tuple
-from fastapi import Request, HTTPException, status
+
+from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
@@ -28,7 +28,7 @@ class TokenBucket:
     def __post_init__(self):
         self.tokens = float(self.capacity)
 
-    def consume(self, tokens: int = 1) -> Tuple[bool, float]:
+    def consume(self, tokens: int = 1) -> tuple[bool, float]:
         """
         Try to consume tokens.
         Returns (success, wait_time_if_failed)
@@ -97,14 +97,14 @@ def get_endpoint_category(path: str, method: str) -> str:
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """
     Rate limiting middleware using token bucket algorithm.
-    
+
     Tracks limits per IP address and per authenticated user.
     """
 
     def __init__(self, app, enabled: bool = True):
         super().__init__(app)
         self.enabled = enabled
-        self.buckets: Dict[str, Dict[str, TokenBucket]] = defaultdict(dict)
+        self.buckets: dict[str, dict[str, TokenBucket]] = defaultdict(dict)
         self.cleanup_interval = 300  # Clean up old buckets every 5 minutes
         self.last_cleanup = time.time()
 

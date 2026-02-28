@@ -6,24 +6,22 @@ SQLAlchemy ORM models for all database entities.
 
 import enum
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 from uuid import uuid4
 
 from sqlalchemy import (
+    JSON,
     Boolean,
-    Column,
     DateTime,
     Enum,
     Float,
     ForeignKey,
     Index,
     Integer,
-    JSON,
     String,
     Text,
-    UniqueConstraint,
 )
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
 
@@ -34,21 +32,21 @@ def generate_uuid() -> str:
 
 
 # Enums
-class Gender(str, enum.Enum):
+class Gender(enum.StrEnum):
     """Gender options."""
     MALE = "male"
     FEMALE = "female"
     OTHER = "other"
 
 
-class SymptomSeverity(str, enum.Enum):
+class SymptomSeverity(enum.StrEnum):
     """Symptom severity levels."""
     MILD = "mild"
     MODERATE = "moderate"
     SEVERE = "severe"
 
 
-class RiskLevel(str, enum.Enum):
+class RiskLevel(enum.StrEnum):
     """Risk level classification."""
     LOW = "low"
     MODERATE = "moderate"
@@ -56,7 +54,7 @@ class RiskLevel(str, enum.Enum):
     CRITICAL = "critical"
 
 
-class AuditAction(str, enum.Enum):
+class AuditAction(enum.StrEnum):
     """Audit log action types."""
     CREATE = "create"
     READ = "read"
@@ -77,7 +75,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     # Status flags
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -87,14 +85,14 @@ class User(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), onupdate=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
-    last_login: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_login: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Preferences
-    preferences: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    preferences: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Relationships
-    children: Mapped[List["Child"]] = relationship("Child", back_populates="user", cascade="all, delete-orphan")
-    audit_logs: Mapped[List["AuditLog"]] = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
+    children: Mapped[list["Child"]] = relationship("Child", back_populates="user", cascade="all, delete-orphan")
+    audit_logs: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
@@ -114,12 +112,12 @@ class Child(Base):
     gender: Mapped[Gender] = mapped_column(Enum(Gender), nullable=False)
 
     # Medical info
-    medical_conditions: Mapped[Optional[list]] = mapped_column(JSON, default=list)
-    allergies: Mapped[Optional[list]] = mapped_column(JSON, default=list)
-    medications: Mapped[Optional[list]] = mapped_column(JSON, default=list)
+    medical_conditions: Mapped[list | None] = mapped_column(JSON, default=list)
+    allergies: Mapped[list | None] = mapped_column(JSON, default=list)
+    medications: Mapped[list | None] = mapped_column(JSON, default=list)
 
     # Additional info
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
@@ -127,8 +125,8 @@ class Child(Base):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="children")
-    symptoms: Mapped[List["Symptom"]] = relationship("Symptom", back_populates="child", cascade="all, delete-orphan")
-    assessments: Mapped[List["Assessment"]] = relationship("Assessment", back_populates="child", cascade="all, delete-orphan")
+    symptoms: Mapped[list["Symptom"]] = relationship("Symptom", back_populates="child", cascade="all, delete-orphan")
+    assessments: Mapped[list["Assessment"]] = relationship("Assessment", back_populates="child", cascade="all, delete-orphan")
 
     @property
     def age_months(self) -> int:
@@ -168,13 +166,13 @@ class Symptom(Base):
     # Symptom details
     symptom_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     severity: Mapped[SymptomSeverity] = mapped_column(Enum(SymptomSeverity), nullable=False)
-    measurements: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    measurements: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Timing
-    onset_time: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    onset_time: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     recorded_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False, index=True)
-    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
     child: Mapped["Child"] = relationship("Child", back_populates="symptoms")
@@ -204,7 +202,7 @@ class Assessment(Base):
 
     # Input data
     symptoms_input: Mapped[dict] = mapped_column(JSON, nullable=False)
-    location: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    location: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Results
     risk_factors: Mapped[list] = mapped_column(JSON, default=list)
@@ -219,10 +217,10 @@ class Assessment(Base):
 
     # Explanations
     explanation: Mapped[str] = mapped_column(Text, nullable=False)
-    clinical_reasoning: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    clinical_reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Environmental context
-    environmental_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    environmental_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False, index=True)
@@ -249,20 +247,20 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Action details
     action: Mapped[AuditAction] = mapped_column(Enum(AuditAction), nullable=False, index=True)
     resource_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    resource_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
+    resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
 
     # Request context
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    request_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
 
     # Details
-    details: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Timestamp
     timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False, index=True)
@@ -295,11 +293,11 @@ class RefreshToken(Base):
 
     # Status
     is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    revoked_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Metadata
-    device_info: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    device_info: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(__import__('datetime').timezone.utc), nullable=False)
@@ -319,17 +317,17 @@ class EnvironmentData(Base):
     # Location
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
-    location_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    location_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Air quality
-    aqi: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    aqi_category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    pollutants: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    aqi: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    aqi_category: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    pollutants: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Weather
-    temperature: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    humidity: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    conditions: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    temperature: Mapped[float | None] = mapped_column(Float, nullable=True)
+    humidity: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    conditions: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Timestamps
     data_timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)

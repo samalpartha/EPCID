@@ -7,7 +7,7 @@ including when to seek care and home management tips.
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
@@ -22,11 +22,11 @@ class CareGuide(BaseModel):
     id: str
     title: str
     summary: str
-    when_to_call_911: List[str]
-    when_to_call_now: List[str]
-    when_to_call_24_hours: List[str]
-    home_care: Dict[str, Any]
-    age_specific: Optional[Dict[str, Any]] = None
+    when_to_call_911: list[str]
+    when_to_call_now: list[str]
+    when_to_call_24_hours: list[str]
+    home_care: dict[str, Any]
+    age_specific: dict[str, Any] | None = None
 
 
 class CareGuideListItem(BaseModel):
@@ -38,24 +38,24 @@ class CareGuideListItem(BaseModel):
 
 class CareGuidesResponse(BaseModel):
     """Response with list of available care guides."""
-    guides: List[CareGuideListItem]
+    guides: list[CareGuideListItem]
     total: int
 
 
 class EmergencySignsResponse(BaseModel):
     """Emergency warning signs response."""
     title: str
-    always_call_911: List[str]
-    infants_under_3_months: List[str]
+    always_call_911: list[str]
+    infants_under_3_months: list[str]
 
 
 # ============== Load Care Guides Data ==============
 
-def load_care_guides() -> Dict[str, Any]:
+def load_care_guides() -> dict[str, Any]:
     """Load care guides from JSON file."""
     try:
         data_path = Path(__file__).parent.parent.parent / "data" / "care_guides.json"
-        with open(data_path, "r") as f:
+        with open(data_path) as f:
             return json.load(f)
     except FileNotFoundError:
         # Return default data if file not found
@@ -74,7 +74,7 @@ def load_care_guides() -> Dict[str, Any]:
 async def list_care_guides():
     """
     List all available care guides.
-    
+
     Returns a summary of each guide including ID, title, and description.
     """
     data = load_care_guides()
@@ -96,7 +96,7 @@ async def list_care_guides():
 async def get_emergency_signs():
     """
     Get list of emergency warning signs.
-    
+
     Returns signs that always require calling 911 and
     special considerations for infants under 3 months.
     """
@@ -114,10 +114,10 @@ async def get_emergency_signs():
 async def get_care_guide(condition_id: str):
     """
     Get detailed care guide for a specific condition.
-    
+
     Args:
         condition_id: The condition identifier (e.g., 'fever', 'cough_cold')
-        
+
     Returns:
         Complete care guide with when to seek care and home treatment advice.
     """
@@ -147,10 +147,10 @@ async def get_care_guide(condition_id: str):
 async def search_care_guides(query: str):
     """
     Search care guides by keyword.
-    
+
     Args:
         query: Search term
-        
+
     Returns:
         List of matching care guides.
     """

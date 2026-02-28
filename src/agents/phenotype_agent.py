@@ -14,13 +14,11 @@ Converts raw data into clinically meaningful signals (phenotypes):
 These derived signals enable better risk stratification.
 """
 
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
 import logging
-import math
+from dataclasses import dataclass
+from typing import Any
 
-from .base_agent import BaseAgent, AgentConfig, AgentResponse
+from .base_agent import AgentConfig, AgentResponse, BaseAgent
 
 logger = logging.getLogger("epcid.agents.phenotype")
 
@@ -33,15 +31,15 @@ class Phenotype:
     unit: str
     severity: str  # normal, mild, moderate, severe
     confidence: float
-    trend: Optional[str] = None  # improving, stable, worsening
-    description: Optional[str] = None
-    contributing_factors: List[str] = None
+    trend: str | None = None  # improving, stable, worsening
+    description: str | None = None
+    contributing_factors: list[str] = None
 
     def __post_init__(self):
         if self.contributing_factors is None:
             self.contributing_factors = []
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "value": self.value,
@@ -57,7 +55,7 @@ class Phenotype:
 class PhenotypeAgent(BaseAgent):
     """
     Agent that derives clinical phenotypes from raw observations.
-    
+
     Phenotypes are higher-level clinical signals computed from
     raw data, enabling more nuanced risk assessment.
     """
@@ -92,7 +90,7 @@ class PhenotypeAgent(BaseAgent):
 
     def __init__(
         self,
-        config: Optional[AgentConfig] = None,
+        config: AgentConfig | None = None,
         **kwargs,
     ):
         config = config or AgentConfig(
@@ -105,24 +103,24 @@ class PhenotypeAgent(BaseAgent):
 
     async def process(
         self,
-        input_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> AgentResponse:
         """
         Process normalized data and compute phenotypes.
-        
+
         Args:
             input_data: Normalized data from ingestion agent
             context: Optional context with historical data
-            
+
         Returns:
             AgentResponse with computed phenotypes
         """
         import uuid
         request_id = str(uuid.uuid4())[:12]
 
-        phenotypes: List[Phenotype] = []
-        warnings: List[str] = []
+        phenotypes: list[Phenotype] = []
+        warnings: list[str] = []
 
         # Extract data
         normalized = input_data.get("normalized", input_data)
@@ -204,9 +202,9 @@ class PhenotypeAgent(BaseAgent):
 
     def _compute_fever_phenotype(
         self,
-        vitals: Dict[str, Any],
-        history: List[Dict],
-    ) -> Optional[Phenotype]:
+        vitals: dict[str, Any],
+        history: list[dict],
+    ) -> Phenotype | None:
         """Compute fever persistence and severity phenotype."""
         temp = vitals.get("temperature")
         if temp is None:
@@ -248,7 +246,7 @@ class PhenotypeAgent(BaseAgent):
             unit="celsius",
             severity=severity,
             confidence=0.9,
-            description=f"Temperature {temp:.1f}°C" + 
+            description=f"Temperature {temp:.1f}°C" +
                        (f", persistent for ~{persistence_hours}h" if persistence_hours > 0 else ""),
             contributing_factors=[
                 f"Current temperature: {temp:.1f}°C",
@@ -258,9 +256,9 @@ class PhenotypeAgent(BaseAgent):
 
     def _compute_respiratory_phenotype(
         self,
-        symptoms: List[str],
-        vitals: Dict[str, Any],
-    ) -> Optional[Phenotype]:
+        symptoms: list[str],
+        vitals: dict[str, Any],
+    ) -> Phenotype | None:
         """Compute respiratory effort score."""
         score = 0
         factors = []
@@ -326,9 +324,9 @@ class PhenotypeAgent(BaseAgent):
 
     def _compute_dehydration_phenotype(
         self,
-        symptoms: List[str],
-        vitals: Dict[str, Any],
-    ) -> Optional[Phenotype]:
+        symptoms: list[str],
+        vitals: dict[str, Any],
+    ) -> Phenotype | None:
         """Compute dehydration severity score."""
         score = 0
         factors = []
@@ -387,7 +385,7 @@ class PhenotypeAgent(BaseAgent):
             contributing_factors=factors,
         )
 
-    def _compute_symptom_burden(self, symptoms: List[str]) -> Phenotype:
+    def _compute_symptom_burden(self, symptoms: list[str]) -> Phenotype:
         """Compute overall symptom burden."""
         # Weight symptoms by severity
         severe_symptoms = {"cyanosis", "unresponsive", "seizure", "difficulty_breathing"}
@@ -425,8 +423,8 @@ class PhenotypeAgent(BaseAgent):
 
     def _compute_fatigue_index(
         self,
-        activity_levels: List[Dict[str, Any]],
-    ) -> Optional[Phenotype]:
+        activity_levels: list[dict[str, Any]],
+    ) -> Phenotype | None:
         """Compute fatigue/activity index from historical data."""
         if not activity_levels:
             return None
@@ -479,9 +477,9 @@ class PhenotypeAgent(BaseAgent):
 
     def _compute_appetite_phenotype(
         self,
-        symptoms: List[str],
-        context: Optional[Dict[str, Any]],
-    ) -> Optional[Phenotype]:
+        symptoms: list[str],
+        context: dict[str, Any] | None,
+    ) -> Phenotype | None:
         """Compute appetite/feeding phenotype."""
         score = 100  # Start at 100% normal
         factors = []
@@ -536,8 +534,8 @@ class PhenotypeAgent(BaseAgent):
     def _compute_weight_velocity(
         self,
         current_weight: float,
-        history: List[Dict],
-    ) -> Optional[Phenotype]:
+        history: list[dict],
+    ) -> Phenotype | None:
         """Compute weight change velocity."""
         # Find weight from 7 days ago
         week_ago_weight = None
@@ -589,9 +587,9 @@ class PhenotypeAgent(BaseAgent):
 
     def _compute_pain_phenotype(
         self,
-        symptoms: List[str],
-        context: Optional[Dict[str, Any]],
-    ) -> Optional[Phenotype]:
+        symptoms: list[str],
+        context: dict[str, Any] | None,
+    ) -> Phenotype | None:
         """Compute pain phenotype."""
         pain_symptoms = {
             "severe_pain": 9,
@@ -649,8 +647,8 @@ class PhenotypeAgent(BaseAgent):
 
     def _compute_clinical_state(
         self,
-        phenotypes: List[Phenotype],
-    ) -> Dict[str, Any]:
+        phenotypes: list[Phenotype],
+    ) -> dict[str, Any]:
         """Compute overall clinical state summary."""
         severe_count = sum(1 for p in phenotypes if p.severity == "severe")
         moderate_count = sum(1 for p in phenotypes if p.severity == "moderate")
@@ -687,8 +685,8 @@ class PhenotypeAgent(BaseAgent):
 
     def _generate_explanation(
         self,
-        phenotypes: List[Phenotype],
-        clinical_state: Dict[str, Any],
+        phenotypes: list[Phenotype],
+        clinical_state: dict[str, Any],
     ) -> str:
         """Generate explanation of phenotype analysis."""
         lines = ["## Phenotype Analysis\n"]

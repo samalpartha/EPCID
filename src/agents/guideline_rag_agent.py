@@ -11,13 +11,12 @@ Retrieval-Augmented Generation for clinical guidelines:
 This agent provides educational information, NOT medical advice.
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
 import logging
 import re
+from dataclasses import dataclass
+from typing import Any
 
-from .base_agent import BaseAgent, AgentConfig, AgentResponse
+from .base_agent import AgentConfig, AgentResponse, BaseAgent
 
 logger = logging.getLogger("epcid.agents.guideline_rag")
 
@@ -41,7 +40,7 @@ class GuidelineResult:
     relevance_score: float
     age_appropriate: bool
     citation: str
-    url: Optional[str] = None
+    url: str | None = None
 
 
 # Allowlisted sources
@@ -87,7 +86,7 @@ ALLOWED_SOURCES = [
 class GuidelineRAGAgent(BaseAgent):
     """
     RAG agent for retrieving clinical guidelines and educational content.
-    
+
     Key constraints:
     - Only retrieves from allowlisted sources
     - Always cites sources
@@ -99,19 +98,19 @@ class GuidelineRAGAgent(BaseAgent):
     CONTENT_TEMPLATES = {
         "fever": {
             "title": "Fever in Children",
-            "content": """Fever is usually a sign that your child's body is fighting an infection. 
+            "content": """Fever is usually a sign that your child's body is fighting an infection.
             A fever is generally defined as a temperature of 100.4°F (38°C) or higher.
-            
+
             Common causes include:
             - Viral infections (colds, flu)
             - Ear infections
             - Respiratory infections
-            
+
             When to contact a doctor:
             - Infant under 3 months with any fever
             - Fever lasting more than 3 days
             - Fever with other concerning symptoms
-            
+
             Home care:
             - Keep child comfortable
             - Ensure adequate fluid intake
@@ -121,18 +120,18 @@ class GuidelineRAGAgent(BaseAgent):
         "cough": {
             "title": "Cough in Children",
             "content": """Coughing helps clear mucus and irritants from the airways.
-            
+
             Types of cough:
             - Dry cough: Often from viral infections or allergies
             - Wet/productive cough: May indicate lower respiratory infection
             - Barking cough: May suggest croup
-            
+
             When to seek medical attention:
             - Difficulty breathing
             - Cough lasting more than 2 weeks
             - Cough with high fever
             - Wheezing or stridor
-            
+
             Home care:
             - Keep child hydrated
             - Use a humidifier
@@ -142,20 +141,20 @@ class GuidelineRAGAgent(BaseAgent):
         "vomiting": {
             "title": "Vomiting and Nausea in Children",
             "content": """Vomiting in children is common and usually due to viral gastroenteritis.
-            
+
             Common causes:
             - Stomach flu (viral gastroenteritis)
             - Food poisoning
             - Motion sickness
             - Overeating
-            
+
             Warning signs requiring medical attention:
             - Signs of dehydration
             - Blood in vomit
             - Severe abdominal pain
             - Vomiting for more than 24 hours
             - Unable to keep fluids down
-            
+
             Home care:
             - Small, frequent sips of clear fluids
             - Avoid solid foods until vomiting stops
@@ -165,47 +164,47 @@ class GuidelineRAGAgent(BaseAgent):
         "rash": {
             "title": "Rashes in Children",
             "content": """Rashes are common in children and have many causes.
-            
+
             Common types:
             - Viral rashes: Often with fever, usually resolve on their own
             - Allergic rashes: Hives, contact dermatitis
             - Heat rash: Small red bumps in warm areas
             - Eczema: Dry, itchy, recurring patches
-            
+
             Concerning signs:
             - Petechiae (small red/purple dots that don't fade with pressure)
             - Rash with high fever and ill appearance
             - Rapidly spreading rash
             - Blistering or painful rash
-            
+
             Always seek immediate care for petechial rashes.""",
             "source_id": "aap",
         },
         "breathing": {
             "title": "Breathing Problems in Children",
-            "content": """Normal breathing in children varies by age. Any significant change 
+            "content": """Normal breathing in children varies by age. Any significant change
             in breathing pattern warrants attention.
-            
+
             Warning signs:
             - Fast breathing (varies by age)
             - Nostril flaring
             - Chest retractions (skin pulling in between ribs)
             - Blue color around lips or fingernails
             - Grunting
-            
+
             EMERGENCY: Seek immediate care for:
             - Blue skin color
             - Severe difficulty breathing
             - Child unable to speak or cry
             - Breathing stops
-            
+
             These require calling 911 immediately.""",
             "source_id": "aap",
         },
         "dehydration": {
             "title": "Dehydration in Children",
             "content": """Dehydration occurs when a child loses more fluid than they take in.
-            
+
             Signs of dehydration:
             - Dry mouth and tongue
             - No tears when crying
@@ -213,12 +212,12 @@ class GuidelineRAGAgent(BaseAgent):
             - Sunken soft spot on infant's head
             - Sunken eyes
             - Lethargy or irritability
-            
+
             Prevention and treatment:
             - Oral rehydration solutions (like Pedialyte)
             - Small, frequent sips
             - Continue breastfeeding if applicable
-            
+
             Seek medical care for:
             - No wet diaper in 8 hours
             - Very dry mouth
@@ -241,7 +240,7 @@ class GuidelineRAGAgent(BaseAgent):
 
     def __init__(
         self,
-        config: Optional[AgentConfig] = None,
+        config: AgentConfig | None = None,
         **kwargs,
     ):
         config = config or AgentConfig(
@@ -260,16 +259,16 @@ class GuidelineRAGAgent(BaseAgent):
 
     async def process(
         self,
-        input_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> AgentResponse:
         """
         Retrieve relevant guidelines for the given query/symptoms.
-        
+
         Args:
             input_data: Contains query or symptoms to look up
             context: Optional context including risk tier
-            
+
         Returns:
             AgentResponse with guidelines and citations
         """
@@ -321,8 +320,8 @@ class GuidelineRAGAgent(BaseAgent):
     def _extract_search_terms(
         self,
         query: str,
-        symptoms: List[str],
-    ) -> List[str]:
+        symptoms: list[str],
+    ) -> list[str]:
         """Extract search terms from query and symptoms."""
         terms = []
 
@@ -342,9 +341,9 @@ class GuidelineRAGAgent(BaseAgent):
 
     def _retrieve_guidelines(
         self,
-        search_terms: List[str],
-        age_months: Optional[int],
-    ) -> List[GuidelineResult]:
+        search_terms: list[str],
+        age_months: int | None,
+    ) -> list[GuidelineResult]:
         """Retrieve guidelines matching search terms."""
         results = []
 
@@ -372,9 +371,9 @@ class GuidelineRAGAgent(BaseAgent):
 
     def _filter_results(
         self,
-        results: List[GuidelineResult],
-        age_months: Optional[int],
-    ) -> List[GuidelineResult]:
+        results: list[GuidelineResult],
+        age_months: int | None,
+    ) -> list[GuidelineResult]:
         """Filter and deduplicate results."""
         seen_titles = set()
         filtered = []
@@ -399,7 +398,7 @@ class GuidelineRAGAgent(BaseAgent):
 
     def _generate_response(
         self,
-        results: List[GuidelineResult],
+        results: list[GuidelineResult],
         risk_tier: str,
         query: str,
     ) -> str:
@@ -419,7 +418,7 @@ class GuidelineRAGAgent(BaseAgent):
         )
 
         # Add content from top results
-        for i, result in enumerate(results[:3]):
+        for _i, result in enumerate(results[:3]):
             lines.append(f"### {result.title}")
 
             # Truncate content
@@ -432,12 +431,12 @@ class GuidelineRAGAgent(BaseAgent):
 
         return "\n".join(lines)
 
-    def _get_escalation_message(self, risk_tier: str) -> Optional[str]:
+    def _get_escalation_message(self, risk_tier: str) -> str | None:
         """Get appropriate escalation message for risk tier."""
         tier_lower = risk_tier.lower()
         return self.ESCALATION_MESSAGES.get(tier_lower)
 
-    def _extract_citations(self, results: List[GuidelineResult]) -> List[Dict[str, str]]:
+    def _extract_citations(self, results: list[GuidelineResult]) -> list[dict[str, str]]:
         """Extract citations from results."""
         citations = []
         seen = set()
@@ -454,7 +453,7 @@ class GuidelineRAGAgent(BaseAgent):
 
         return citations
 
-    def _result_to_dict(self, result: GuidelineResult) -> Dict[str, Any]:
+    def _result_to_dict(self, result: GuidelineResult) -> dict[str, Any]:
         """Convert GuidelineResult to dictionary."""
         return {
             "title": result.title,
@@ -467,7 +466,7 @@ class GuidelineRAGAgent(BaseAgent):
 
     def _generate_explanation(
         self,
-        results: List[GuidelineResult],
+        results: list[GuidelineResult],
         risk_tier: str,
     ) -> str:
         """Generate explanation of the retrieval process."""
@@ -478,7 +477,7 @@ class GuidelineRAGAgent(BaseAgent):
 
         if results:
             lines.append("\n### Sources Used")
-            sources = set(r.source.name for r in results)
+            sources = {r.source.name for r in results}
             for source in sources:
                 lines.append(f"- {source}")
 

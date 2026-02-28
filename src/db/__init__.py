@@ -6,17 +6,17 @@ SQLAlchemy database configuration and models.
 
 from .database import (
     Base,
-    engine,
     SessionLocal,
+    engine,
     get_db,
     init_db,
 )
 from .models import (
-    User,
-    Child,
-    Symptom,
     Assessment,
     AuditLog,
+    Child,
+    Symptom,
+    User,
 )
 
 __all__ = [

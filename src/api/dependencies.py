@@ -4,7 +4,6 @@ EPCID API Dependencies
 FastAPI dependency injection for authentication and common resources.
 """
 
-from typing import Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -15,10 +14,10 @@ from .security import verify_token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login/form", auto_error=False)
 
 
-async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[dict]:
+async def get_current_user(token: str | None = Depends(oauth2_scheme)) -> dict | None:
     """
     Get the current user from the JWT token.
-    
+
     Returns None if no token is provided or token is invalid.
     """
     if not token:
@@ -40,7 +39,7 @@ async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> Opt
 async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> dict:
     """
     Get the current authenticated user.
-    
+
     Raises HTTPException if not authenticated.
     """
     if not token:
@@ -83,10 +82,10 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> dict:
     return user
 
 
-async def get_optional_user(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[dict]:
+async def get_optional_user(token: str | None = Depends(oauth2_scheme)) -> dict | None:
     """
     Get the current user if authenticated, otherwise None.
-    
+
     Useful for endpoints that work with or without authentication.
     """
     return await get_current_user(token)
@@ -95,7 +94,7 @@ async def get_optional_user(token: Optional[str] = Depends(oauth2_scheme)) -> Op
 def require_verified_user(user: dict = Depends(get_current_active_user)) -> dict:
     """
     Require a verified user account.
-    
+
     Raises HTTPException if user email is not verified.
     """
     if not user.get("is_verified"):

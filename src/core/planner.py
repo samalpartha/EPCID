@@ -9,12 +9,12 @@ Implements goal decomposition and task planning for the agentic platform:
 Enables structured, safe execution of clinical support workflows.
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set
-from enum import Enum
 import logging
 import uuid
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any
 
 logger = logging.getLogger("epcid.core.planner")
 
@@ -52,7 +52,7 @@ class GoalType(Enum):
 class Task:
     """
     A single actionable task within a plan.
-    
+
     Tasks are atomic units of work that can be executed
     by agents in the system.
     """
@@ -62,29 +62,29 @@ class Task:
     agent_type: str  # Which agent should execute this task
     priority: TaskPriority
     status: TaskStatus = TaskStatus.PENDING
-    dependencies: List[str] = field(default_factory=list)  # Task IDs
-    input_data: Dict[str, Any] = field(default_factory=dict)
-    output_data: Dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)  # Task IDs
+    input_data: dict[str, Any] = field(default_factory=dict)
+    output_data: dict[str, Any] = field(default_factory=dict)
     timeout_seconds: int = 30
     retries: int = 0
     max_retries: int = 3
     created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    error_message: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def can_execute(self, completed_tasks: Set[str]) -> bool:
+    def can_execute(self, completed_tasks: set[str]) -> bool:
         """Check if all dependencies are satisfied."""
         return all(dep in completed_tasks for dep in self.dependencies)
 
-    def duration(self) -> Optional[timedelta]:
+    def duration(self) -> timedelta | None:
         """Calculate task execution duration."""
         if self.started_at and self.completed_at:
             return self.completed_at - self.started_at
         return None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -106,21 +106,21 @@ class Task:
 class Goal:
     """
     A high-level goal to be achieved by the system.
-    
+
     Goals are decomposed into tasks by the planner.
     """
     id: str
     goal_type: GoalType
     description: str
-    context: Dict[str, Any]
-    success_criteria: List[str]
-    constraints: List[str] = field(default_factory=list)
-    deadline: Optional[datetime] = None
+    context: dict[str, Any]
+    success_criteria: list[str]
+    constraints: list[str] = field(default_factory=list)
+    deadline: datetime | None = None
     priority: TaskPriority = TaskPriority.MEDIUM
     created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -138,25 +138,25 @@ class Goal:
 class Plan:
     """
     An ordered sequence of tasks to achieve a goal.
-    
+
     Plans maintain task dependencies and execution state.
     """
     id: str
     goal: Goal
-    tasks: List[Task]
+    tasks: list[Task]
     status: TaskStatus = TaskStatus.PENDING
     created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def completed_tasks(self) -> Set[str]:
+    def completed_tasks(self) -> set[str]:
         """Get IDs of completed tasks."""
         return {t.id for t in self.tasks if t.status == TaskStatus.COMPLETED}
 
     @property
-    def pending_tasks(self) -> List[Task]:
+    def pending_tasks(self) -> list[Task]:
         """Get tasks that are ready to execute."""
         return [
             t for t in self.tasks
@@ -187,14 +187,14 @@ class Plan:
             for t in self.tasks
         )
 
-    def get_next_tasks(self, max_parallel: int = 3) -> List[Task]:
+    def get_next_tasks(self, max_parallel: int = 3) -> list[Task]:
         """Get the next tasks to execute, respecting dependencies and parallelism."""
         ready = self.pending_tasks
         # Sort by priority
         ready.sort(key=lambda t: t.priority.value)
         return ready[:max_parallel]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -211,7 +211,7 @@ class Plan:
 class Planner:
     """
     Task planner that decomposes goals into executable plans.
-    
+
     Uses domain knowledge to create safe, efficient execution plans
     for clinical support workflows.
     """
@@ -257,7 +257,7 @@ class Planner:
         logger.info(f"Created plan {plan.id} with {len(tasks)} tasks")
         return plan
 
-    def _decompose_goal(self, goal: Goal) -> List[Task]:
+    def _decompose_goal(self, goal: Goal) -> list[Task]:
         """Decompose a goal into individual tasks."""
         templates = self._task_templates.get(goal.goal_type, [])
         tasks = []
@@ -278,7 +278,7 @@ class Planner:
 
         return tasks
 
-    def _add_safety_tasks(self, tasks: List[Task], goal: Goal) -> List[Task]:
+    def _add_safety_tasks(self, tasks: list[Task], goal: Goal) -> list[Task]:
         """Add safety validation tasks to the plan."""
         safety_tasks = []
 
@@ -314,10 +314,10 @@ class Planner:
 
         return safety_tasks + tasks + [audit_task]
 
-    def _order_tasks(self, tasks: List[Task]) -> List[Task]:
+    def _order_tasks(self, tasks: list[Task]) -> list[Task]:
         """Order tasks by dependencies and priority using topological sort."""
         # Build dependency graph
-        task_map = {t.id: t for t in tasks}
+        {t.id: t for t in tasks}
         in_degree = {t.id: len(t.dependencies) for t in tasks}
 
         # Find tasks with no dependencies
@@ -345,7 +345,7 @@ class Planner:
 
         return ordered
 
-    def _validate_plan(self, tasks: List[Task]) -> None:
+    def _validate_plan(self, tasks: list[Task]) -> None:
         """Validate that the plan is executable."""
         if len(tasks) > self.max_tasks_per_plan:
             raise ValueError(f"Plan exceeds maximum tasks: {len(tasks)} > {self.max_tasks_per_plan}")
@@ -385,7 +385,7 @@ class Planner:
 
         return plan
 
-    def _initialize_templates(self) -> Dict[GoalType, List[Dict[str, Any]]]:
+    def _initialize_templates(self) -> dict[GoalType, list[dict[str, Any]]]:
         """Initialize task templates for common goals."""
         return {
             GoalType.RISK_ASSESSMENT: [
@@ -630,15 +630,15 @@ class Planner:
         total_seconds = sum(t.timeout_seconds for t in critical_path)
         return timedelta(seconds=total_seconds)
 
-    def _find_critical_path(self, plan: Plan) -> List[Task]:
+    def _find_critical_path(self, plan: Plan) -> list[Task]:
         """Find the critical path through the task graph."""
         # Simplified: just return tasks with most dependencies
         task_map = {t.id: t for t in plan.tasks}
 
         # Calculate longest path to each task
-        longest_path: Dict[str, List[Task]] = {}
+        longest_path: dict[str, list[Task]] = {}
 
-        def get_longest_path(task_id: str) -> List[Task]:
+        def get_longest_path(task_id: str) -> list[Task]:
             if task_id in longest_path:
                 return longest_path[task_id]
 
@@ -651,7 +651,7 @@ class Planner:
                 return [task]
 
             # Find longest path among dependencies
-            max_path: List[Task] = []
+            max_path: list[Task] = []
             for dep_id in task.dependencies:
                 dep_path = get_longest_path(dep_id)
                 if len(dep_path) > len(max_path):
@@ -661,7 +661,7 @@ class Planner:
             return longest_path[task_id]
 
         # Find task with longest path
-        max_path: List[Task] = []
+        max_path: list[Task] = []
         for task in plan.tasks:
             path = get_longest_path(task.id)
             if len(path) > len(max_path):

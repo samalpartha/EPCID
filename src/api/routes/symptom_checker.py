@@ -6,14 +6,13 @@ the ChildrensMD-style workflow with 4-tier triage output.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ..dependencies import get_current_user
-from ..schemas import RiskLevel
 
 router = APIRouter(prefix="/symptom-checker", tags=["Symptom Checker"])
 
@@ -34,12 +33,12 @@ class SymptomInput(BaseModel):
     name: str
     severity: str = Field(..., description="mild, moderate, or severe")
     duration: str = Field(..., description="Duration category")
-    notes: Optional[str] = None
+    notes: str | None = None
 
 
 class SymptomCheckerStartRequest(BaseModel):
     """Request to start a symptom checker session."""
-    child_id: Optional[str] = None
+    child_id: str | None = None
     age_months: int = Field(..., ge=0, le=216)
     sex: str = Field(..., pattern="^(male|female)$")
 
@@ -50,27 +49,27 @@ class SymptomCheckerStartResponse(BaseModel):
     age_months: int
     sex: str
     created_at: datetime
-    warnings: List[str] = []
+    warnings: list[str] = []
 
 
 class AddSymptomsRequest(BaseModel):
     """Request to add symptoms to session."""
     session_id: str
-    symptoms: List[SymptomInput]
+    symptoms: list[SymptomInput]
 
 
 class AddSymptomsResponse(BaseModel):
     """Response after adding symptoms."""
     session_id: str
     symptoms_count: int
-    red_flags_detected: List[str] = []
+    red_flags_detected: list[str] = []
     immediate_escalation: bool = False
 
 
 class TriageRequest(BaseModel):
     """Request for triage assessment."""
     session_id: str
-    additional_context: Optional[Dict[str, Any]] = None
+    additional_context: dict[str, Any] | None = None
 
 
 class TriageRecommendation(BaseModel):
@@ -78,9 +77,9 @@ class TriageRecommendation(BaseModel):
     level: str  # call_911, call_now, call_24_hours, home_care
     title: str
     description: str
-    reasons: List[str]
-    recommendations: List[str]
-    warning_signs_to_watch: List[str]
+    reasons: list[str]
+    recommendations: list[str]
+    warning_signs_to_watch: list[str]
     disclaimer: str
 
 
@@ -88,7 +87,7 @@ class TriageResponse(BaseModel):
     """Full triage response."""
     session_id: str
     triage: TriageRecommendation
-    symptoms_assessed: List[SymptomInput]
+    symptoms_assessed: list[SymptomInput]
     assessment_time: datetime
     confidence: float
 
@@ -96,7 +95,7 @@ class TriageResponse(BaseModel):
 # ============== In-Memory Session Storage ==============
 # In production, use Redis or database
 
-sessions: Dict[str, Dict[str, Any]] = {}
+sessions: dict[str, dict[str, Any]] = {}
 
 
 # ============== Endpoints ==============
@@ -108,7 +107,7 @@ async def start_symptom_checker(
 ):
     """
     Start a new symptom checker session.
-    
+
     Creates a session for collecting and assessing symptoms,
     with age-appropriate warnings and guidance.
     """
@@ -157,7 +156,7 @@ async def add_symptoms(
 ):
     """
     Add symptoms to an existing session.
-    
+
     Symptoms are validated and checked for red flags that
     might require immediate escalation.
     """
@@ -183,7 +182,7 @@ async def add_symptoms(
     immediate_escalation = False
 
     critical_symptoms = [
-        "unresponsive", "seizure", "severe_difficulty_breathing", 
+        "unresponsive", "seizure", "severe_difficulty_breathing",
         "blue_lips", "not_breathing", "apnea", "severe_abdominal_pain",
         "bloody_vomit", "currant_jelly_stool", "petechiae"
     ]
@@ -217,7 +216,7 @@ async def get_triage(
 ):
     """
     Get triage recommendation based on collected symptoms.
-    
+
     Returns a 4-tier triage level (call_911, call_now, call_24_hours, home_care)
     with specific recommendations and warning signs to watch.
     """
@@ -274,10 +273,10 @@ async def delete_session(
 
 # ============== Triage Logic ==============
 
-def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendation:
+def calculate_triage(symptoms: list[dict], age_months: int) -> TriageRecommendation:
     """
     Calculate triage level based on symptoms and age.
-    
+
     Implements the 4-tier triage system:
     - call_911: Life-threatening emergency
     - call_now: Urgent, needs immediate attention
@@ -285,8 +284,6 @@ def calculate_triage(symptoms: List[Dict], age_months: int) -> TriageRecommendat
     - home_care: Can manage at home
     """
     reasons = []
-    recommendations = []
-    warning_signs = []
 
     disclaimer = (
         "This is not a substitute for professional medical advice, diagnosis, "

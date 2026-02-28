@@ -13,17 +13,16 @@ APIs Used:
 - CDC Vaccination Schedules: https://www.cdc.gov/vaccines/schedules/
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from enum import Enum
+from enum import StrEnum
+from typing import Any
 
 logger = logging.getLogger("epcid.services.cdc")
 
 
-class DiseaseType(str, Enum):
+class DiseaseType(StrEnum):
     """Trackable disease types."""
     INFLUENZA = "influenza"
     RSV = "rsv"
@@ -32,7 +31,7 @@ class DiseaseType(str, Enum):
     ENTEROVIRUS = "enterovirus"
 
 
-class ActivityLevel(str, Enum):
+class ActivityLevel(StrEnum):
     """CDC activity levels."""
     MINIMAL = "minimal"
     LOW = "low"
@@ -54,7 +53,7 @@ class DiseaseActivity:
     pediatric_impact: str
     recommendation: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "disease": self.disease.value,
             "region": self.region,
@@ -75,10 +74,10 @@ class VaccinationSchedule:
     recommended_age: str
     dose_number: int
     total_doses: int
-    catch_up_age: Optional[str]
+    catch_up_age: str | None
     notes: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "vaccine_name": self.vaccine_name,
             "disease": self.disease,
@@ -89,7 +88,7 @@ class VaccinationSchedule:
         }
 
 
-@dataclass 
+@dataclass
 class GrowthPercentile:
     """Growth percentile data."""
     age_months: int
@@ -107,7 +106,7 @@ class GrowthPercentile:
 class CDCService:
     """
     Service for CDC data integration.
-    
+
     Provides disease surveillance, vaccination schedules,
     and pediatric growth reference data.
     """
@@ -119,7 +118,7 @@ class CDCService:
         cache_ttl_hours: int = 6,
     ):
         self.cache_ttl_hours = cache_ttl_hours
-        self._cache: Dict[str, tuple] = {}
+        self._cache: dict[str, tuple] = {}
 
         # Pre-load reference data
         self._vaccination_schedule = self._load_vaccination_schedule()
@@ -130,15 +129,15 @@ class CDCService:
     async def get_disease_activity(
         self,
         state: str,
-        diseases: Optional[List[DiseaseType]] = None,
-    ) -> List[DiseaseActivity]:
+        diseases: list[DiseaseType] | None = None,
+    ) -> list[DiseaseActivity]:
         """
         Get current disease activity for a state.
-        
+
         Args:
             state: Two-letter state code (e.g., "CA")
             diseases: List of diseases to check (default: all)
-            
+
         Returns:
             List of DiseaseActivity objects
         """
@@ -164,15 +163,15 @@ class CDCService:
     async def get_outbreak_alerts(
         self,
         state: str,
-        zip_code: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        zip_code: str | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Get active outbreak alerts for a region.
-        
+
         Args:
             state: Two-letter state code
             zip_code: Optional zip code for local alerts
-            
+
         Returns:
             List of alert dictionaries
         """
@@ -197,14 +196,14 @@ class CDCService:
         self,
         age_months: int,
         include_catchup: bool = True,
-    ) -> List[VaccinationSchedule]:
+    ) -> list[VaccinationSchedule]:
         """
         Get recommended vaccinations for a child's age.
-        
+
         Args:
             age_months: Child's age in months
             include_catchup: Include catch-up vaccines
-            
+
         Returns:
             List of VaccinationSchedule objects
         """
@@ -228,16 +227,16 @@ class CDCService:
         sex: str,
         measurement_type: str,
         value: float,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate growth percentile for a measurement.
-        
+
         Args:
             age_months: Child's age in months
             sex: 'male' or 'female'
             measurement_type: 'weight', 'height', 'head_circumference', 'bmi'
             value: The measured value
-            
+
         Returns:
             Dict with percentile information
         """
@@ -256,19 +255,19 @@ class CDCService:
         # Determine status
         if percentile < 3:
             status = "below_normal"
-            message = f"Below 3rd percentile - consult pediatrician"
+            message = "Below 3rd percentile - consult pediatrician"
         elif percentile < 5:
             status = "low"
-            message = f"Between 3rd and 5th percentile - monitor closely"
+            message = "Between 3rd and 5th percentile - monitor closely"
         elif percentile <= 95:
             status = "normal"
             message = f"Within normal range ({percentile}th percentile)"
         elif percentile <= 97:
             status = "high"
-            message = f"Between 95th and 97th percentile - monitor"
+            message = "Between 95th and 97th percentile - monitor"
         else:
             status = "above_normal"
-            message = f"Above 97th percentile - consult pediatrician"
+            message = "Above 97th percentile - consult pediatrician"
 
         return {
             "percentile": percentile,
@@ -285,14 +284,14 @@ class CDCService:
         self,
         age_months: int,
         vital_type: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get normal vital sign ranges for age.
-        
+
         Args:
             age_months: Child's age in months
             vital_type: 'heart_rate', 'respiratory_rate', 'blood_pressure', 'temperature'
-            
+
         Returns:
             Dict with normal ranges
         """
@@ -313,7 +312,7 @@ class CDCService:
         self,
         state: str,
         disease: DiseaseType,
-    ) -> Optional[DiseaseActivity]:
+    ) -> DiseaseActivity | None:
         """Get simulated regional disease activity."""
         # Regional data (would come from CDC APIs in production)
         # This simulates typical winter respiratory illness patterns
@@ -390,7 +389,7 @@ class CDCService:
                 return region
         return "Unknown"
 
-    def _load_vaccination_schedule(self) -> List[VaccinationSchedule]:
+    def _load_vaccination_schedule(self) -> list[VaccinationSchedule]:
         """Load CDC vaccination schedule."""
         # Based on CDC 2024 schedule
         return [
@@ -443,7 +442,7 @@ class CDCService:
             VaccinationSchedule("MenACWY", "Meningococcal", "11-12 years", 1, 2, "13-18 years", "Booster at 16"),
         ]
 
-    def _load_growth_charts(self) -> Dict[str, List[GrowthPercentile]]:
+    def _load_growth_charts(self) -> dict[str, list[GrowthPercentile]]:
         """Load WHO/CDC growth chart data."""
         # Abbreviated dataset - full data from CDC/WHO
         charts = {
@@ -485,7 +484,7 @@ class CDCService:
         age_months: int,
         sex: str,
         measurement_type: str,
-    ) -> Optional[GrowthPercentile]:
+    ) -> GrowthPercentile | None:
         """Get growth chart for age/sex/measurement."""
         key = f"{measurement_type}_{sex}"
         charts = self._growth_charts.get(key, [])
@@ -564,7 +563,7 @@ class CDCService:
             # Assume months
             return int(''.join(filter(str.isdigit, age_str)) or 0)
 
-    def _get_vital_ranges_for_age(self, age_months: int) -> Dict[str, Any]:
+    def _get_vital_ranges_for_age(self, age_months: int) -> dict[str, Any]:
         """Get normal vital sign ranges for age."""
         # Based on PALS guidelines
         if age_months < 1:  # Newborn
@@ -613,7 +612,7 @@ class CDCService:
         else:
             return "Adolescent"
 
-    def _get_cached(self, key: str) -> Optional[Any]:
+    def _get_cached(self, key: str) -> Any | None:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]

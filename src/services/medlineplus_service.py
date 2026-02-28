@@ -17,9 +17,8 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlencode
-import json
 
 logger = logging.getLogger("epcid.services.medlineplus")
 
@@ -32,9 +31,9 @@ class MedlinePlusResult:
     summary: str
     source: str
     language: str
-    topic_id: Optional[str] = None
+    topic_id: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "title": self.title,
             "url": self.url,
@@ -48,7 +47,7 @@ class MedlinePlusResult:
 class MedlinePlusService:
     """
     Service for MedlinePlus Connect API integration.
-    
+
     MedlinePlus Connect provides patient education materials linked
     to clinical data (diagnoses, labs, medications).
     """
@@ -77,7 +76,7 @@ class MedlinePlusService:
     ):
         self.timeout_seconds = timeout_seconds
         self.cache_ttl_hours = cache_ttl_hours
-        self._cache: Dict[str, tuple] = {}  # key -> (result, timestamp)
+        self._cache: dict[str, tuple] = {}  # key -> (result, timestamp)
 
         logger.info("Initialized MedlinePlus service")
 
@@ -86,15 +85,15 @@ class MedlinePlusService:
         code: str,
         code_system: str = "ICD-10-CM",
         language: str = "en",
-    ) -> List[MedlinePlusResult]:
+    ) -> list[MedlinePlusResult]:
         """
         Search MedlinePlus by medical code (ICD-10, SNOMED, etc.).
-        
+
         Args:
             code: The medical code (e.g., "R50.9" for fever)
             code_system: The coding system (default: ICD-10-CM)
             language: Language for results (default: English)
-            
+
         Returns:
             List of MedlinePlusResult objects
         """
@@ -135,14 +134,14 @@ class MedlinePlusService:
         self,
         symptom: str,
         language: str = "en",
-    ) -> List[MedlinePlusResult]:
+    ) -> list[MedlinePlusResult]:
         """
         Search MedlinePlus by symptom name.
-        
+
         Args:
             symptom: The symptom to search for
             language: Language for results
-            
+
         Returns:
             List of MedlinePlusResult objects
         """
@@ -160,14 +159,14 @@ class MedlinePlusService:
         self,
         query: str,
         language: str = "en",
-    ) -> List[MedlinePlusResult]:
+    ) -> list[MedlinePlusResult]:
         """
         Search MedlinePlus health topics.
-        
+
         Args:
             query: Search query
             language: Language for results
-            
+
         Returns:
             List of MedlinePlusResult objects
         """
@@ -193,14 +192,14 @@ class MedlinePlusService:
         self,
         medication_name: str,
         language: str = "en",
-    ) -> List[MedlinePlusResult]:
+    ) -> list[MedlinePlusResult]:
         """
         Get medication information from MedlinePlus.
-        
+
         Args:
             medication_name: Name of the medication
             language: Language for results
-            
+
         Returns:
             List of MedlinePlusResult objects
         """
@@ -248,17 +247,17 @@ class MedlinePlusService:
     async def get_lab_info(
         self,
         lab_name: str,
-        loinc_code: Optional[str] = None,
+        loinc_code: str | None = None,
         language: str = "en",
-    ) -> List[MedlinePlusResult]:
+    ) -> list[MedlinePlusResult]:
         """
         Get lab test information from MedlinePlus.
-        
+
         Args:
             lab_name: Name of the lab test
             loinc_code: Optional LOINC code
             language: Language for results
-            
+
         Returns:
             List of MedlinePlusResult objects
         """
@@ -290,7 +289,7 @@ class MedlinePlusService:
             logger.error(f"MedlinePlus lab search failed: {e}")
             return []
 
-    async def _make_request(self, url: str) -> Dict[str, Any]:
+    async def _make_request(self, url: str) -> dict[str, Any]:
         """Make HTTP request to MedlinePlus API."""
         # In production, would use aiohttp:
         # async with aiohttp.ClientSession() as session:
@@ -301,7 +300,7 @@ class MedlinePlusService:
         await asyncio.sleep(0.1)  # Simulate network latency
         return {"feed": {"entry": []}}
 
-    def _parse_response(self, response: Dict[str, Any]) -> List[MedlinePlusResult]:
+    def _parse_response(self, response: dict[str, Any]) -> list[MedlinePlusResult]:
         """Parse MedlinePlus API response."""
         results = []
 
@@ -335,7 +334,7 @@ class MedlinePlusService:
         }
         return oids.get(code_system, code_system)
 
-    def _get_curated_content(self, query: str) -> List[MedlinePlusResult]:
+    def _get_curated_content(self, query: str) -> list[MedlinePlusResult]:
         """Get curated content for common queries."""
         # Curated pediatric health content
         content = {
@@ -383,7 +382,7 @@ class MedlinePlusService:
 
         return []
 
-    def _get_medication_content(self, medication_name: str) -> List[MedlinePlusResult]:
+    def _get_medication_content(self, medication_name: str) -> list[MedlinePlusResult]:
         """Get curated medication content."""
         content = {
             "acetaminophen": MedlinePlusResult(
@@ -405,7 +404,7 @@ class MedlinePlusService:
         name_lower = medication_name.lower()
         return [content[name_lower]] if name_lower in content else []
 
-    def _get_cached(self, key: str) -> Optional[List[MedlinePlusResult]]:
+    def _get_cached(self, key: str) -> list[MedlinePlusResult] | None:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]
@@ -414,7 +413,7 @@ class MedlinePlusService:
             del self._cache[key]
         return None
 
-    def _set_cached(self, key: str, value: List[MedlinePlusResult]) -> None:
+    def _set_cached(self, key: str, value: list[MedlinePlusResult]) -> None:
         """Set cached result."""
         self._cache[key] = (value, datetime.now(__import__('datetime').timezone.utc))
 

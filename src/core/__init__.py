@@ -9,11 +9,11 @@ Core components for the agentic architecture:
 - Executor: Safe action execution with rollback
 """
 
-from .memory import Memory, ShortTermMemory, EpisodicMemory, SemanticMemory
-from .reasoning import ReasoningEngine, ChainOfThought, SelfConsistency
-from .planner import Planner, Goal, Task, Plan
-from .decision_maker import DecisionMaker, Decision, RiskAssessment
-from .executor import Executor, Action, ActionResult
+from .decision_maker import Decision, DecisionMaker, RiskAssessment
+from .executor import Action, ActionResult, Executor
+from .memory import EpisodicMemory, Memory, SemanticMemory, ShortTermMemory
+from .planner import Goal, Plan, Planner, Task
+from .reasoning import ChainOfThought, ReasoningEngine, SelfConsistency
 
 __all__ = [
     "Memory",

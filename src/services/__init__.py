@@ -9,10 +9,10 @@ Service integrations for external APIs:
 - WeatherService: Weather and climate data (NOAA, OpenWeather)
 """
 
+from .air_quality_service import AirQualityService
 from .fhir_service import FHIRService
 from .medlineplus_service import MedlinePlusService
 from .openfda_service import OpenFDAService
-from .air_quality_service import AirQualityService
 from .weather_service import WeatherService
 
 __all__ = [

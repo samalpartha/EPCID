@@ -10,10 +10,10 @@ Generates human-readable explanations for:
 Every output from EPCID must be explainable.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-import logging
+from typing import Any
 
 logger = logging.getLogger("epcid.utils.explainability")
 
@@ -24,16 +24,16 @@ class ExplanationSection:
     title: str
     content: str
     importance: str = "medium"  # high, medium, low
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
 
 
 @dataclass
 class Explanation:
     """A complete explanation."""
     summary: str
-    sections: List[ExplanationSection]
+    sections: list[ExplanationSection]
     confidence_statement: str
-    disclaimers: List[str]
+    disclaimers: list[str]
     generated_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
 
     def to_markdown(self) -> str:
@@ -63,7 +63,7 @@ class Explanation:
 
         return "\n".join(lines)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "summary": self.summary,
@@ -85,7 +85,7 @@ class Explanation:
 class ExplanationGenerator:
     """
     Generates explanations for EPCID outputs.
-    
+
     Ensures all system outputs are explainable and
     understandable by caregivers and clinicians.
     """
@@ -104,16 +104,16 @@ class ExplanationGenerator:
         self,
         risk_tier: str,
         confidence: float,
-        risk_factors: List[str],
-        protective_factors: List[str],
-        uncertainty_factors: List[str],
-        triggered_rules: List[str],
-        model_scores: Dict[str, float],
-        missing_data: List[str],
+        risk_factors: list[str],
+        protective_factors: list[str],
+        uncertainty_factors: list[str],
+        triggered_rules: list[str],
+        model_scores: dict[str, float],
+        missing_data: list[str],
     ) -> Explanation:
         """
         Generate explanation for a risk assessment.
-        
+
         Args:
             risk_tier: The assessed risk tier
             confidence: Confidence in the assessment
@@ -123,7 +123,7 @@ class ExplanationGenerator:
             triggered_rules: Safety rules that were triggered
             model_scores: Scores from ML models
             missing_data: Data that would improve assessment
-            
+
         Returns:
             Explanation object
         """
@@ -218,7 +218,7 @@ class ExplanationGenerator:
         escalation_type: str,
         urgency: str,
         primary_action: str,
-        reasons: List[str],
+        reasons: list[str],
         timeline: str,
     ) -> Explanation:
         """Generate explanation for an escalation recommendation."""
@@ -253,8 +253,8 @@ class ExplanationGenerator:
         phenotype_name: str,
         value: float,
         severity: str,
-        contributing_factors: List[str],
-        trend: Optional[str] = None,
+        contributing_factors: list[str],
+        trend: str | None = None,
     ) -> Explanation:
         """Generate explanation for a clinical phenotype."""
         sections = []
@@ -298,8 +298,8 @@ class ExplanationGenerator:
     def explain_guideline_retrieval(
         self,
         query: str,
-        sources: List[str],
-        citations: List[Dict[str, str]],
+        sources: list[str],
+        citations: list[dict[str, str]],
     ) -> Explanation:
         """Generate explanation for guideline retrieval."""
         sections = []
@@ -330,7 +330,7 @@ class ExplanationGenerator:
     def _generate_confidence_statement(
         self,
         confidence: float,
-        uncertainty_factors: List[str],
+        uncertainty_factors: list[str],
     ) -> str:
         """Generate a confidence statement."""
         if confidence >= 0.85:
@@ -356,11 +356,11 @@ def format_explanation(
 ) -> str:
     """
     Format an explanation for display.
-    
+
     Args:
         explanation: The explanation to format
         format: Output format (markdown, text, html)
-        
+
     Returns:
         Formatted explanation string
     """
@@ -403,15 +403,15 @@ def format_explanation(
 
 def generate_simple_explanation(
     risk_tier: str,
-    risk_factors: List[str],
+    risk_factors: list[str],
 ) -> str:
     """
     Generate a simple one-paragraph explanation.
-    
+
     Args:
         risk_tier: The risk tier
         risk_factors: Top risk factors
-        
+
     Returns:
         Simple explanation string
     """

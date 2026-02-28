@@ -13,12 +13,11 @@ Outputs:
 This is NOT prescriptive - purely informational.
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Dict, List, Optional
 import logging
+from dataclasses import dataclass
+from typing import Any
 
-from .base_agent import BaseAgent, AgentConfig, AgentResponse
+from .base_agent import AgentConfig, AgentResponse, BaseAgent
 
 logger = logging.getLogger("epcid.agents.medication_safety")
 
@@ -27,13 +26,13 @@ logger = logging.getLogger("epcid.agents.medication_safety")
 class DrugInfo:
     """Information about a drug from FDA sources."""
     name: str
-    brand_names: List[str]
+    brand_names: list[str]
     generic_name: str
     drug_class: str
     pediatric_use: str
-    warnings: List[str]
-    common_adverse_events: List[Dict[str, Any]]
-    interactions: List[str]
+    warnings: list[str]
+    common_adverse_events: list[dict[str, Any]]
+    interactions: list[str]
 
 
 @dataclass
@@ -51,7 +50,7 @@ class AdverseEventMatch:
 class MedicationSafetyAgent(BaseAgent):
     """
     Agent that provides medication safety information.
-    
+
     Uses FDA data to identify potential relationships between
     medications and symptoms. Always includes explicit caveats
     about the nature of adverse event reporting data.
@@ -160,7 +159,7 @@ class MedicationSafetyAgent(BaseAgent):
 
     def __init__(
         self,
-        config: Optional[AgentConfig] = None,
+        config: AgentConfig | None = None,
         **kwargs,
     ):
         config = config or AgentConfig(
@@ -173,16 +172,16 @@ class MedicationSafetyAgent(BaseAgent):
 
     async def process(
         self,
-        input_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> AgentResponse:
         """
         Check medications against symptoms for potential adverse events.
-        
+
         Args:
             input_data: Contains medications and symptoms
             context: Optional additional context
-            
+
         Returns:
             AgentResponse with medication safety information
         """
@@ -231,7 +230,7 @@ class MedicationSafetyAgent(BaseAgent):
             warnings=age_warnings,
         )
 
-    def _normalize_medications(self, medications: List) -> List[str]:
+    def _normalize_medications(self, medications: list) -> list[str]:
         """Normalize medication names for lookup."""
         normalized = []
 
@@ -258,7 +257,7 @@ class MedicationSafetyAgent(BaseAgent):
 
         return list(set(normalized))
 
-    def _lookup_drugs(self, medication_names: List[str]) -> List[DrugInfo]:
+    def _lookup_drugs(self, medication_names: list[str]) -> list[DrugInfo]:
         """Look up drug information from database."""
         results = []
 
@@ -270,9 +269,9 @@ class MedicationSafetyAgent(BaseAgent):
 
     def _find_adverse_event_matches(
         self,
-        drugs: List[DrugInfo],
-        symptoms: List[str],
-    ) -> List[AdverseEventMatch]:
+        drugs: list[DrugInfo],
+        symptoms: list[str],
+    ) -> list[AdverseEventMatch]:
         """Find matches between symptoms and known adverse events."""
         matches = []
 
@@ -300,9 +299,9 @@ class MedicationSafetyAgent(BaseAgent):
 
     def _check_age_appropriateness(
         self,
-        drugs: List[DrugInfo],
-        age_months: Optional[int],
-    ) -> List[str]:
+        drugs: list[DrugInfo],
+        age_months: int | None,
+    ) -> list[str]:
         """Check if medications are age-appropriate."""
         warnings = []
 
@@ -324,7 +323,7 @@ class MedicationSafetyAgent(BaseAgent):
 
         return warnings
 
-    def _check_interactions(self, drugs: List[DrugInfo]) -> List[str]:
+    def _check_interactions(self, drugs: list[DrugInfo]) -> list[str]:
         """Check for drug-drug interactions."""
         interactions = []
         drug_names = [d.name for d in drugs]
@@ -341,10 +340,10 @@ class MedicationSafetyAgent(BaseAgent):
 
     def _generate_response(
         self,
-        drugs: List[DrugInfo],
-        matches: List[AdverseEventMatch],
-        age_warnings: List[str],
-        interactions: List[str],
+        drugs: list[DrugInfo],
+        matches: list[AdverseEventMatch],
+        age_warnings: list[str],
+        interactions: list[str],
     ) -> str:
         """Generate response text with medication information."""
         lines = [
@@ -396,7 +395,7 @@ class MedicationSafetyAgent(BaseAgent):
 
         return "\n".join(lines)
 
-    def _match_to_dict(self, match: AdverseEventMatch) -> Dict[str, Any]:
+    def _match_to_dict(self, match: AdverseEventMatch) -> dict[str, Any]:
         """Convert match to dictionary."""
         return {
             "drug_name": match.drug_name,
@@ -409,8 +408,8 @@ class MedicationSafetyAgent(BaseAgent):
 
     def _generate_explanation(
         self,
-        drugs: List[DrugInfo],
-        matches: List[AdverseEventMatch],
+        drugs: list[DrugInfo],
+        matches: list[AdverseEventMatch],
     ) -> str:
         """Generate explanation of the analysis."""
         lines = ["## Medication Safety Analysis\n"]

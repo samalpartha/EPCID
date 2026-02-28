@@ -16,7 +16,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlencode
 
 logger = logging.getLogger("epcid.services.air_quality")
@@ -34,7 +34,7 @@ class AirQualityReading:
     timestamp: datetime
     source: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "aqi": self.aqi,
             "category": self.category,
@@ -54,13 +54,13 @@ class AirQualityForecast:
     aqi: int
     category: str
     pollutant: str
-    discussion: Optional[str]
+    discussion: str | None
 
 
 class AirQualityService:
     """
     Service for air quality data from AirNow and OpenAQ.
-    
+
     Provides current conditions, forecasts, and health guidance
     based on air quality levels.
     """
@@ -116,8 +116,8 @@ class AirQualityService:
 
     def __init__(
         self,
-        airnow_api_key: Optional[str] = None,
-        openaq_api_key: Optional[str] = None,
+        airnow_api_key: str | None = None,
+        openaq_api_key: str | None = None,
         timeout_seconds: int = 10,
         cache_ttl_minutes: int = 30,
     ):
@@ -125,24 +125,24 @@ class AirQualityService:
         self.openaq_api_key = openaq_api_key
         self.timeout_seconds = timeout_seconds
         self.cache_ttl_minutes = cache_ttl_minutes
-        self._cache: Dict[str, tuple] = {}
+        self._cache: dict[str, tuple] = {}
 
         logger.info("Initialized Air Quality service")
 
     async def get_current_aqi(
         self,
-        zip_code: Optional[str] = None,
-        latitude: Optional[float] = None,
-        longitude: Optional[float] = None,
-    ) -> Optional[AirQualityReading]:
+        zip_code: str | None = None,
+        latitude: float | None = None,
+        longitude: float | None = None,
+    ) -> AirQualityReading | None:
         """
         Get current air quality for a location.
-        
+
         Args:
             zip_code: US zip code
             latitude: Latitude coordinate
             longitude: Longitude coordinate
-            
+
         Returns:
             AirQualityReading or None
         """
@@ -173,13 +173,13 @@ class AirQualityService:
     async def get_forecast(
         self,
         zip_code: str,
-    ) -> List[AirQualityForecast]:
+    ) -> list[AirQualityForecast]:
         """
         Get air quality forecast for a location.
-        
+
         Args:
             zip_code: US zip code
-            
+
         Returns:
             List of AirQualityForecast objects
         """
@@ -202,13 +202,13 @@ class AirQualityService:
             logger.error(f"Failed to get air quality forecast: {e}")
             return self._get_simulated_forecast()
 
-    def get_health_guidance(self, aqi: int) -> Dict[str, str]:
+    def get_health_guidance(self, aqi: int) -> dict[str, str]:
         """
         Get health guidance for an AQI value.
-        
+
         Args:
             aqi: Air Quality Index value
-            
+
         Returns:
             Dict with health guidance
         """
@@ -219,13 +219,13 @@ class AirQualityService:
         # Above 500
         return self.AQI_CATEGORIES[(301, 500)]
 
-    def get_pediatric_guidance(self, aqi: int) -> Dict[str, Any]:
+    def get_pediatric_guidance(self, aqi: int) -> dict[str, Any]:
         """
         Get pediatric-specific guidance for an AQI value.
-        
+
         Args:
             aqi: Air Quality Index value
-            
+
         Returns:
             Dict with pediatric guidance
         """
@@ -240,7 +240,7 @@ class AirQualityService:
 
         return pediatric
 
-    async def _get_airnow_current(self, zip_code: str) -> Optional[AirQualityReading]:
+    async def _get_airnow_current(self, zip_code: str) -> AirQualityReading | None:
         """Get current AQI from AirNow API."""
         params = {
             "format": "application/json",
@@ -268,7 +268,7 @@ class AirQualityService:
 
         return None
 
-    async def _get_airnow_forecast(self, zip_code: str) -> List[AirQualityForecast]:
+    async def _get_airnow_forecast(self, zip_code: str) -> list[AirQualityForecast]:
         """Get forecast from AirNow API."""
         params = {
             "format": "application/json",
@@ -298,7 +298,7 @@ class AirQualityService:
         self,
         latitude: float,
         longitude: float,
-    ) -> Optional[AirQualityReading]:
+    ) -> AirQualityReading | None:
         """Get current readings from OpenAQ API."""
         params = {
             "coordinates": f"{latitude},{longitude}",
@@ -340,8 +340,8 @@ class AirQualityService:
     async def _make_request(
         self,
         url: str,
-        headers: Optional[Dict[str, str]] = None,
-    ) -> Optional[Any]:
+        headers: dict[str, str] | None = None,
+    ) -> Any | None:
         """Make HTTP request."""
         # In production, would use aiohttp
         await asyncio.sleep(0.1)
@@ -381,7 +381,7 @@ class AirQualityService:
             source="Simulated",
         )
 
-    def _get_simulated_forecast(self) -> List[AirQualityForecast]:
+    def _get_simulated_forecast(self) -> list[AirQualityForecast]:
         """Get simulated forecast for testing."""
         today = datetime.now(__import__('datetime').timezone.utc)
         return [
@@ -421,7 +421,7 @@ class AirQualityService:
         else:
             return "All outdoor activities should be avoided"
 
-    def _get_symptoms_to_watch(self, aqi: int) -> List[str]:
+    def _get_symptoms_to_watch(self, aqi: int) -> list[str]:
         """Get symptoms to watch for based on AQI."""
         symptoms = []
 
@@ -434,7 +434,7 @@ class AirQualityService:
 
         return symptoms
 
-    def _get_cached(self, key: str) -> Optional[Any]:
+    def _get_cached(self, key: str) -> Any | None:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]

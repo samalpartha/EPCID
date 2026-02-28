@@ -4,10 +4,9 @@ EPCID API Tests
 Comprehensive test suite for all API endpoints.
 """
 
-import pytest
 from datetime import datetime, timedelta
-from typing import Dict, Any
 
+import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
@@ -30,7 +29,7 @@ async def async_client():
 
 
 @pytest.fixture
-def auth_headers(client: TestClient) -> Dict[str, str]:
+def auth_headers(client: TestClient) -> dict[str, str]:
     """Get authentication headers for protected endpoints."""
     # Register a test user
     register_data = {
@@ -162,7 +161,7 @@ class TestAuthEndpoints:
         response = client.post("/api/v1/auth/login", json=data)
         assert response.status_code == 401
 
-    def test_get_current_user(self, client: TestClient, auth_headers: Dict):
+    def test_get_current_user(self, client: TestClient, auth_headers: dict):
         """Test getting current user profile."""
         response = client.get("/api/v1/auth/me", headers=auth_headers)
         assert response.status_code == 200
@@ -180,7 +179,7 @@ class TestAuthEndpoints:
 class TestChildrenEndpoints:
     """Test child management endpoints."""
 
-    def test_create_child(self, client: TestClient, auth_headers: Dict):
+    def test_create_child(self, client: TestClient, auth_headers: dict):
         """Test creating a child profile."""
         data = {
             "name": "Test Child",
@@ -199,13 +198,13 @@ class TestChildrenEndpoints:
         assert "id" in result
         assert result["age_months"] > 0
 
-    def test_list_children(self, client: TestClient, auth_headers: Dict):
+    def test_list_children(self, client: TestClient, auth_headers: dict):
         """Test listing children."""
         response = client.get("/api/v1/children/", headers=auth_headers)
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 
-    def test_get_child(self, client: TestClient, auth_headers: Dict):
+    def test_get_child(self, client: TestClient, auth_headers: dict):
         """Test getting a specific child."""
         # Create child first
         create_data = {
@@ -221,7 +220,7 @@ class TestChildrenEndpoints:
         assert response.status_code == 200
         assert response.json()["name"] == "Get Test Child"
 
-    def test_update_child(self, client: TestClient, auth_headers: Dict):
+    def test_update_child(self, client: TestClient, auth_headers: dict):
         """Test updating a child profile."""
         # Create child first
         create_data = {
@@ -239,7 +238,7 @@ class TestChildrenEndpoints:
         assert response.status_code == 200
         assert response.json()["name"] == "Updated Name"
 
-    def test_delete_child(self, client: TestClient, auth_headers: Dict):
+    def test_delete_child(self, client: TestClient, auth_headers: dict):
         """Test deleting a child profile."""
         # Create child first
         create_data = {
@@ -262,7 +261,7 @@ class TestChildrenEndpoints:
 class TestSymptomsEndpoints:
     """Test symptom logging endpoints."""
 
-    def test_log_symptom(self, client: TestClient, auth_headers: Dict):
+    def test_log_symptom(self, client: TestClient, auth_headers: dict):
         """Test logging a symptom."""
         # Create child first
         child_data = {
@@ -289,7 +288,7 @@ class TestSymptomsEndpoints:
         assert result["symptom_type"] == "fever"
         assert result["severity"] == "moderate"
 
-    def test_list_symptoms(self, client: TestClient, auth_headers: Dict):
+    def test_list_symptoms(self, client: TestClient, auth_headers: dict):
         """Test listing symptoms."""
         response = client.get("/api/v1/symptoms/", headers=auth_headers)
         assert response.status_code == 200
@@ -309,7 +308,7 @@ class TestSymptomsEndpoints:
 class TestAssessmentEndpoints:
     """Test risk assessment endpoints."""
 
-    def test_create_assessment(self, client: TestClient, auth_headers: Dict):
+    def test_create_assessment(self, client: TestClient, auth_headers: dict):
         """Test creating a risk assessment."""
         # Create child first
         child_data = {
@@ -349,7 +348,7 @@ class TestAssessmentEndpoints:
         assert "primary_recommendation" in result
         assert "disclaimers" in result
 
-    def test_list_assessments(self, client: TestClient, auth_headers: Dict):
+    def test_list_assessments(self, client: TestClient, auth_headers: dict):
         """Test listing assessments."""
         response = client.get("/api/v1/assessment/", headers=auth_headers)
         assert response.status_code == 200
@@ -464,7 +463,7 @@ class TestErrorHandling:
         response = client.get("/api/v1/nonexistent")
         assert response.status_code == 404
 
-    def test_422_validation_error(self, client: TestClient, auth_headers: Dict):
+    def test_422_validation_error(self, client: TestClient, auth_headers: dict):
         """Test validation error response."""
         # Invalid child data (missing required fields)
         response = client.post("/api/v1/children/", json={}, headers=auth_headers)

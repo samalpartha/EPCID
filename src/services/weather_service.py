@@ -16,7 +16,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlencode
 
 logger = logging.getLogger("epcid.services.weather")
@@ -31,14 +31,14 @@ class WeatherConditions:
     wind_speed_mph: float
     condition: str
     description: str
-    uv_index: Optional[int]
-    visibility_miles: Optional[float]
-    pressure_hpa: Optional[float]
+    uv_index: int | None
+    visibility_miles: float | None
+    pressure_hpa: float | None
     location: str
     timestamp: datetime
     source: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "temperature_f": self.temperature_f,
             "feels_like_f": self.feels_like_f,
@@ -60,9 +60,9 @@ class WeatherAlert:
     headline: str
     description: str
     start: datetime
-    end: Optional[datetime]
+    end: datetime | None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "event": self.event,
             "severity": self.severity,
@@ -86,7 +86,7 @@ class WeatherForecast:
 class WeatherService:
     """
     Service for weather data from NOAA and OpenWeatherMap.
-    
+
     Provides current conditions, forecasts, and weather alerts
     with health implications for children.
     """
@@ -107,8 +107,8 @@ class WeatherService:
 
     def __init__(
         self,
-        noaa_api_key: Optional[str] = None,
-        openweather_api_key: Optional[str] = None,
+        noaa_api_key: str | None = None,
+        openweather_api_key: str | None = None,
         timeout_seconds: int = 10,
         cache_ttl_minutes: int = 15,
     ):
@@ -116,24 +116,24 @@ class WeatherService:
         self.openweather_api_key = openweather_api_key
         self.timeout_seconds = timeout_seconds
         self.cache_ttl_minutes = cache_ttl_minutes
-        self._cache: Dict[str, tuple] = {}
+        self._cache: dict[str, tuple] = {}
 
         logger.info("Initialized Weather service")
 
     async def get_current_weather(
         self,
-        zip_code: Optional[str] = None,
-        latitude: Optional[float] = None,
-        longitude: Optional[float] = None,
-    ) -> Optional[WeatherConditions]:
+        zip_code: str | None = None,
+        latitude: float | None = None,
+        longitude: float | None = None,
+    ) -> WeatherConditions | None:
         """
         Get current weather conditions.
-        
+
         Args:
             zip_code: US zip code
             latitude: Latitude coordinate
             longitude: Longitude coordinate
-            
+
         Returns:
             WeatherConditions or None
         """
@@ -161,20 +161,20 @@ class WeatherService:
 
     async def get_forecast(
         self,
-        zip_code: Optional[str] = None,
-        latitude: Optional[float] = None,
-        longitude: Optional[float] = None,
+        zip_code: str | None = None,
+        latitude: float | None = None,
+        longitude: float | None = None,
         days: int = 5,
-    ) -> List[WeatherForecast]:
+    ) -> list[WeatherForecast]:
         """
         Get weather forecast.
-        
+
         Args:
             zip_code: US zip code
             latitude: Latitude coordinate
             longitude: Longitude coordinate
             days: Number of days to forecast
-            
+
         Returns:
             List of WeatherForecast objects
         """
@@ -202,14 +202,14 @@ class WeatherService:
         self,
         latitude: float,
         longitude: float,
-    ) -> List[WeatherAlert]:
+    ) -> list[WeatherAlert]:
         """
         Get active weather alerts for a location.
-        
+
         Args:
             latitude: Latitude coordinate
             longitude: Longitude coordinate
-            
+
         Returns:
             List of WeatherAlert objects
         """
@@ -231,13 +231,13 @@ class WeatherService:
     def get_health_guidance(
         self,
         weather: WeatherConditions,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get health guidance based on weather conditions.
-        
+
         Args:
             weather: Current weather conditions
-            
+
         Returns:
             Dict with health guidance
         """
@@ -298,7 +298,7 @@ class WeatherService:
 
         return guidance
 
-    def _get_temperature_guidance(self, temp_f: float) -> Dict[str, Any]:
+    def _get_temperature_guidance(self, temp_f: float) -> dict[str, Any]:
         """Get guidance for a specific temperature."""
         if temp_f >= 100:
             return {
@@ -343,7 +343,7 @@ class WeatherService:
                 "message": self.TEMP_THRESHOLDS["extreme_cold"]["message"],
             }
 
-    def _get_humidity_guidance(self, humidity: int) -> Dict[str, Any]:
+    def _get_humidity_guidance(self, humidity: int) -> dict[str, Any]:
         """Get guidance for humidity level."""
         if humidity > 80:
             return {
@@ -368,10 +368,10 @@ class WeatherService:
 
     async def _get_openweather_current(
         self,
-        zip_code: Optional[str],
-        latitude: Optional[float],
-        longitude: Optional[float],
-    ) -> Optional[WeatherConditions]:
+        zip_code: str | None,
+        latitude: float | None,
+        longitude: float | None,
+    ) -> WeatherConditions | None:
         """Get current weather from OpenWeatherMap."""
         params = {
             "appid": self.openweather_api_key,
@@ -414,10 +414,10 @@ class WeatherService:
 
     async def _get_openweather_forecast(
         self,
-        zip_code: Optional[str],
-        latitude: Optional[float],
-        longitude: Optional[float],
-    ) -> List[WeatherForecast]:
+        zip_code: str | None,
+        latitude: float | None,
+        longitude: float | None,
+    ) -> list[WeatherForecast]:
         """Get forecast from OpenWeatherMap."""
         params = {
             "appid": self.openweather_api_key,
@@ -472,7 +472,7 @@ class WeatherService:
         self,
         latitude: float,
         longitude: float,
-    ) -> List[WeatherAlert]:
+    ) -> list[WeatherAlert]:
         """Get weather alerts from NOAA."""
         url = f"{self.NOAA_BASE_URL}/alerts/active?point={latitude},{longitude}"
 
@@ -493,7 +493,7 @@ class WeatherService:
 
         return alerts
 
-    async def _make_request(self, url: str) -> Optional[Dict[str, Any]]:
+    async def _make_request(self, url: str) -> dict[str, Any] | None:
         """Make HTTP request."""
         # In production, would use aiohttp
         await asyncio.sleep(0.1)
@@ -516,7 +516,7 @@ class WeatherService:
             source="Simulated",
         )
 
-    def _get_simulated_forecast(self) -> List[WeatherForecast]:
+    def _get_simulated_forecast(self) -> list[WeatherForecast]:
         """Get simulated forecast for testing."""
         today = datetime.now(__import__('datetime').timezone.utc)
         return [
@@ -531,7 +531,7 @@ class WeatherService:
             for i in range(5)
         ]
 
-    def _get_cached(self, key: str) -> Optional[Any]:
+    def _get_cached(self, key: str) -> Any | None:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]

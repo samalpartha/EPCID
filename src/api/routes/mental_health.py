@@ -11,19 +11,19 @@ Provides endpoints for:
 Inspired by OCD Action (https://github.com/womenhackfornonprofits/ocdaction)
 """
 
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field
-from typing import Optional, List
-from datetime import datetime, date
-from enum import Enum
 import uuid
+from datetime import datetime
+from enum import StrEnum
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 
 router = APIRouter()
 
 
 # ============== Enums ==============
 
-class MoodLevel(str, Enum):
+class MoodLevel(StrEnum):
     VERY_SAD = "very_sad"
     SAD = "sad"
     NEUTRAL = "neutral"
@@ -31,14 +31,14 @@ class MoodLevel(str, Enum):
     VERY_HAPPY = "very_happy"
 
 
-class AnxietyLevel(str, Enum):
+class AnxietyLevel(StrEnum):
     NONE = "none"
     MILD = "mild"
     MODERATE = "moderate"
     SEVERE = "severe"
 
 
-class CopingCategory(str, Enum):
+class CopingCategory(StrEnum):
     BREATHING = "breathing"
     GROUNDING = "grounding"
     MOVEMENT = "movement"
@@ -57,10 +57,10 @@ class MoodEntry(BaseModel):
     mood_level: MoodLevel
     energy_level: int = Field(ge=1, le=5, description="1-5 scale")
     anxiety_level: int = Field(ge=0, le=10, description="0-10 scale")
-    sleep_quality: Optional[int] = Field(None, ge=1, le=5)
-    notes: Optional[str] = None
-    triggers: Optional[List[str]] = None
-    activities: Optional[List[str]] = None
+    sleep_quality: int | None = Field(None, ge=1, le=5)
+    notes: str | None = None
+    triggers: list[str] | None = None
+    activities: list[str] | None = None
 
 
 class MoodEntryCreate(BaseModel):
@@ -68,32 +68,32 @@ class MoodEntryCreate(BaseModel):
     mood_level: MoodLevel
     energy_level: int = Field(ge=1, le=5)
     anxiety_level: int = Field(ge=0, le=10)
-    sleep_quality: Optional[int] = Field(None, ge=1, le=5)
-    notes: Optional[str] = None
-    triggers: Optional[List[str]] = None
-    activities: Optional[List[str]] = None
+    sleep_quality: int | None = Field(None, ge=1, le=5)
+    notes: str | None = None
+    triggers: list[str] | None = None
+    activities: list[str] | None = None
 
 
 class JournalEntry(BaseModel):
     id: str = Field(default_factory=lambda: f"journal_{uuid.uuid4().hex[:8]}")
     child_id: str
     timestamp: datetime = Field(default_factory=datetime.now)
-    title: Optional[str] = None
+    title: str | None = None
     content: str
-    mood_before: Optional[MoodLevel] = None
-    mood_after: Optional[MoodLevel] = None
+    mood_before: MoodLevel | None = None
+    mood_after: MoodLevel | None = None
     is_private: bool = True
-    tags: Optional[List[str]] = None
+    tags: list[str] | None = None
 
 
 class JournalEntryCreate(BaseModel):
     child_id: str
-    title: Optional[str] = None
+    title: str | None = None
     content: str
-    mood_before: Optional[MoodLevel] = None
-    mood_after: Optional[MoodLevel] = None
+    mood_before: MoodLevel | None = None
+    mood_after: MoodLevel | None = None
     is_private: bool = True
-    tags: Optional[List[str]] = None
+    tags: list[str] | None = None
 
 
 class AnxietyAssessmentQuestion(BaseModel):
@@ -110,7 +110,7 @@ class AnxietyAssessmentAnswer(BaseModel):
 class AnxietyAssessmentSubmit(BaseModel):
     child_id: str
     assessment_type: str = "GAD-7"  # or "PHQ-A"
-    answers: List[AnxietyAssessmentAnswer]
+    answers: list[AnxietyAssessmentAnswer]
 
 
 class AnxietyAssessmentResult(BaseModel):
@@ -121,7 +121,7 @@ class AnxietyAssessmentResult(BaseModel):
     total_score: int
     severity: AnxietyLevel
     interpretation: str
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 class CopingStrategy(BaseModel):
@@ -132,18 +132,18 @@ class CopingStrategy(BaseModel):
     age_appropriate_min: int
     age_appropriate_max: int
     duration_minutes: int
-    steps: List[str]
-    benefits: List[str]
-    when_to_use: List[str]
+    steps: list[str]
+    benefits: list[str]
+    when_to_use: list[str]
     icon: str
 
 
 class CrisisResource(BaseModel):
     name: str
     description: str
-    phone: Optional[str] = None
-    text_line: Optional[str] = None
-    website: Optional[str] = None
+    phone: str | None = None
+    text_line: str | None = None
+    website: str | None = None
     available_24_7: bool
     for_children: bool
     for_parents: bool
@@ -151,14 +151,14 @@ class CrisisResource(BaseModel):
 
 # ============== In-Memory Storage (Demo) ==============
 
-mood_entries: List[MoodEntry] = []
-journal_entries: List[JournalEntry] = []
-assessment_results: List[AnxietyAssessmentResult] = []
+mood_entries: list[MoodEntry] = []
+journal_entries: list[JournalEntry] = []
+assessment_results: list[AnxietyAssessmentResult] = []
 
 
 # ============== GAD-7 Questions (Adapted for Children) ==============
 
-GAD7_QUESTIONS: List[AnxietyAssessmentQuestion] = [
+GAD7_QUESTIONS: list[AnxietyAssessmentQuestion] = [
     AnxietyAssessmentQuestion(
         id=1,
         text="Feeling nervous, anxious, or on edge",
@@ -199,7 +199,7 @@ GAD7_QUESTIONS: List[AnxietyAssessmentQuestion] = [
 
 # ============== Coping Strategies Database ==============
 
-COPING_STRATEGIES: List[CopingStrategy] = [
+COPING_STRATEGIES: list[CopingStrategy] = [
     CopingStrategy(
         id="breathe_1",
         name="Bubble Breathing",
@@ -425,7 +425,7 @@ COPING_STRATEGIES: List[CopingStrategy] = [
 
 # ============== Crisis Resources ==============
 
-CRISIS_RESOURCES: List[CrisisResource] = [
+CRISIS_RESOURCES: list[CrisisResource] = [
     CrisisResource(
         name="988 Suicide & Crisis Lifeline",
         description="Free, confidential support for people in distress",
@@ -497,13 +497,13 @@ async def log_mood(entry: MoodEntryCreate):
     return mood_entry
 
 
-@router.get("/mood/{child_id}", response_model=List[MoodEntry], tags=["Mental Health"])
+@router.get("/mood/{child_id}", response_model=list[MoodEntry], tags=["Mental Health"])
 async def get_mood_history(child_id: str, days: int = 30):
     """Get mood history for a child"""
     from datetime import timedelta
     cutoff = datetime.now() - timedelta(days=days)
     return [
-        e for e in mood_entries 
+        e for e in mood_entries
         if e.child_id == child_id and e.timestamp > cutoff
     ]
 
@@ -514,7 +514,7 @@ async def get_mood_summary(child_id: str, days: int = 7):
     from datetime import timedelta
     cutoff = datetime.now() - timedelta(days=days)
     entries = [
-        e for e in mood_entries 
+        e for e in mood_entries
         if e.child_id == child_id and e.timestamp > cutoff
     ]
 
@@ -582,7 +582,7 @@ async def create_journal_entry(entry: JournalEntryCreate):
     return journal_entry
 
 
-@router.get("/journal/{child_id}", response_model=List[JournalEntry], tags=["Mental Health"])
+@router.get("/journal/{child_id}", response_model=list[JournalEntry], tags=["Mental Health"])
 async def get_journal_entries(child_id: str, limit: int = 20):
     """Get journal entries for a child"""
     entries = [e for e in journal_entries if e.child_id == child_id]
@@ -677,7 +677,7 @@ async def submit_assessment(submission: AnxietyAssessmentSubmit):
     return result
 
 
-@router.get("/assessment/history/{child_id}", response_model=List[AnxietyAssessmentResult], tags=["Mental Health"])
+@router.get("/assessment/history/{child_id}", response_model=list[AnxietyAssessmentResult], tags=["Mental Health"])
 async def get_assessment_history(child_id: str):
     """Get assessment history for a child"""
     return [r for r in assessment_results if r.child_id == child_id]
@@ -685,17 +685,17 @@ async def get_assessment_history(child_id: str):
 
 # ----- Coping Strategies -----
 
-@router.get("/coping/strategies", response_model=List[CopingStrategy], tags=["Mental Health"])
+@router.get("/coping/strategies", response_model=list[CopingStrategy], tags=["Mental Health"])
 async def get_coping_strategies(
-    age: Optional[int] = None,
-    category: Optional[CopingCategory] = None
+    age: int | None = None,
+    category: CopingCategory | None = None
 ):
     """Get coping strategies, optionally filtered by age and category"""
     strategies = COPING_STRATEGIES
 
     if age is not None:
         strategies = [
-            s for s in strategies 
+            s for s in strategies
             if s.age_appropriate_min <= age <= s.age_appropriate_max
         ]
 
@@ -765,8 +765,8 @@ async def get_coping_categories():
 
 # ----- Crisis Resources -----
 
-@router.get("/crisis/resources", response_model=List[CrisisResource], tags=["Mental Health"])
-async def get_crisis_resources(for_children: Optional[bool] = None):
+@router.get("/crisis/resources", response_model=list[CrisisResource], tags=["Mental Health"])
+async def get_crisis_resources(for_children: bool | None = None):
     """Get crisis resources and hotlines"""
     resources = CRISIS_RESOURCES
 

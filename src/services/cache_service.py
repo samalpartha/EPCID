@@ -9,10 +9,9 @@ Provides caching for:
 """
 
 import json
-import os
-from typing import Any, Optional
-from datetime import timedelta
 import logging
+import os
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -77,16 +76,16 @@ class CacheService:
         try:
             self._redis.ping()
             return True
-        except:
+        except Exception:
             return False
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """
         Get value from cache.
-        
+
         Args:
             key: Cache key
-            
+
         Returns:
             Cached value or None if not found
         """
@@ -103,19 +102,19 @@ class CacheService:
         return self._memory_cache.get(key)
 
     def set(
-        self, 
-        key: str, 
-        value: Any, 
+        self,
+        key: str,
+        value: Any,
         ttl: int = TTL_MEDIUM
     ) -> bool:
         """
         Set value in cache with TTL.
-        
+
         Args:
             key: Cache key
             value: Value to cache (must be JSON serializable)
             ttl: Time to live in seconds
-            
+
         Returns:
             True if successful
         """
@@ -138,7 +137,7 @@ class CacheService:
         if self._redis:
             try:
                 self._redis.delete(key)
-            except:
+            except Exception:
                 pass
 
         self._memory_cache.pop(key, None)
@@ -168,7 +167,7 @@ class CacheService:
     # Specialized caching methods
     # =========================================================================
 
-    def get_weather(self, zip_code: str) -> Optional[dict]:
+    def get_weather(self, zip_code: str) -> dict | None:
         """Get cached weather data."""
         return self.get(f"{self.PREFIX_WEATHER}{zip_code}")
 
@@ -176,7 +175,7 @@ class CacheService:
         """Cache weather data (15 min TTL)."""
         return self.set(f"{self.PREFIX_WEATHER}{zip_code}", data, ttl=900)
 
-    def get_air_quality(self, zip_code: str) -> Optional[dict]:
+    def get_air_quality(self, zip_code: str) -> dict | None:
         """Get cached air quality data."""
         return self.get(f"{self.PREFIX_AIR_QUALITY}{zip_code}")
 
@@ -184,7 +183,7 @@ class CacheService:
         """Cache air quality data (30 min TTL)."""
         return self.set(f"{self.PREFIX_AIR_QUALITY}{zip_code}", data, ttl=1800)
 
-    def get_guidelines(self, topic: str) -> Optional[dict]:
+    def get_guidelines(self, topic: str) -> dict | None:
         """Get cached guidelines."""
         return self.get(f"{self.PREFIX_GUIDELINES}{topic}")
 
@@ -197,19 +196,19 @@ class CacheService:
     # =========================================================================
 
     def check_rate_limit(
-        self, 
-        identifier: str, 
-        limit: int = 100, 
+        self,
+        identifier: str,
+        limit: int = 100,
         window: int = 60
     ) -> tuple[bool, int]:
         """
         Check if request is within rate limit.
-        
+
         Args:
             identifier: Unique identifier (e.g., user_id, IP)
             limit: Max requests allowed
             window: Time window in seconds
-            
+
         Returns:
             Tuple of (is_allowed, remaining_requests)
         """
@@ -246,7 +245,7 @@ class CacheService:
                 info = self._redis.info("memory")
                 status["redis_memory_used"] = info.get("used_memory_human", "unknown")
                 status["redis_keys"] = self._redis.dbsize()
-            except:
+            except Exception:
                 pass
 
         return status

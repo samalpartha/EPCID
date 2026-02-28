@@ -5,14 +5,14 @@ Pydantic models for API request/response validation.
 """
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field, validator
 
 
 # Enums
-class RiskLevel(str, Enum):
+class RiskLevel(StrEnum):
     """Risk level classification."""
     LOW = "low"
     MODERATE = "moderate"
@@ -20,14 +20,14 @@ class RiskLevel(str, Enum):
     CRITICAL = "critical"
 
 
-class SymptomSeverity(str, Enum):
+class SymptomSeverity(StrEnum):
     """Symptom severity levels."""
     MILD = "mild"
     MODERATE = "moderate"
     SEVERE = "severe"
 
 
-class Gender(str, Enum):
+class Gender(StrEnum):
     """Gender options."""
     MALE = "male"
     FEMALE = "female"
@@ -43,9 +43,9 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """Token payload data."""
-    email: Optional[str] = None
-    user_id: Optional[str] = None
-    scopes: List[str] = []
+    email: str | None = None
+    user_id: str | None = None
+    scopes: list[str] = []
 
 
 class UserBase(BaseModel):
@@ -66,7 +66,7 @@ class UserResponse(BaseModel):
     full_name: str
     is_active: bool = True
     is_verified: bool = False
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -88,26 +88,26 @@ class ChildBase(BaseModel):
 
 class ChildCreate(ChildBase):
     """Child creation model."""
-    medical_conditions: List[str] = []
-    allergies: List[str] = []
-    medications: List[str] = []
+    medical_conditions: list[str] = []
+    allergies: list[str] = []
+    medications: list[str] = []
 
 
 class ChildUpdate(BaseModel):
     """Child update model."""
-    name: Optional[str] = None
-    medical_conditions: Optional[List[str]] = None
-    allergies: Optional[List[str]] = None
-    medications: Optional[List[str]] = None
+    name: str | None = None
+    medical_conditions: list[str] | None = None
+    allergies: list[str] | None = None
+    medications: list[str] | None = None
 
 
 class ChildResponse(ChildBase):
     """Child response model."""
     id: str
     age_months: int
-    medical_conditions: List[str] = []
-    allergies: List[str] = []
-    medications: List[str] = []
+    medical_conditions: list[str] = []
+    allergies: list[str] = []
+    medications: list[str] = []
     created_at: datetime
     updated_at: datetime
 
@@ -120,14 +120,14 @@ class SymptomBase(BaseModel):
     """Base symptom model."""
     symptom_type: str = Field(..., description="Type of symptom (e.g., fever, cough)")
     severity: SymptomSeverity
-    notes: Optional[str] = None
+    notes: str | None = None
 
 
 class SymptomCreate(SymptomBase):
     """Symptom creation model."""
     child_id: str
-    onset_time: Optional[datetime] = None
-    measurements: Optional[Dict[str, Any]] = Field(
+    onset_time: datetime | None = None
+    measurements: dict[str, Any] | None = Field(
         default=None,
         description="Additional measurements (e.g., temperature: 101.5)",
     )
@@ -153,8 +153,8 @@ class SymptomResponse(SymptomBase):
     id: str
     child_id: str
     recorded_at: datetime
-    onset_time: Optional[datetime]
-    measurements: Optional[Dict[str, Any]]
+    onset_time: datetime | None
+    measurements: dict[str, Any] | None
 
     class Config:
         from_attributes = True
@@ -163,17 +163,17 @@ class SymptomResponse(SymptomBase):
 class SymptomHistory(BaseModel):
     """Symptom history response."""
     child_id: str
-    symptoms: List[SymptomResponse]
+    symptoms: list[SymptomResponse]
     total_count: int
-    date_range: Dict[str, datetime]
+    date_range: dict[str, datetime]
 
 
 # Assessment Schemas
 class AssessmentRequest(BaseModel):
     """Risk assessment request."""
     child_id: str
-    symptoms: List[SymptomCreate]
-    location: Optional[Dict[str, float]] = Field(
+    symptoms: list[SymptomCreate]
+    location: dict[str, float] | None = Field(
         default=None,
         description="Location for environmental context (lat, lng)",
     )
@@ -222,26 +222,26 @@ class AssessmentResponse(BaseModel):
     confidence: float = Field(..., ge=0, le=1)
 
     # Risk breakdown
-    risk_factors: List[RiskFactor]
+    risk_factors: list[RiskFactor]
 
     # Recommendations
     primary_recommendation: str
-    secondary_recommendations: List[str]
+    secondary_recommendations: list[str]
 
     # Flags
-    red_flags: List[str]
-    warning_signs: List[str]
+    red_flags: list[str]
+    warning_signs: list[str]
 
     # Explanations
     explanation: str
     clinical_reasoning: str
 
     # Actions
-    suggested_actions: List[str]
+    suggested_actions: list[str]
     when_to_seek_care: str
 
     # Disclaimers
-    disclaimers: List[str]
+    disclaimers: list[str]
 
     class Config:
         json_schema_extra = {
@@ -283,17 +283,17 @@ class AssessmentResponse(BaseModel):
 class GuidelineRequest(BaseModel):
     """Guideline query request."""
     query: str = Field(..., description="Search query for guidelines")
-    symptoms: Optional[List[str]] = None
-    age_months: Optional[int] = None
+    symptoms: list[str] | None = None
+    age_months: int | None = None
     max_results: int = Field(default=5, ge=1, le=20)
 
 
 class GuidelineSource(BaseModel):
     """Guideline source information."""
     name: str
-    url: Optional[str]
+    url: str | None
     organization: str
-    last_updated: Optional[datetime]
+    last_updated: datetime | None
 
 
 class GuidelineResponse(BaseModel):
@@ -303,15 +303,15 @@ class GuidelineResponse(BaseModel):
     content: str
     relevance_score: float
     source: GuidelineSource
-    key_points: List[str]
+    key_points: list[str]
     age_specific: bool
-    warning_signs: List[str]
+    warning_signs: list[str]
 
 
 class GuidelinesResponse(BaseModel):
     """Multiple guidelines response."""
     query: str
-    results: List[GuidelineResponse]
+    results: list[GuidelineResponse]
     total_found: int
 
 
@@ -335,10 +335,10 @@ class AirQualityResponse(BaseModel):
     aqi: int = Field(..., ge=0)
     category: str
     dominant_pollutant: str
-    pollutants: Dict[str, float]
+    pollutants: dict[str, float]
     health_implications: str
     recommendation: str
-    pediatric_advisory: Optional[str]
+    pediatric_advisory: str | None
     data_timestamp: datetime
     location: str
 
@@ -350,9 +350,9 @@ class WeatherResponse(BaseModel):
     humidity: int
     conditions: str
     wind_speed: float
-    uv_index: Optional[float]
-    alerts: List[str]
-    pediatric_considerations: List[str]
+    uv_index: float | None
+    alerts: list[str]
+    pediatric_considerations: list[str]
     data_timestamp: datetime
     location: str
 
@@ -362,7 +362,7 @@ class EnvironmentResponse(BaseModel):
     air_quality: AirQualityResponse
     weather: WeatherResponse
     health_impact_summary: str
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 # Generic Schemas
@@ -374,7 +374,7 @@ class PaginationParams(BaseModel):
 
 class PaginatedResponse(BaseModel):
     """Generic paginated response."""
-    items: List[Any]
+    items: list[Any]
     total: int
     page: int
     page_size: int
@@ -385,11 +385,11 @@ class ErrorResponse(BaseModel):
     """Error response model."""
     error: str
     message: str
-    detail: Optional[str] = None
+    detail: str | None = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
 
 
 class SuccessResponse(BaseModel):
     """Generic success response."""
     message: str
-    data: Optional[Dict[str, Any]] = None
+    data: dict[str, Any] | None = None

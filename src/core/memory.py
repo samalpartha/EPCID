@@ -9,15 +9,15 @@ Hierarchical memory architecture for the agentic platform:
 This enables longitudinal tracking of patient health signals over time.
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
-from collections import deque
 import hashlib
 import json
 import logging
+from abc import ABC, abstractmethod
+from collections import deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any
 
 logger = logging.getLogger("epcid.core.memory")
 
@@ -35,13 +35,13 @@ class MemoryItem:
     id: str
     content: Any
     timestamp: datetime
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    embedding: Optional[List[float]] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    embedding: list[float] | None = None
     importance: float = 0.5
     access_count: int = 0
-    last_accessed: Optional[datetime] = None
+    last_accessed: datetime | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "id": self.id,
@@ -54,7 +54,7 @@ class MemoryItem:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "MemoryItem":
+    def from_dict(cls, data: dict[str, Any]) -> "MemoryItem":
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -74,14 +74,14 @@ class Episode:
     child_id: str
     event_type: str
     start_time: datetime
-    end_time: Optional[datetime]
-    observations: List[MemoryItem]
-    outcome: Optional[str] = None
-    risk_tier: Optional[str] = None
-    actions_taken: List[str] = field(default_factory=list)
-    summary: Optional[str] = None
+    end_time: datetime | None
+    observations: list[MemoryItem]
+    outcome: str | None = None
+    risk_tier: str | None = None
+    actions_taken: list[str] = field(default_factory=list)
+    summary: str | None = None
 
-    def duration(self) -> Optional[timedelta]:
+    def duration(self) -> timedelta | None:
         """Calculate episode duration."""
         if self.end_time:
             return self.end_time - self.start_time
@@ -97,12 +97,12 @@ class MemoryStore(ABC):
         pass
 
     @abstractmethod
-    def retrieve(self, item_id: str) -> Optional[MemoryItem]:
+    def retrieve(self, item_id: str) -> MemoryItem | None:
         """Retrieve an item by ID."""
         pass
 
     @abstractmethod
-    def search(self, query: str, limit: int = 10) -> List[MemoryItem]:
+    def search(self, query: str, limit: int = 10) -> list[MemoryItem]:
         """Search for items matching a query."""
         pass
 
@@ -120,7 +120,7 @@ class MemoryStore(ABC):
 class ShortTermMemory(MemoryStore):
     """
     Short-term working memory for recent observations.
-    
+
     Uses a bounded deque with time-based expiration.
     Maintains the most recent context for agent decision-making.
     """
@@ -133,7 +133,7 @@ class ShortTermMemory(MemoryStore):
         self.max_items = max_items
         self.ttl_minutes = ttl_minutes
         self._items: deque[MemoryItem] = deque(maxlen=max_items)
-        self._index: Dict[str, int] = {}
+        self._index: dict[str, int] = {}
         logger.info(f"Initialized ShortTermMemory: max_items={max_items}, ttl={ttl_minutes}min")
 
     def store(self, item: MemoryItem) -> bool:
@@ -148,7 +148,7 @@ class ShortTermMemory(MemoryStore):
             logger.error(f"Failed to store item in short-term memory: {e}")
             return False
 
-    def retrieve(self, item_id: str) -> Optional[MemoryItem]:
+    def retrieve(self, item_id: str) -> MemoryItem | None:
         """Retrieve an item by ID."""
         self._expire_old_items()
         if item_id in self._index:
@@ -160,7 +160,7 @@ class ShortTermMemory(MemoryStore):
                 return item
         return None
 
-    def search(self, query: str, limit: int = 10) -> List[MemoryItem]:
+    def search(self, query: str, limit: int = 10) -> list[MemoryItem]:
         """Search for items containing the query string."""
         self._expire_old_items()
         results = []
@@ -175,12 +175,12 @@ class ShortTermMemory(MemoryStore):
 
         return results
 
-    def get_recent(self, n: int = 10) -> List[MemoryItem]:
+    def get_recent(self, n: int = 10) -> list[MemoryItem]:
         """Get the n most recent items."""
         self._expire_old_items()
         return list(reversed(list(self._items)))[:n]
 
-    def get_context_window(self, minutes: int = 30) -> List[MemoryItem]:
+    def get_context_window(self, minutes: int = 30) -> list[MemoryItem]:
         """Get items from the last N minutes."""
         cutoff = datetime.now(__import__('datetime').timezone.utc) - timedelta(minutes=minutes)
         return [item for item in self._items if item.timestamp > cutoff]
@@ -230,7 +230,7 @@ class ShortTermMemory(MemoryStore):
 class EpisodicMemory(MemoryStore):
     """
     Episodic memory for health events and interactions.
-    
+
     Stores structured episodes with temporal context, enabling
     pattern recognition across similar events over time.
     """
@@ -242,10 +242,10 @@ class EpisodicMemory(MemoryStore):
     ):
         self.max_episodes = max_episodes
         self.compression_enabled = compression_enabled
-        self._episodes: Dict[str, Episode] = {}
-        self._items: Dict[str, MemoryItem] = {}
-        self._child_episodes: Dict[str, List[str]] = {}  # child_id -> episode_ids
-        self._temporal_index: List[Tuple[datetime, str]] = []  # (timestamp, episode_id)
+        self._episodes: dict[str, Episode] = {}
+        self._items: dict[str, MemoryItem] = {}
+        self._child_episodes: dict[str, list[str]] = {}  # child_id -> episode_ids
+        self._temporal_index: list[tuple[datetime, str]] = []  # (timestamp, episode_id)
         logger.info(f"Initialized EpisodicMemory: max_episodes={max_episodes}")
 
     def store(self, item: MemoryItem) -> bool:
@@ -281,20 +281,20 @@ class EpisodicMemory(MemoryStore):
             logger.error(f"Failed to store episode: {e}")
             return False
 
-    def retrieve(self, item_id: str) -> Optional[MemoryItem]:
+    def retrieve(self, item_id: str) -> MemoryItem | None:
         """Retrieve a memory item by ID."""
         return self._items.get(item_id)
 
-    def retrieve_episode(self, episode_id: str) -> Optional[Episode]:
+    def retrieve_episode(self, episode_id: str) -> Episode | None:
         """Retrieve an episode by ID."""
         return self._episodes.get(episode_id)
 
     def get_child_episodes(
         self,
         child_id: str,
-        event_type: Optional[str] = None,
+        event_type: str | None = None,
         limit: int = 50,
-    ) -> List[Episode]:
+    ) -> list[Episode]:
         """Get episodes for a specific child."""
         episode_ids = self._child_episodes.get(child_id, [])
         episodes = [self._episodes[eid] for eid in episode_ids if eid in self._episodes]
@@ -309,9 +309,9 @@ class EpisodicMemory(MemoryStore):
     def get_similar_episodes(
         self,
         event_type: str,
-        risk_tier: Optional[str] = None,
+        risk_tier: str | None = None,
         limit: int = 10,
-    ) -> List[Episode]:
+    ) -> list[Episode]:
         """Find similar episodes by type and risk."""
         episodes = [e for e in self._episodes.values() if e.event_type == event_type]
 
@@ -321,7 +321,7 @@ class EpisodicMemory(MemoryStore):
         episodes.sort(key=lambda e: e.start_time, reverse=True)
         return episodes[:limit]
 
-    def search(self, query: str, limit: int = 10) -> List[MemoryItem]:
+    def search(self, query: str, limit: int = 10) -> list[MemoryItem]:
         """Search for items matching a query."""
         results = []
         query_lower = query.lower()
@@ -383,7 +383,7 @@ class EpisodicMemory(MemoryStore):
 class SemanticMemory(MemoryStore):
     """
     Semantic memory for knowledge and learned patterns.
-    
+
     Uses vector embeddings for semantic similarity search.
     Stores medical knowledge, guidelines, and learned patterns.
     """
@@ -395,9 +395,9 @@ class SemanticMemory(MemoryStore):
     ):
         self.embedding_dim = embedding_dim
         self.similarity_threshold = similarity_threshold
-        self._items: Dict[str, MemoryItem] = {}
-        self._embeddings: Dict[str, List[float]] = {}
-        self._categories: Dict[str, List[str]] = {}  # category -> item_ids
+        self._items: dict[str, MemoryItem] = {}
+        self._embeddings: dict[str, list[float]] = {}
+        self._categories: dict[str, list[str]] = {}  # category -> item_ids
         logger.info(f"Initialized SemanticMemory: embedding_dim={embedding_dim}")
 
     def store(self, item: MemoryItem) -> bool:
@@ -420,7 +420,7 @@ class SemanticMemory(MemoryStore):
             logger.error(f"Failed to store item in semantic memory: {e}")
             return False
 
-    def retrieve(self, item_id: str) -> Optional[MemoryItem]:
+    def retrieve(self, item_id: str) -> MemoryItem | None:
         """Retrieve an item by ID."""
         item = self._items.get(item_id)
         if item:
@@ -428,7 +428,7 @@ class SemanticMemory(MemoryStore):
             item.last_accessed = datetime.now(__import__('datetime').timezone.utc)
         return item
 
-    def search(self, query: str, limit: int = 10) -> List[MemoryItem]:
+    def search(self, query: str, limit: int = 10) -> list[MemoryItem]:
         """Search for items by text query."""
         results = []
         query_lower = query.lower()
@@ -444,10 +444,10 @@ class SemanticMemory(MemoryStore):
 
     def search_by_embedding(
         self,
-        query_embedding: List[float],
+        query_embedding: list[float],
         limit: int = 10,
-        category: Optional[str] = None,
-    ) -> List[Tuple[MemoryItem, float]]:
+        category: str | None = None,
+    ) -> list[tuple[MemoryItem, float]]:
         """Search for semantically similar items using embeddings."""
         if not query_embedding:
             return []
@@ -480,7 +480,7 @@ class SemanticMemory(MemoryStore):
 
         return results
 
-    def get_by_category(self, category: str, limit: int = 50) -> List[MemoryItem]:
+    def get_by_category(self, category: str, limit: int = 50) -> list[MemoryItem]:
         """Get items by category."""
         item_ids = self._categories.get(category, [])
         return [self._items[iid] for iid in item_ids[:limit] if iid in self._items]
@@ -513,12 +513,12 @@ class SemanticMemory(MemoryStore):
         logger.info("Cleared semantic memory")
 
     @staticmethod
-    def _cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
+    def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
         """Calculate cosine similarity between two vectors."""
         if len(vec1) != len(vec2):
             return 0.0
 
-        dot_product = sum(a * b for a, b in zip(vec1, vec2))
+        dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=False))
         magnitude1 = sum(a * a for a in vec1) ** 0.5
         magnitude2 = sum(b * b for b in vec2) ** 0.5
 
@@ -531,16 +531,16 @@ class SemanticMemory(MemoryStore):
 class Memory:
     """
     Unified memory system combining all memory types.
-    
+
     Provides a single interface for storing and retrieving
     information across the hierarchical memory architecture.
     """
 
     def __init__(
         self,
-        short_term_config: Optional[Dict[str, Any]] = None,
-        episodic_config: Optional[Dict[str, Any]] = None,
-        semantic_config: Optional[Dict[str, Any]] = None,
+        short_term_config: dict[str, Any] | None = None,
+        episodic_config: dict[str, Any] | None = None,
+        semantic_config: dict[str, Any] | None = None,
     ):
         short_term_config = short_term_config or {}
         episodic_config = episodic_config or {}
@@ -556,8 +556,8 @@ class Memory:
         self,
         content: Any,
         memory_type: MemoryType = MemoryType.SHORT_TERM,
-        metadata: Optional[Dict[str, Any]] = None,
-        embedding: Optional[List[float]] = None,
+        metadata: dict[str, Any] | None = None,
+        embedding: list[float] | None = None,
         importance: float = 0.5,
     ) -> MemoryItem:
         """Store content in the specified memory type."""
@@ -582,8 +582,8 @@ class Memory:
     def retrieve(
         self,
         item_id: str,
-        memory_type: Optional[MemoryType] = None,
-    ) -> Optional[MemoryItem]:
+        memory_type: MemoryType | None = None,
+    ) -> MemoryItem | None:
         """Retrieve an item by ID, optionally from a specific memory type."""
         if memory_type == MemoryType.SHORT_TERM:
             return self.short_term.retrieve(item_id)
@@ -602,9 +602,9 @@ class Memory:
     def search(
         self,
         query: str,
-        memory_types: Optional[List[MemoryType]] = None,
+        memory_types: list[MemoryType] | None = None,
         limit: int = 10,
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         """Search across memory types."""
         memory_types = memory_types or list(MemoryType)
         results = []
@@ -625,7 +625,7 @@ class Memory:
         self,
         child_id: str,
         window_minutes: int = 60,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get comprehensive context for a child."""
         return {
             "recent_observations": self.short_term.get_context_window(window_minutes),

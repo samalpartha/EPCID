@@ -5,8 +5,8 @@ SQLAlchemy async database setup with connection pooling.
 """
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -75,7 +75,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 def get_db():
     """
     Synchronous database session dependency.
-    
+
     Usage:
         @app.get("/items")
         def get_items(db: Session = Depends(get_db)):
@@ -91,7 +91,7 @@ def get_db():
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Async database session dependency.
-    
+
     Usage:
         @app.get("/items")
         async def get_items(db: AsyncSession = Depends(get_async_db)):
@@ -109,7 +109,7 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
 async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
     """
     Async context manager for database sessions.
-    
+
     Usage:
         async with get_db_context() as db:
             result = await db.execute(select(Item))
@@ -128,7 +128,7 @@ async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
 def init_db():
     """
     Initialize the database by creating all tables.
-    
+
     Should be called once at application startup.
     """
     # Import models to register them with Base
@@ -151,7 +151,7 @@ async def init_async_db():
 def drop_db():
     """
     Drop all database tables.
-    
+
     WARNING: This will delete all data!
     """
     Base.metadata.drop_all(bind=engine)

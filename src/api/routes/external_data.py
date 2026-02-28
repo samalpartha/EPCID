@@ -8,10 +8,9 @@ Endpoints for accessing external health data:
 - Growth charts (WHO/CDC)
 """
 
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from typing import List, Optional
-from ..dependencies import get_current_user
 
 router = APIRouter(prefix="/external-data", tags=["External Data"])
 
@@ -47,7 +46,7 @@ class VaccinationDue(BaseModel):
     disease: str
     recommended_age: str
     dose: str
-    catch_up_age: Optional[str]
+    catch_up_age: str | None
     notes: str
 
 
@@ -62,10 +61,10 @@ class GrowthPercentileRequest(BaseModel):
 
 class GrowthPercentileResponse(BaseModel):
     """Growth percentile result."""
-    percentile: Optional[int]
+    percentile: int | None
     status: str
     message: str
-    reference: Optional[dict]
+    reference: dict | None
 
 
 class VitalRangeResponse(BaseModel):
@@ -98,27 +97,27 @@ class DrugInfoResponse(BaseModel):
     brand_name: str
     generic_name: str
     manufacturer: str
-    route: List[str]
-    warnings: List[str]
-    pediatric_use: Optional[str]
-    adverse_reactions: List[str]
+    route: list[str]
+    warnings: list[str]
+    pediatric_use: str | None
+    adverse_reactions: list[str]
 
 
 # ============== CDC Endpoints ==============
 
 @router.get(
     "/disease-activity/{state}",
-    response_model=List[DiseaseActivityResponse],
+    response_model=list[DiseaseActivityResponse],
     summary="Get disease activity for a state",
     description="Returns current disease activity levels from CDC surveillance data.",
 )
 async def get_disease_activity(
     state: str,
-    diseases: Optional[str] = Query(None, description="Comma-separated disease types"),
+    diseases: str | None = Query(None, description="Comma-separated disease types"),
 ):
     """
     Get current disease activity for a state.
-    
+
     - **state**: Two-letter state code (e.g., "CA", "NY")
     - **diseases**: Optional filter for specific diseases (influenza, rsv, covid, strep)
     """
@@ -137,17 +136,17 @@ async def get_disease_activity(
 
 @router.get(
     "/outbreak-alerts/{state}",
-    response_model=List[OutbreakAlert],
+    response_model=list[OutbreakAlert],
     summary="Get outbreak alerts",
     description="Returns active disease outbreak alerts for a region.",
 )
 async def get_outbreak_alerts(
     state: str,
-    zip_code: Optional[str] = None,
+    zip_code: str | None = None,
 ):
     """
     Get active outbreak alerts for a state.
-    
+
     Returns alerts for diseases with HIGH or VERY_HIGH activity levels.
     """
     from ...services.cdc_service import CDCService
@@ -160,7 +159,7 @@ async def get_outbreak_alerts(
 
 @router.get(
     "/vaccinations/due",
-    response_model=List[VaccinationDue],
+    response_model=list[VaccinationDue],
     summary="Get due vaccinations",
     description="Returns vaccinations due for a child based on age.",
 )
@@ -170,7 +169,7 @@ async def get_due_vaccinations(
 ):
     """
     Get recommended vaccinations for a child's age.
-    
+
     Based on the CDC 2024 immunization schedule.
     """
     from ...services.cdc_service import CDCService
@@ -190,7 +189,7 @@ async def get_due_vaccinations(
 async def calculate_growth_percentile(request: GrowthPercentileRequest):
     """
     Calculate growth percentile for a measurement.
-    
+
     - **age_months**: Child's age in months
     - **sex**: 'male' or 'female'
     - **measurement_type**: 'weight', 'height', or 'head_circumference'
@@ -229,7 +228,7 @@ async def get_vital_ranges(
 ):
     """
     Get normal vital sign ranges for a child's age.
-    
+
     Based on PALS (Pediatric Advanced Life Support) guidelines.
     """
     from ...services.cdc_service import CDCService
@@ -252,13 +251,13 @@ async def get_vital_ranges(
     description="Returns current air quality with pediatric health guidance.",
 )
 async def get_air_quality(
-    zip_code: Optional[str] = None,
-    latitude: Optional[float] = None,
-    longitude: Optional[float] = None,
+    zip_code: str | None = None,
+    latitude: float | None = None,
+    longitude: float | None = None,
 ):
     """
     Get current air quality for a location.
-    
+
     Provide either zip_code OR latitude/longitude.
     """
     from ...services.air_quality_service import AirQualityService
@@ -294,7 +293,7 @@ async def get_air_quality(
 async def get_drug_info(drug_name: str):
     """
     Get drug information from OpenFDA.
-    
+
     - **drug_name**: Brand or generic drug name (e.g., "Tylenol", "acetaminophen")
     """
     from ...services.openfda_service import OpenFDAService
@@ -322,7 +321,7 @@ async def check_drug_interaction(
 ):
     """
     Check if a symptom is commonly reported with a drug.
-    
+
     Uses FDA adverse event reports. Note: This does not establish
     causation, only correlation in reported events.
     """
@@ -343,20 +342,20 @@ async def check_drug_interaction(
 )
 async def get_health_context(
     state: str = Query(..., description="Two-letter state code"),
-    zip_code: Optional[str] = None,
-    age_months: Optional[int] = None,
+    zip_code: str | None = None,
+    age_months: int | None = None,
 ):
     """
     Get comprehensive health context for a location.
-    
+
     Combines:
     - Current disease activity
     - Air quality
     - Due vaccinations (if age provided)
     - Relevant alerts
     """
-    from ...services.cdc_service import CDCService
     from ...services.air_quality_service import AirQualityService
+    from ...services.cdc_service import CDCService
 
     cdc_service = CDCService()
     air_service = AirQualityService()

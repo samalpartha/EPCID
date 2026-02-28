@@ -8,13 +8,12 @@ Provides structured logging with:
 - Log level management
 """
 
+import json
 import logging
 import sys
-import json
 from datetime import datetime
-from typing import Any, Dict, Optional
 from pathlib import Path
-import os
+from typing import Any
 
 
 class JSONFormatter(logging.Formatter):
@@ -51,7 +50,7 @@ class JSONFormatter(logging.Formatter):
 class ContextFilter(logging.Filter):
     """Filter that adds context to log records."""
 
-    def __init__(self, context: Optional[Dict[str, Any]] = None):
+    def __init__(self, context: dict[str, Any] | None = None):
         super().__init__()
         self.context = context or {}
 
@@ -72,16 +71,16 @@ class ContextFilter(logging.Filter):
 def setup_logging(
     level: str = "INFO",
     json_format: bool = False,
-    log_file: Optional[str] = None,
+    log_file: str | None = None,
 ) -> logging.Logger:
     """
     Set up logging for the application.
-    
+
     Args:
         level: Log level (DEBUG, INFO, WARNING, ERROR)
         json_format: Use JSON formatting
         log_file: Optional file path for logging
-        
+
     Returns:
         Root logger
     """
@@ -120,10 +119,10 @@ def setup_logging(
 def get_logger(name: str) -> logging.Logger:
     """
     Get a logger with the given name.
-    
+
     Args:
         name: Logger name (will be prefixed with 'epcid.')
-        
+
     Returns:
         Logger instance
     """
@@ -135,7 +134,7 @@ def get_logger(name: str) -> logging.Logger:
 class AuditLogger:
     """
     Audit logger for compliance and safety tracking.
-    
+
     All audit events are immutable and include:
     - Timestamp
     - Event type
@@ -152,7 +151,7 @@ class AuditLogger:
 
     def __init__(
         self,
-        log_file: Optional[str] = None,
+        log_file: str | None = None,
     ):
         self.logger = logging.getLogger("epcid.audit")
         self.logger.setLevel(logging.INFO)
@@ -180,14 +179,14 @@ class AuditLogger:
         event_type: str,
         action: str,
         outcome: str,
-        child_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        session_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        child_id: str | None = None,
+        user_id: str | None = None,
+        session_id: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Log an audit event.
-        
+
         Args:
             event_type: Type of event (e.g., "risk_assessment")
             action: Action performed
@@ -214,8 +213,8 @@ class AuditLogger:
         resource_type: str,
         resource_id: str,
         action: str,
-        user_id: Optional[str] = None,
-        child_id: Optional[str] = None,
+        user_id: str | None = None,
+        child_id: str | None = None,
     ) -> None:
         """Log a data access event."""
         self.log_event(
@@ -236,7 +235,7 @@ class AuditLogger:
         risk_tier: str,
         confidence: float,
         triggered_rules: list,
-        user_id: Optional[str] = None,
+        user_id: str | None = None,
     ) -> None:
         """Log a risk assessment event."""
         self.log_event(
@@ -257,7 +256,7 @@ class AuditLogger:
         child_id: str,
         escalation_type: str,
         urgency: str,
-        user_id: Optional[str] = None,
+        user_id: str | None = None,
     ) -> None:
         """Log an escalation event."""
         self.log_event(
@@ -277,7 +276,7 @@ class AuditLogger:
         child_id: str,
         alert_type: str,
         triggered_rule: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """Log a safety alert event."""
         self.log_event(

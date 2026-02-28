@@ -13,15 +13,14 @@ Based on BMC Emergency Medicine study findings:
 Key finding: >=2 signs present = Relative Risk 4.98 for organ dysfunction
 
 References:
-- BMC Emergency Medicine: "Effectiveness of physical exam signs for 
+- BMC Emergency Medicine: "Effectiveness of physical exam signs for
   early detection of critical illness in pediatric SIRS"
 - Pediatric Sepsis Clinical Presentation guidelines
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
-from enum import Enum
 import logging
+from dataclasses import dataclass, field
+from enum import Enum
 
 logger = logging.getLogger("epcid.clinical.physical_exam")
 
@@ -60,7 +59,7 @@ class ExamFinding:
     name: str
     present: bool
     severity: str = "none"  # none, mild, moderate, severe
-    description: Optional[str] = None
+    description: str | None = None
 
     # Diagnostic characteristics
     sensitivity: float = 0.0
@@ -72,7 +71,7 @@ class ExamFinding:
 class PhysicalExamAssessment:
     """
     Complete physical examination assessment for critical illness detection.
-    
+
     Evaluates four key physical exam signs validated for early detection
     of organ dysfunction in pediatric patients with systemic inflammatory
     response syndrome (SIRS).
@@ -115,7 +114,7 @@ class PhysicalExamAssessment:
     mental_status: MentalStatus = MentalStatus.NORMAL
     pulse_quality: PulseQuality = PulseQuality.NORMAL
     skin_perfusion: SkinPerfusion = SkinPerfusion.NORMAL
-    capillary_refill_seconds: Optional[float] = None
+    capillary_refill_seconds: float | None = None
 
     # Composite scores
     signs_present_count: int = 0
@@ -126,8 +125,8 @@ class PhysicalExamAssessment:
     organ_dysfunction_risk: str = "low"
 
     # Recommendations
-    findings_summary: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    findings_summary: list[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
     # Confidence
     confidence: float = 0.5
@@ -136,17 +135,17 @@ class PhysicalExamAssessment:
 class PhysicalExamAssessor:
     """
     Assesses physical examination findings for pediatric critical illness risk.
-    
+
     Based on validated research showing that combinations of physical exam
     signs significantly increase the risk of organ dysfunction:
-    
+
     - 1 sign present: RR 2.71 for organ dysfunction
     - >=2 signs present: RR 4.98 for organ dysfunction
-    
+
     The most predictive individual signs are:
     - Altered mental status (most sensitive at 54%)
     - Abnormal peripheral pulse quality (most specific at 98%)
-    
+
     Usage:
         assessor = PhysicalExamAssessor()
         assessment = assessor.assess(
@@ -155,7 +154,7 @@ class PhysicalExamAssessor:
             capillary_refill_seconds=4.0,
             skin_perfusion=SkinPerfusion.MOTTLED,
         )
-        
+
         if assessment.signs_present_count >= 2:
             print(f"High risk: RR {assessment.composite_relative_risk}")
     """
@@ -168,23 +167,23 @@ class PhysicalExamAssessor:
         self,
         # Mental status
         mental_status: MentalStatus = MentalStatus.NORMAL,
-        gcs_total: Optional[int] = None,
-        avpu: Optional[str] = None,
+        gcs_total: int | None = None,
+        avpu: str | None = None,
         # Pulse quality
         pulse_quality: PulseQuality = PulseQuality.NORMAL,
         # Capillary refill
-        capillary_refill_seconds: Optional[float] = None,
+        capillary_refill_seconds: float | None = None,
         # Skin/extremities
         skin_perfusion: SkinPerfusion = SkinPerfusion.NORMAL,
-        extremities_temperature: Optional[str] = None,  # warm, cool, cold
+        extremities_temperature: str | None = None,  # warm, cool, cold
         # Additional context
-        age_months: Optional[int] = None,
+        age_months: int | None = None,
         has_fever: bool = False,
         has_tachycardia: bool = False,
     ) -> PhysicalExamAssessment:
         """
         Perform comprehensive physical exam assessment.
-        
+
         Args:
             mental_status: Mental status category
             gcs_total: Glasgow Coma Scale total (optional, used to infer mental status)
@@ -196,7 +195,7 @@ class PhysicalExamAssessor:
             age_months: Patient age in months
             has_fever: Whether patient has fever
             has_tachycardia: Whether patient has tachycardia
-            
+
         Returns:
             PhysicalExamAssessment with risk stratification
         """
@@ -330,7 +329,7 @@ class PhysicalExamAssessor:
         return finding
 
     def _assess_capillary_refill(
-        self, seconds: Optional[float]
+        self, seconds: float | None
     ) -> ExamFinding:
         """Assess capillary refill finding."""
         finding = ExamFinding(
@@ -359,7 +358,7 @@ class PhysicalExamAssessor:
     def _assess_extremities(
         self,
         skin_perfusion: SkinPerfusion,
-        extremities_temp: Optional[str],
+        extremities_temp: str | None,
     ) -> ExamFinding:
         """Assess cold/mottled extremities finding."""
         finding = ExamFinding(
@@ -429,7 +428,6 @@ class PhysicalExamAssessor:
     ) -> str:
         """Determine risk of organ dysfunction."""
         # Base risk from physical exam findings
-        base_risk = assessment.composite_relative_risk
 
         # In context of SIRS (fever + tachycardia), risk increases
         if has_fever and has_tachycardia:
@@ -448,7 +446,7 @@ class PhysicalExamAssessor:
 
     def _generate_findings_summary(
         self, assessment: PhysicalExamAssessment
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate summary of positive findings."""
         summary = []
 
@@ -483,7 +481,7 @@ class PhysicalExamAssessor:
 
     def _generate_recommendations(
         self, assessment: PhysicalExamAssessment
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate recommendations based on findings."""
         recommendations = []
 

@@ -11,7 +11,7 @@ Provides endpoints for:
 """
 
 from .main import app, create_app
-from .routes import assessment, children, symptoms, auth, guidelines, environment
+from .routes import assessment, auth, children, environment, guidelines, symptoms
 
 __all__ = [
     "app",

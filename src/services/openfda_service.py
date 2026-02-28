@@ -15,10 +15,10 @@ Note: Adverse event data is from voluntary reports and does not represent incide
 
 import asyncio
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from urllib.parse import urlencode, quote
+from typing import Any
+from urllib.parse import urlencode
 
 logger = logging.getLogger("epcid.services.openfda")
 
@@ -29,15 +29,15 @@ class DrugLabel:
     brand_name: str
     generic_name: str
     manufacturer: str
-    route: List[str]
-    dosage_forms: List[str]
-    warnings: List[str]
-    pediatric_use: Optional[str]
-    contraindications: List[str]
-    adverse_reactions: List[str]
-    drug_interactions: List[str]
+    route: list[str]
+    dosage_forms: list[str]
+    warnings: list[str]
+    pediatric_use: str | None
+    contraindications: list[str]
+    adverse_reactions: list[str]
+    drug_interactions: list[str]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "brand_name": self.brand_name,
             "generic_name": self.generic_name,
@@ -54,13 +54,13 @@ class AdverseEvent:
     """An adverse event report from OpenFDA."""
     drug_name: str
     reaction: str
-    outcome: Optional[str]
-    patient_age: Optional[float]
-    patient_sex: Optional[str]
-    report_date: Optional[str]
+    outcome: str | None
+    patient_age: float | None
+    patient_sex: str | None
+    report_date: str | None
     serious: bool
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "drug_name": self.drug_name,
             "reaction": self.reaction,
@@ -75,7 +75,7 @@ class AdverseEventSummary:
     """Summary of adverse events for a drug."""
     drug_name: str
     total_reports: int
-    reactions: Dict[str, int]  # reaction -> count
+    reactions: dict[str, int]  # reaction -> count
     pediatric_reports: int
     serious_reports: int
 
@@ -90,7 +90,7 @@ class AdverseEventSummary:
 class OpenFDAService:
     """
     Service for OpenFDA API integration.
-    
+
     Provides drug label and adverse event data with appropriate
     caveats about data limitations.
     """
@@ -106,27 +106,27 @@ class OpenFDAService:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         timeout_seconds: int = 15,
         cache_ttl_hours: int = 12,
     ):
         self.api_key = api_key
         self.timeout_seconds = timeout_seconds
         self.cache_ttl_hours = cache_ttl_hours
-        self._cache: Dict[str, tuple] = {}
+        self._cache: dict[str, tuple] = {}
 
         logger.info("Initialized OpenFDA service")
 
     async def get_drug_label(
         self,
         drug_name: str,
-    ) -> Optional[DrugLabel]:
+    ) -> DrugLabel | None:
         """
         Get drug label information.
-        
+
         Args:
             drug_name: Name of the drug (brand or generic)
-            
+
         Returns:
             DrugLabel object or None if not found
         """
@@ -172,15 +172,15 @@ class OpenFDAService:
         drug_name: str,
         limit: int = 100,
         pediatric_only: bool = False,
-    ) -> List[AdverseEvent]:
+    ) -> list[AdverseEvent]:
         """
         Get adverse event reports for a drug.
-        
+
         Args:
             drug_name: Name of the drug
             limit: Maximum number of reports to return
             pediatric_only: Filter to pediatric patients only
-            
+
         Returns:
             List of AdverseEvent objects
         """
@@ -222,13 +222,13 @@ class OpenFDAService:
     async def get_adverse_event_summary(
         self,
         drug_name: str,
-    ) -> Optional[AdverseEventSummary]:
+    ) -> AdverseEventSummary | None:
         """
         Get a summary of adverse events for a drug.
-        
+
         Args:
             drug_name: Name of the drug
-            
+
         Returns:
             AdverseEventSummary object or None
         """
@@ -283,14 +283,14 @@ class OpenFDAService:
         self,
         drug_name: str,
         symptom: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Check if a symptom is commonly reported with a drug.
-        
+
         Args:
             drug_name: Name of the drug
             symptom: The symptom to check
-            
+
         Returns:
             Dict with correlation information
         """
@@ -340,7 +340,7 @@ class OpenFDAService:
             "caveat": self.ADVERSE_EVENT_CAVEAT,
         }
 
-    async def _make_request(self, url: str) -> Optional[Dict[str, Any]]:
+    async def _make_request(self, url: str) -> dict[str, Any] | None:
         """Make HTTP request to OpenFDA API."""
         # In production, would use aiohttp:
         # async with aiohttp.ClientSession() as session:
@@ -353,7 +353,7 @@ class OpenFDAService:
         await asyncio.sleep(0.1)
         return None
 
-    def _parse_drug_label(self, data: Dict[str, Any]) -> DrugLabel:
+    def _parse_drug_label(self, data: dict[str, Any]) -> DrugLabel:
         """Parse drug label response."""
         openfda = data.get("openfda", {})
 
@@ -372,7 +372,7 @@ class OpenFDAService:
 
     def _parse_adverse_event(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         drug_name: str,
     ) -> AdverseEvent:
         """Parse adverse event response."""
@@ -389,11 +389,11 @@ class OpenFDAService:
             serious=data.get("serious", 0) == 1,
         )
 
-    def _get_first(self, lst: List) -> str:
+    def _get_first(self, lst: list) -> str:
         """Get first element of list or empty string."""
         return lst[0] if lst else ""
 
-    def _get_curated_label(self, drug_name: str) -> Optional[DrugLabel]:
+    def _get_curated_label(self, drug_name: str) -> DrugLabel | None:
         """Get curated drug label data."""
         labels = {
             "acetaminophen": DrugLabel(
@@ -445,7 +445,7 @@ class OpenFDAService:
 
         return labels.get(drug_name.lower())
 
-    def _get_curated_summary(self, drug_name: str) -> Optional[AdverseEventSummary]:
+    def _get_curated_summary(self, drug_name: str) -> AdverseEventSummary | None:
         """Get curated adverse event summary."""
         summaries = {
             "acetaminophen": AdverseEventSummary(
@@ -492,7 +492,7 @@ class OpenFDAService:
 
         return summaries.get(drug_name.lower())
 
-    def _get_cached(self, key: str) -> Optional[Any]:
+    def _get_cached(self, key: str) -> Any | None:
         """Get cached result if not expired."""
         if key in self._cache:
             result, timestamp = self._cache[key]

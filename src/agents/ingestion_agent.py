@@ -12,15 +12,15 @@ Normalizes and validates multimodal inputs:
 Ensures all data is timestamped, validated, and ready for processing.
 """
 
+import base64
+import logging
+import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
 from enum import Enum
-import logging
-import base64
-import re
+from typing import Any
 
-from .base_agent import BaseAgent, AgentConfig, AgentResponse, AgentStatus
+from .base_agent import AgentConfig, AgentResponse, BaseAgent
 
 logger = logging.getLogger("epcid.agents.ingestion")
 
@@ -54,13 +54,13 @@ class ValidationResult:
     field: str
     original_value: Any
     normalized_value: Any
-    message: Optional[str] = None
+    message: str | None = None
 
 
 class IngestionAgent(BaseAgent):
     """
     Agent responsible for ingesting and normalizing multimodal health data.
-    
+
     Key responsibilities:
     - Validate input format and completeness
     - Normalize values to standard units
@@ -71,11 +71,11 @@ class IngestionAgent(BaseAgent):
 
     # Valid symptom categories
     SYMPTOM_CATEGORIES = {
-        "respiratory": ["cough", "wheezing", "difficulty_breathing", "rapid_breathing", 
+        "respiratory": ["cough", "wheezing", "difficulty_breathing", "rapid_breathing",
                        "stridor", "nasal_congestion", "runny_nose", "sneezing"],
         "gastrointestinal": ["vomiting", "diarrhea", "abdominal_pain", "nausea",
                            "poor_appetite", "constipation", "blood_in_stool"],
-        "neurological": ["headache", "dizziness", "confusion", "seizure", 
+        "neurological": ["headache", "dizziness", "confusion", "seizure",
                         "unresponsive", "irritability", "lethargy"],
         "skin": ["rash", "hives", "swelling", "bruising", "pallor", "jaundice",
                 "cyanosis", "petechiae"],
@@ -83,7 +83,7 @@ class IngestionAgent(BaseAgent):
                    "decreased_activity", "poor_sleep"],
         "hydration": ["decreased_urine", "dry_mouth", "no_tears", "sunken_eyes",
                      "sunken_fontanelle", "thirst"],
-        "ear_nose_throat": ["ear_pain", "sore_throat", "neck_stiffness", 
+        "ear_nose_throat": ["ear_pain", "sore_throat", "neck_stiffness",
                           "swollen_lymph_nodes"],
     }
 
@@ -124,7 +124,7 @@ class IngestionAgent(BaseAgent):
 
     def __init__(
         self,
-        config: Optional[AgentConfig] = None,
+        config: AgentConfig | None = None,
         **kwargs,
     ):
         config = config or AgentConfig(
@@ -142,16 +142,16 @@ class IngestionAgent(BaseAgent):
 
     async def process(
         self,
-        input_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> AgentResponse:
         """
         Process and normalize input data.
-        
+
         Args:
             input_data: Raw input data with various types
             context: Optional processing context
-            
+
         Returns:
             AgentResponse with normalized data
         """
@@ -159,8 +159,8 @@ class IngestionAgent(BaseAgent):
         request_id = str(uuid.uuid4())[:12]
 
         normalized_data = {}
-        validation_results: List[ValidationResult] = []
-        warnings: List[str] = []
+        validation_results: list[ValidationResult] = []
+        warnings: list[str] = []
 
         # Get timestamp
         timestamp = input_data.get("timestamp", datetime.now(__import__('datetime').timezone.utc).isoformat())
@@ -255,7 +255,7 @@ class IngestionAgent(BaseAgent):
             warnings=warnings,
         )
 
-    def _normalize_symptoms(self, symptoms: Union[List[str], str]) -> Dict[str, Any]:
+    def _normalize_symptoms(self, symptoms: list[str] | str) -> dict[str, Any]:
         """Normalize symptom input."""
         validations = []
         warnings = []
@@ -309,9 +309,9 @@ class IngestionAgent(BaseAgent):
 
     def _normalize_vitals(
         self,
-        vitals: Dict[str, Any],
-        age_months: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        vitals: dict[str, Any],
+        age_months: int | None = None,
+    ) -> dict[str, Any]:
         """Normalize vital signs and check ranges."""
         validations = []
         warnings = []
@@ -406,7 +406,7 @@ class IngestionAgent(BaseAgent):
             "warnings": warnings,
         }
 
-    def _normalize_demographics(self, demographics: Dict[str, Any]) -> Dict[str, Any]:
+    def _normalize_demographics(self, demographics: dict[str, Any]) -> dict[str, Any]:
         """Normalize demographic data."""
         validations = []
         warnings = []
@@ -466,7 +466,7 @@ class IngestionAgent(BaseAgent):
             "warnings": warnings,
         }
 
-    def _validate_image(self, image_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_image(self, image_data: dict[str, Any]) -> dict[str, Any]:
         """Validate image input."""
         validations = []
         warnings = []
@@ -479,7 +479,7 @@ class IngestionAgent(BaseAgent):
             # Validate base64
             try:
                 # Check if it's valid base64
-                decoded = base64.b64decode(data[:100])  # Just check prefix
+                base64.b64decode(data[:100])  # Just check prefix
                 normalized["has_image_data"] = True
                 normalized["image_size_bytes"] = len(data) * 3 // 4  # Approximate
 
@@ -516,7 +516,7 @@ class IngestionAgent(BaseAgent):
             "warnings": warnings,
         }
 
-    def _validate_voice(self, voice_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_voice(self, voice_data: dict[str, Any]) -> dict[str, Any]:
         """Validate voice/audio input."""
         validations = []
         warnings = []
@@ -564,7 +564,7 @@ class IngestionAgent(BaseAgent):
             "warnings": warnings,
         }
 
-    def _normalize_environmental(self, env_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _normalize_environmental(self, env_data: dict[str, Any]) -> dict[str, Any]:
         """Normalize environmental data."""
         validations = []
         warnings = []
@@ -610,7 +610,7 @@ class IngestionAgent(BaseAgent):
             "warnings": warnings,
         }
 
-    def _normalize_medications(self, medications: Union[List, Dict]) -> Dict[str, Any]:
+    def _normalize_medications(self, medications: list | dict) -> dict[str, Any]:
         """Normalize medication data."""
         validations = []
         warnings = []
@@ -640,7 +640,7 @@ class IngestionAgent(BaseAgent):
             "warnings": warnings,
         }
 
-    def _normalize_duration(self, duration: Union[str, int, float]) -> float:
+    def _normalize_duration(self, duration: str | int | float) -> float:
         """Normalize symptom duration to hours."""
         if isinstance(duration, (int, float)):
             return float(duration)
@@ -663,7 +663,7 @@ class IngestionAgent(BaseAgent):
 
         return 0.0
 
-    def _get_vital_ranges(self, age_months: Optional[int]) -> Optional[Dict]:
+    def _get_vital_ranges(self, age_months: int | None) -> dict | None:
         """Get appropriate vital sign ranges for age."""
         if age_months is None:
             return None
@@ -677,8 +677,8 @@ class IngestionAgent(BaseAgent):
 
     def _calculate_quality_score(
         self,
-        normalized_data: Dict[str, Any],
-        validations: List[ValidationResult],
+        normalized_data: dict[str, Any],
+        validations: list[ValidationResult],
     ) -> float:
         """Calculate overall data quality score (0-1)."""
         score = 0.5  # Base score
@@ -703,8 +703,8 @@ class IngestionAgent(BaseAgent):
 
     def _generate_explanation(
         self,
-        normalized_data: Dict[str, Any],
-        validations: List[ValidationResult],
+        normalized_data: dict[str, Any],
+        validations: list[ValidationResult],
         quality_score: float,
     ) -> str:
         """Generate explanation of ingestion results."""

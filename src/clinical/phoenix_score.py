@@ -14,16 +14,15 @@ Sepsis: Phoenix Score >= 2 in a patient with suspected infection
 Septic Shock: Sepsis + Cardiovascular Score >= 1
 
 References:
-- Sanchez-Pinto LN, et al. Development and Validation of the Phoenix 
+- Sanchez-Pinto LN, et al. Development and Validation of the Phoenix
   Criteria for Pediatric Sepsis and Septic Shock. JAMA. 2024.
 - MDCalc Phoenix Sepsis Score Calculator
 - phoenix R package (CRAN)
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
-from enum import Enum
 import logging
+from dataclasses import dataclass, field
+from enum import Enum
 
 from .vital_signs import VitalSignNormalizer
 
@@ -42,37 +41,37 @@ class VentilationType(Enum):
 class RespiratoryAssessment:
     """Respiratory system assessment for Phoenix Score."""
     # Oxygenation metrics
-    pao2: Optional[float] = None  # mmHg
-    fio2: Optional[float] = None  # Fraction (0-1)
-    spo2: Optional[float] = None  # Percentage
+    pao2: float | None = None  # mmHg
+    fio2: float | None = None  # Fraction (0-1)
+    spo2: float | None = None  # Percentage
 
     # Ventilation status
     ventilation_type: VentilationType = VentilationType.NONE
     on_invasive_ventilation: bool = False
 
     # Calculated ratios
-    pao2_fio2_ratio: Optional[float] = None
-    spo2_fio2_ratio: Optional[float] = None
+    pao2_fio2_ratio: float | None = None
+    spo2_fio2_ratio: float | None = None
 
     # Score
     score: int = 0
-    score_components: List[str] = field(default_factory=list)
+    score_components: list[str] = field(default_factory=list)
 
 
 @dataclass
 class CardiovascularAssessment:
     """Cardiovascular system assessment for Phoenix Score."""
     # Vital signs
-    systolic_bp: Optional[int] = None
-    diastolic_bp: Optional[int] = None
-    mean_arterial_pressure: Optional[float] = None
-    age_months: Optional[int] = None
+    systolic_bp: int | None = None
+    diastolic_bp: int | None = None
+    mean_arterial_pressure: float | None = None
+    age_months: int | None = None
 
     # Lactate
-    lactate: Optional[float] = None  # mmol/L
+    lactate: float | None = None  # mmol/L
 
     # Vasoactive medications (boolean for presence)
-    vasoactive_medications: List[str] = field(default_factory=list)
+    vasoactive_medications: list[str] = field(default_factory=list)
     dobutamine: bool = False
     dopamine: bool = False
     epinephrine: bool = False
@@ -82,7 +81,7 @@ class CardiovascularAssessment:
 
     # Score
     score: int = 0
-    score_components: List[str] = field(default_factory=list)
+    score_components: list[str] = field(default_factory=list)
 
     # Flags
     map_below_threshold: bool = False
@@ -92,35 +91,35 @@ class CardiovascularAssessment:
 @dataclass
 class CoagulationAssessment:
     """Coagulation system assessment for Phoenix Score."""
-    platelet_count: Optional[int] = None  # x10^9/L (thousands)
-    inr: Optional[float] = None
-    d_dimer: Optional[float] = None  # mg/L FEU
-    fibrinogen: Optional[float] = None  # mg/dL
+    platelet_count: int | None = None  # x10^9/L (thousands)
+    inr: float | None = None
+    d_dimer: float | None = None  # mg/L FEU
+    fibrinogen: float | None = None  # mg/dL
 
     # Score
     score: int = 0
-    score_components: List[str] = field(default_factory=list)
+    score_components: list[str] = field(default_factory=list)
 
 
 @dataclass
 class NeurologicalAssessment:
     """Neurological system assessment for Phoenix Score."""
     # Glasgow Coma Scale components
-    gcs_total: Optional[int] = None
-    gcs_eye: Optional[int] = None  # 1-4
-    gcs_verbal: Optional[int] = None  # 1-5
-    gcs_motor: Optional[int] = None  # 1-6
+    gcs_total: int | None = None
+    gcs_eye: int | None = None  # 1-4
+    gcs_verbal: int | None = None  # 1-5
+    gcs_motor: int | None = None  # 1-6
 
     # Pupil reactivity
     pupils_fixed: bool = False
     bilateral_fixed_pupils: bool = False
 
     # Alternative: AVPU scale
-    avpu: Optional[str] = None  # "A", "V", "P", "U"
+    avpu: str | None = None  # "A", "V", "P", "U"
 
     # Score
     score: int = 0
-    score_components: List[str] = field(default_factory=list)
+    score_components: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -145,8 +144,8 @@ class PhoenixScore:
 
     # Explanation
     summary: str = ""
-    contributing_factors: List[str] = field(default_factory=list)
-    missing_data: List[str] = field(default_factory=list)
+    contributing_factors: list[str] = field(default_factory=list)
+    missing_data: list[str] = field(default_factory=list)
 
     # Confidence based on available data
     confidence: float = 0.5
@@ -155,11 +154,11 @@ class PhoenixScore:
 class PhoenixScoreCalculator:
     """
     Calculator for the Phoenix Pediatric Sepsis Score.
-    
+
     The Phoenix criteria provide a validated, data-driven approach to
     identifying pediatric sepsis and septic shock, replacing previous
     consensus-based definitions.
-    
+
     Usage:
         calculator = PhoenixScoreCalculator()
         score = calculator.calculate(
@@ -174,7 +173,7 @@ class PhoenixScoreCalculator:
             gcs_total=12,
             suspected_infection=True,
         )
-        
+
         if score.meets_sepsis_criteria:
             print(f"Sepsis identified, score: {score.total_score}")
     """
@@ -182,7 +181,7 @@ class PhoenixScoreCalculator:
     # MAP thresholds by age (months) from Phoenix criteria
     MAP_THRESHOLDS = [
         (0, 1, 31),      # 0-<1 month: MAP >= 31
-        (1, 12, 32),     # 1-<12 months: MAP >= 32  
+        (1, 12, 32),     # 1-<12 months: MAP >= 32
         (12, 24, 34),    # 1-<2 years: MAP >= 34
         (24, 60, 36),    # 2-<5 years: MAP >= 36
         (60, 144, 40),   # 5-<12 years: MAP >= 40
@@ -196,32 +195,32 @@ class PhoenixScoreCalculator:
         self,
         age_months: int,
         # Respiratory parameters
-        pao2: Optional[float] = None,
-        fio2: Optional[float] = None,
-        spo2: Optional[float] = None,
+        pao2: float | None = None,
+        fio2: float | None = None,
+        spo2: float | None = None,
         on_invasive_ventilation: bool = False,
         ventilation_type: VentilationType = VentilationType.NONE,
         # Cardiovascular parameters
-        systolic_bp: Optional[int] = None,
-        diastolic_bp: Optional[int] = None,
-        lactate: Optional[float] = None,
-        vasoactive_medications: Optional[List[str]] = None,
+        systolic_bp: int | None = None,
+        diastolic_bp: int | None = None,
+        lactate: float | None = None,
+        vasoactive_medications: list[str] | None = None,
         # Coagulation parameters
-        platelet_count: Optional[int] = None,
-        inr: Optional[float] = None,
-        d_dimer: Optional[float] = None,
-        fibrinogen: Optional[float] = None,
+        platelet_count: int | None = None,
+        inr: float | None = None,
+        d_dimer: float | None = None,
+        fibrinogen: float | None = None,
         # Neurological parameters
-        gcs_total: Optional[int] = None,
+        gcs_total: int | None = None,
         pupils_fixed: bool = False,
         bilateral_fixed_pupils: bool = False,
-        avpu: Optional[str] = None,
+        avpu: str | None = None,
         # Clinical context
         suspected_infection: bool = False,
     ) -> PhoenixScore:
         """
         Calculate the Phoenix Sepsis Score.
-        
+
         Args:
             age_months: Patient age in months
             pao2: Arterial oxygen pressure (mmHg)
@@ -242,7 +241,7 @@ class PhoenixScoreCalculator:
             bilateral_fixed_pupils: Whether both pupils are fixed
             avpu: AVPU scale assessment (A/V/P/U)
             suspected_infection: Whether infection is suspected
-            
+
         Returns:
             PhoenixScore with complete assessment
         """
@@ -319,26 +318,26 @@ class PhoenixScoreCalculator:
 
     def _calculate_respiratory(
         self,
-        pao2: Optional[float],
-        fio2: Optional[float],
-        spo2: Optional[float],
+        pao2: float | None,
+        fio2: float | None,
+        spo2: float | None,
         on_invasive_ventilation: bool,
         ventilation_type: VentilationType,
     ) -> RespiratoryAssessment:
         """
         Calculate respiratory component score.
-        
+
         Scoring (0-3 points):
         - Uses PaO2:FiO2 ratio if available, otherwise SpO2:FiO2 ratio
         - Additional point if on invasive mechanical ventilation
-        
+
         PaO2:FiO2 thresholds:
         - >=400: 0 points
-        - 300-<400: 1 point  
+        - 300-<400: 1 point
         - 200-<300: 2 points (IMV required)
         - <200: 2 points (IMV required)
         - <100: 3 points (IMV required)
-        
+
         SpO2:FiO2 thresholds (if PaO2 unavailable):
         - >=292: 0 points
         - 264-<292: 1 point
@@ -419,26 +418,26 @@ class PhoenixScoreCalculator:
     def _calculate_cardiovascular(
         self,
         age_months: int,
-        systolic_bp: Optional[int],
-        diastolic_bp: Optional[int],
-        lactate: Optional[float],
-        vasoactive_medications: List[str],
+        systolic_bp: int | None,
+        diastolic_bp: int | None,
+        lactate: float | None,
+        vasoactive_medications: list[str],
     ) -> CardiovascularAssessment:
         """
         Calculate cardiovascular component score.
-        
+
         Scoring (0-6 points, sum of three subscores):
-        
+
         1. Vasoactive medications (0-2):
            - 0 meds: 0 points
            - 1 med: 1 point
            - >=2 meds: 2 points
-           
+
         2. Lactate (0-2):
            - <5 mmol/L: 0 points
            - 5-<11 mmol/L: 1 point
            - >=11 mmol/L: 2 points
-           
+
         3. Age-adjusted MAP (0-2):
            - MAP above age threshold: 0 points
            - MAP below age threshold: 1-2 points (severity dependent)
@@ -456,7 +455,7 @@ class PhoenixScoreCalculator:
 
         # Known vasoactive medications for Phoenix criteria
         known_vasoactives = {
-            "dobutamine", "dopamine", "epinephrine", 
+            "dobutamine", "dopamine", "epinephrine",
             "milrinone", "norepinephrine", "vasopressin"
         }
 
@@ -526,14 +525,14 @@ class PhoenixScoreCalculator:
 
     def _calculate_coagulation(
         self,
-        platelet_count: Optional[int],
-        inr: Optional[float],
-        d_dimer: Optional[float],
-        fibrinogen: Optional[float],
+        platelet_count: int | None,
+        inr: float | None,
+        d_dimer: float | None,
+        fibrinogen: float | None,
     ) -> CoagulationAssessment:
         """
         Calculate coagulation component score.
-        
+
         Scoring (0-2 points):
         - Platelets >=100: 0 points
         - Platelets <100: 1 point
@@ -558,7 +557,7 @@ class PhoenixScoreCalculator:
 
             if platelet_count < 50:
                 score += 1
-                components.append(f"Severe thrombocytopenia (<50)")
+                components.append("Severe thrombocytopenia (<50)")
 
         # INR consideration
         if inr is not None and inr > 1.3:
@@ -579,20 +578,20 @@ class PhoenixScoreCalculator:
 
     def _calculate_neurological(
         self,
-        gcs_total: Optional[int],
+        gcs_total: int | None,
         pupils_fixed: bool,
         bilateral_fixed_pupils: bool,
-        avpu: Optional[str],
+        avpu: str | None,
     ) -> NeurologicalAssessment:
         """
         Calculate neurological component score.
-        
+
         Scoring (0-2 points):
         - GCS 15: 0 points
         - GCS 11-14: 1 point
         - GCS <=10: 2 points
         - Bilateral fixed pupils: 2 points
-        
+
         AVPU conversion:
         - A (Alert): GCS ~15
         - V (Verbal): GCS ~12
@@ -656,7 +655,7 @@ class PhoenixScoreCalculator:
         else:
             return "low"
 
-    def _collect_contributing_factors(self, result: PhoenixScore) -> List[str]:
+    def _collect_contributing_factors(self, result: PhoenixScore) -> list[str]:
         """Collect all contributing factors from component assessments."""
         factors = []
 
@@ -672,7 +671,7 @@ class PhoenixScoreCalculator:
 
         return factors
 
-    def _identify_missing_data(self, **kwargs) -> List[str]:
+    def _identify_missing_data(self, **kwargs) -> list[str]:
         """Identify missing data that would improve assessment."""
         missing = []
 

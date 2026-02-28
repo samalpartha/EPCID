@@ -16,12 +16,11 @@ References:
 - PEWS systematic review (BMJ Open)
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
-from enum import Enum
 import logging
+from dataclasses import dataclass, field
+from enum import Enum
 
-from .vital_signs import VitalSignNormalizer, AgeAdjustedVitals, VitalSignStatus
+from .vital_signs import AgeAdjustedVitals, VitalSignNormalizer, VitalSignStatus
 
 logger = logging.getLogger("epcid.clinical.pews")
 
@@ -62,9 +61,9 @@ class BehaviorStatus(Enum):
 @dataclass
 class CardiovascularPEWS:
     """Cardiovascular component of PEWS."""
-    heart_rate: Optional[int] = None
+    heart_rate: int | None = None
     capillary_refill: CapillaryRefill = CapillaryRefill.NORMAL
-    systolic_bp: Optional[int] = None
+    systolic_bp: int | None = None
     skin_color: str = "normal"  # normal, pale, mottled, grey
 
     # Age-adjusted assessment
@@ -73,16 +72,16 @@ class CardiovascularPEWS:
     hypotension: bool = False
 
     score: int = 0
-    score_components: List[str] = field(default_factory=list)
+    score_components: list[str] = field(default_factory=list)
 
 
-@dataclass  
+@dataclass
 class RespiratoryPEWS:
     """Respiratory component of PEWS."""
-    respiratory_rate: Optional[int] = None
+    respiratory_rate: int | None = None
     work_of_breathing: WorkOfBreathing = WorkOfBreathing.NORMAL
     oxygen_requirement: float = 0.21  # FiO2 (room air = 0.21)
-    oxygen_saturation: Optional[float] = None
+    oxygen_saturation: float | None = None
 
     # Specific signs
     nasal_flaring: bool = False
@@ -97,7 +96,7 @@ class RespiratoryPEWS:
     hypoxia: bool = False
 
     score: int = 0
-    score_components: List[str] = field(default_factory=list)
+    score_components: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -108,14 +107,14 @@ class BehaviorPEWS:
 
     # Parent concern
     parent_concern: bool = False
-    parent_notes: Optional[str] = None
+    parent_notes: str | None = None
 
     # Additional observations
     consolable: bool = True
     interacting: bool = True
 
     score: int = 0
-    score_components: List[str] = field(default_factory=list)
+    score_components: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -137,7 +136,7 @@ class PEWSScore:
 
     # Clinical interpretation
     interpretation: str = ""
-    recommended_actions: List[str] = field(default_factory=list)
+    recommended_actions: list[str] = field(default_factory=list)
 
     # Metadata
     age_months: int = 0
@@ -147,16 +146,16 @@ class PEWSScore:
 class PEWSCalculator:
     """
     Calculator for Pediatric Early Warning Score.
-    
+
     PEWS provides a standardized assessment of pediatric patients
     to identify those at risk of clinical deterioration. Score
     thresholds trigger escalating responses:
-    
+
     - Score 0-2: Low risk, routine monitoring
     - Score 3-4: Moderate risk, increased monitoring
     - Score 5-6: High risk, consider rapid response
     - Score 7+: Critical, immediate senior review
-    
+
     Usage:
         calculator = PEWSCalculator()
         score = calculator.calculate(
@@ -167,7 +166,7 @@ class PEWSCalculator:
             work_of_breathing=WorkOfBreathing.MODERATE,
             avpu=AVPU.ALERT,
         )
-        
+
         if score.escalation_recommended:
             print("Consider escalation to senior clinician")
     """
@@ -179,14 +178,14 @@ class PEWSCalculator:
         self,
         age_months: int,
         # Cardiovascular
-        heart_rate: Optional[int] = None,
-        systolic_bp: Optional[int] = None,
+        heart_rate: int | None = None,
+        systolic_bp: int | None = None,
         capillary_refill: CapillaryRefill = CapillaryRefill.NORMAL,
-        capillary_refill_seconds: Optional[float] = None,
+        capillary_refill_seconds: float | None = None,
         skin_color: str = "normal",
         # Respiratory
-        respiratory_rate: Optional[int] = None,
-        oxygen_saturation: Optional[float] = None,
+        respiratory_rate: int | None = None,
+        oxygen_saturation: float | None = None,
         oxygen_requirement: float = 0.21,
         work_of_breathing: WorkOfBreathing = WorkOfBreathing.NORMAL,
         nasal_flaring: bool = False,
@@ -199,11 +198,11 @@ class PEWSCalculator:
         avpu: AVPU = AVPU.ALERT,
         behavior: BehaviorStatus = BehaviorStatus.APPROPRIATE,
         parent_concern: bool = False,
-        parent_notes: Optional[str] = None,
+        parent_notes: str | None = None,
     ) -> PEWSScore:
         """
         Calculate PEWS score.
-        
+
         Args:
             age_months: Patient age in months
             heart_rate: Heart rate in bpm
@@ -225,7 +224,7 @@ class PEWSCalculator:
             behavior: Behavior status assessment
             parent_concern: Whether parent has concerns
             parent_notes: Parent notes about concerns
-            
+
         Returns:
             PEWSScore with complete assessment
         """
@@ -453,7 +452,7 @@ class PEWSCalculator:
         avpu: AVPU,
         behavior: BehaviorStatus,
         parent_concern: bool,
-        parent_notes: Optional[str],
+        parent_notes: str | None,
     ) -> BehaviorPEWS:
         """Calculate behavior/neurological PEWS component (0-3 points)."""
         beh = BehaviorPEWS(
@@ -539,7 +538,7 @@ class PEWSCalculator:
                 "Reassess as clinically indicated."
             )
 
-    def _generate_recommendations(self, result: PEWSScore) -> List[str]:
+    def _generate_recommendations(self, result: PEWSScore) -> list[str]:
         """Generate recommended actions based on PEWS score."""
         actions = []
         score = result.total_score

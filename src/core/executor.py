@@ -9,15 +9,15 @@ Safe action execution with validation, rollback, and audit logging:
 All actions are logged for audit compliance and safety review.
 """
 
+import asyncio
+import logging
+import traceback
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Generic
 from enum import Enum
-import logging
-import asyncio
-import traceback
-import uuid
+from typing import Any, TypeVar
 
 logger = logging.getLogger("epcid.core.executor")
 
@@ -50,7 +50,7 @@ T = TypeVar('T')
 class Action:
     """
     A discrete operation to be executed.
-    
+
     Actions are the atomic units of execution in the system.
     Each action is validated, executed, and logged.
     """
@@ -61,15 +61,15 @@ class Action:
 
     # Execution details
     handler: str  # Name of handler function
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
 
     # Validation
     requires_validation: bool = True
-    validators: List[str] = field(default_factory=list)
+    validators: list[str] = field(default_factory=list)
 
     # Safety
     is_reversible: bool = False
-    rollback_handler: Optional[str] = None
+    rollback_handler: str | None = None
 
     # Execution control
     timeout_seconds: int = 30
@@ -77,17 +77,17 @@ class Action:
     max_retries: int = 2
 
     # Context
-    child_id: Optional[str] = None
-    session_id: Optional[str] = None
-    initiated_by: Optional[str] = None
+    child_id: str | None = None
+    session_id: str | None = None
+    initiated_by: str | None = None
 
     # Timestamps
     created_at: datetime = field(default_factory=lambda: datetime.now(__import__('datetime').timezone.utc))
 
     # Metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging."""
         return {
             "id": self.id,
@@ -108,7 +108,7 @@ class Action:
 class ActionResult:
     """
     Result of an action execution.
-    
+
     Contains the outcome, any output data, and execution metadata.
     """
     action_id: str
@@ -116,31 +116,31 @@ class ActionResult:
 
     # Output
     output: Any = None
-    error_message: Optional[str] = None
-    error_traceback: Optional[str] = None
+    error_message: str | None = None
+    error_traceback: str | None = None
 
     # Execution details
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    duration_ms: Optional[float] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    duration_ms: float | None = None
 
     # Validation results
     validation_passed: bool = True
-    validation_messages: List[str] = field(default_factory=list)
+    validation_messages: list[str] = field(default_factory=list)
 
     # Rollback info
     was_rolled_back: bool = False
-    rollback_at: Optional[datetime] = None
+    rollback_at: datetime | None = None
 
     # Metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def success(self) -> bool:
         """Check if the action completed successfully."""
         return self.status == ActionStatus.COMPLETED
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging."""
         return {
             "action_id": self.action_id,
@@ -159,7 +159,7 @@ class ActionValidator(ABC):
     """Base class for action validators."""
 
     @abstractmethod
-    def validate(self, action: Action) -> tuple[bool, Optional[str]]:
+    def validate(self, action: Action) -> tuple[bool, str | None]:
         """Validate an action. Returns (is_valid, error_message)."""
         pass
 
@@ -167,7 +167,7 @@ class ActionValidator(ABC):
 class SafetyValidator(ActionValidator):
     """Validates actions for safety compliance."""
 
-    def validate(self, action: Action) -> tuple[bool, Optional[str]]:
+    def validate(self, action: Action) -> tuple[bool, str | None]:
         """Check safety constraints."""
         # Ensure child_id is present for patient-related actions
         if action.category in [ActionCategory.STORE, ActionCategory.ESCALATE]:
@@ -185,10 +185,10 @@ class SafetyValidator(ActionValidator):
 class ParameterValidator(ActionValidator):
     """Validates action parameters."""
 
-    def __init__(self, required_params: Dict[str, type]):
+    def __init__(self, required_params: dict[str, type]):
         self.required_params = required_params
 
-    def validate(self, action: Action) -> tuple[bool, Optional[str]]:
+    def validate(self, action: Action) -> tuple[bool, str | None]:
         """Check parameter presence and types."""
         for param_name, param_type in self.required_params.items():
             if param_name not in action.parameters:
@@ -216,7 +216,7 @@ class ActionHandler(ABC):
 class AuditLogger:
     """Logs all action executions for audit compliance."""
 
-    def __init__(self, log_path: Optional[str] = None):
+    def __init__(self, log_path: str | None = None):
         self.log_path = log_path
         self.audit_logger = logging.getLogger("epcid.audit")
 
@@ -243,7 +243,7 @@ class AuditLogger:
             }
         )
 
-    def log_validation_failure(self, action: Action, messages: List[str]) -> None:
+    def log_validation_failure(self, action: Action, messages: list[str]) -> None:
         """Log validation failure."""
         self.audit_logger.warning(
             "VALIDATION_FAILED",
@@ -271,7 +271,7 @@ class AuditLogger:
 class Executor:
     """
     Central executor for action orchestration.
-    
+
     Handles validation, execution, error handling, and rollback
     of all actions in the system with full audit logging.
     """
@@ -287,18 +287,18 @@ class Executor:
         self.max_concurrent_actions = max_concurrent_actions
 
         # Validators
-        self.validators: Dict[str, ActionValidator] = {
+        self.validators: dict[str, ActionValidator] = {
             "safety": SafetyValidator(),
         }
 
         # Handlers
-        self.handlers: Dict[str, ActionHandler] = {}
+        self.handlers: dict[str, ActionHandler] = {}
 
         # Audit
         self.audit_logger = AuditLogger() if enable_audit else None
 
         # Execution tracking
-        self._active_actions: Dict[str, Action] = {}
+        self._active_actions: dict[str, Action] = {}
         self._semaphore = asyncio.Semaphore(max_concurrent_actions)
 
         logger.info(f"Initialized Executor: validation={enable_validation}, audit={enable_audit}")
@@ -316,10 +316,10 @@ class Executor:
     async def execute(self, action: Action) -> ActionResult:
         """
         Execute an action with validation, error handling, and audit logging.
-        
+
         Args:
             action: The action to execute
-            
+
         Returns:
             ActionResult with execution outcome
         """
@@ -357,7 +357,7 @@ class Executor:
                     result.output = output
                     result.status = ActionStatus.COMPLETED
 
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     result.status = ActionStatus.FAILED
                     result.error_message = f"Action timed out after {action.timeout_seconds}s"
 
@@ -391,16 +391,16 @@ class Executor:
 
     async def execute_batch(
         self,
-        actions: List[Action],
+        actions: list[Action],
         stop_on_failure: bool = False,
-    ) -> List[ActionResult]:
+    ) -> list[ActionResult]:
         """
         Execute multiple actions, optionally in parallel.
-        
+
         Args:
             actions: List of actions to execute
             stop_on_failure: If True, stop on first failure
-            
+
         Returns:
             List of ActionResults in same order as input
         """
@@ -422,7 +422,7 @@ class Executor:
 
         return results
 
-    async def _validate(self, action: Action) -> tuple[bool, List[str]]:
+    async def _validate(self, action: Action) -> tuple[bool, list[str]]:
         """Run all validators on the action."""
         messages = []
 
@@ -478,7 +478,7 @@ class Executor:
             return True
         return False
 
-    def get_active_actions(self) -> List[Action]:
+    def get_active_actions(self) -> list[Action]:
         """Get list of currently active actions."""
         return list(self._active_actions.values())
 
@@ -488,7 +488,7 @@ class Executor:
 class LogActionHandler(ActionHandler):
     """Handler that logs actions (for testing and audit)."""
 
-    async def execute(self, action: Action) -> Dict[str, Any]:
+    async def execute(self, action: Action) -> dict[str, Any]:
         """Log and return action details."""
         logger.info(f"Executing action: {action.name}")
         return {
@@ -511,9 +511,9 @@ class NoOpHandler(ActionHandler):
 def create_action(
     name: str,
     handler: str,
-    parameters: Dict[str, Any],
+    parameters: dict[str, Any],
     category: ActionCategory = ActionCategory.COMPUTE,
-    child_id: Optional[str] = None,
+    child_id: str | None = None,
     **kwargs,
 ) -> Action:
     """Factory function to create actions."""

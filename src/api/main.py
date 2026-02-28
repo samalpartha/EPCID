@@ -10,18 +10,18 @@ Production-ready FastAPI server with:
 - OpenAPI documentation
 """
 
-import logging
 import time
+from collections.abc import Callable
 from contextlib import asynccontextmanager
-from typing import Any, Callable, Dict
+from typing import Any
 
 from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
 
-from ..utils.logger import setup_logging, get_logger
+from ..utils.logger import get_logger, setup_logging
 from ..utils.metrics import get_metrics_collector
 
 logger = get_logger("api")
@@ -138,6 +138,7 @@ Authorization: Bearer <your_token>
 
     # Add rate limiting middleware
     import os
+
     from .middleware.rate_limit import RateLimitMiddleware
 
     rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
@@ -200,10 +201,20 @@ Authorization: Bearer <your_token>
         )
 
     # Include routers
-    from .routes import auth, children, symptoms, assessment, guidelines, environment
-    from .routes import symptom_checker, care_advice, dosage, clinical_scoring
-    from .routes import external_data
-    from .routes import mental_health
+    from .routes import (
+        assessment,
+        auth,
+        care_advice,
+        children,
+        clinical_scoring,
+        dosage,
+        environment,
+        external_data,
+        guidelines,
+        mental_health,
+        symptom_checker,
+        symptoms,
+    )
 
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
     app.include_router(children.router, prefix="/api/v1/children", tags=["Children"])
@@ -226,7 +237,7 @@ Authorization: Bearer <your_token>
 
     # Health check endpoints
     @app.get("/health", tags=["Health"])
-    async def health_check() -> Dict[str, Any]:
+    async def health_check() -> dict[str, Any]:
         """Health check endpoint for load balancers."""
         return {
             "status": "healthy",
@@ -235,7 +246,7 @@ Authorization: Bearer <your_token>
         }
 
     @app.get("/health/ready", tags=["Health"])
-    async def readiness_check() -> Dict[str, Any]:
+    async def readiness_check() -> dict[str, Any]:
         """Readiness check - verifies all dependencies are available."""
         from ..services.cache_service import get_cache
 
@@ -257,12 +268,12 @@ Authorization: Bearer <your_token>
         }
 
     @app.get("/health/live", tags=["Health"])
-    async def liveness_check() -> Dict[str, str]:
+    async def liveness_check() -> dict[str, str]:
         """Liveness check - verifies the service is running."""
         return {"status": "alive"}
 
     @app.get("/metrics", tags=["Monitoring"])
-    async def get_metrics(request: Request) -> Dict[str, Any]:
+    async def get_metrics(request: Request) -> dict[str, Any]:
         """Get application metrics."""
         if hasattr(request.app.state, "metrics"):
             return request.app.state.metrics.get_summary()
@@ -270,7 +281,7 @@ Authorization: Bearer <your_token>
 
     # Root endpoint
     @app.get("/", tags=["Root"])
-    async def root() -> Dict[str, str]:
+    async def root() -> dict[str, str]:
         """Root endpoint with API information."""
         return {
             "name": "EPCID API",
