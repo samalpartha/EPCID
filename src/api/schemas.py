@@ -10,6 +10,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+
 # Enums
 class RiskLevel(str, Enum):
     """Risk level classification."""
