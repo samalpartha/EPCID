@@ -176,7 +176,9 @@ async def run_assessment_pipeline(
             red_flags=risk_result.get("red_flags", []),
             warning_signs=risk_result.get("warning_signs", []),
             explanation=getattr(explanation, "summary", "Based on the reported symptoms..."),
-            clinical_reasoning=explanation.to_markdown() if hasattr(explanation, "to_markdown") else "",
+            clinical_reasoning=(
+                explanation.to_markdown() if hasattr(explanation, "to_markdown") else ""
+            ),
             suggested_actions=escalation_result.get("suggested_actions", []),
             when_to_seek_care=escalation_result.get(
                 "when_to_seek_care", "If symptoms worsen or new symptoms develop"

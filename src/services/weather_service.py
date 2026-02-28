@@ -299,9 +299,7 @@ class WeatherService:
 
         # Humidity considerations
         if weather.humidity_percent > 80:
-            recs.append(
-                "High humidity - take extra breaks during physical activity"
-            )
+            recs.append("High humidity - take extra breaks during physical activity")
         elif weather.humidity_percent < 30:
             recs.append(
                 "Low humidity - ensure good hydration and consider using a humidifier indoors"
