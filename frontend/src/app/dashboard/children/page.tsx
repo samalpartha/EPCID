@@ -292,8 +292,8 @@ export default function ChildrenPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Children</h1>
-          <p className="text-surface-400">Manage your children&apos;s profiles</p>
+          <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Children</h1>
+          <p className="text-surface-600 dark:text-surface-400">Manage your children&apos;s profiles</p>
         </div>
         <Button onClick={() => openModal()}>
           <Plus className="w-4 h-4" />
@@ -353,7 +353,7 @@ export default function ChildrenPage() {
                   </div>
 
                   {/* Quick Stats Row */}
-                  <div className="grid grid-cols-3 gap-2 mb-4 p-3 rounded-xl bg-surface-50 dark:bg-surface-800/50">
+                  <div className="grid grid-cols-3 gap-2 mb-4 p-3 rounded-xl bg-surface-100 dark:bg-surface-800/50">
                     <div className="text-center">
                       <div className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Weight</div>
                       <div className="text-sm font-semibold text-surface-900 dark:text-white">
@@ -479,11 +479,11 @@ export default function ChildrenPage() {
       ) : (
         <Card className="py-16">
           <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-surface-800 flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
               <User className="w-10 h-10 text-surface-500" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">No Children Added</h3>
-            <p className="text-surface-400 mb-6 max-w-md mx-auto">
+            <h3 className="text-xl font-bold text-surface-900 dark:text-white mb-2">No Children Added</h3>
+            <p className="text-surface-600 dark:text-surface-400 mb-6 max-w-md mx-auto">
               Add your child&apos;s profile to start monitoring their health and receive AI-powered assessments.
             </p>
             <Button onClick={() => openModal()}>
@@ -519,7 +519,7 @@ export default function ChildrenPage() {
                     </CardTitle>
                     <button
                       onClick={closeModal}
-                      className="p-2 text-surface-400 hover:text-white transition-all active:scale-90 rounded-lg hover:bg-surface-800"
+                      className="p-2 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all active:scale-90 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-800"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -592,7 +592,7 @@ export default function ChildrenPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-surface-300 mb-2">
+                      <label className="block text-sm font-medium text-surface-600 dark:text-surface-300 mb-2">
                         Medical Conditions (Optional)
                       </label>
                       <Input
@@ -604,7 +604,7 @@ export default function ChildrenPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-surface-300 mb-2">
+                      <label className="block text-sm font-medium text-surface-600 dark:text-surface-300 mb-2">
                         Allergies (Optional)
                       </label>
                       <Input

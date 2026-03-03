@@ -31,7 +31,7 @@ const AI_FEATURES: AIFeature[] = [
     description: 'AI-powered symptom severity assessment',
     icon: Stethoscope,
     status: 'active',
-    model: 'Gemini 2.5 Flash'
+    model: 'Gemini 2.5 Flash (GenAI SDK)'
   },
   {
     id: 'risk-prediction',
@@ -46,8 +46,16 @@ const AI_FEATURES: AIFeature[] = [
     name: 'Medical Chat Assistant',
     description: 'Conversational AI for health guidance',
     icon: MessageSquare,
-    status: 'ready',
-    model: 'Gemini 2.5 Flash'
+    status: 'active',
+    model: 'Gemini 2.5 Flash (GenAI SDK)'
+  },
+  {
+    id: 'voice-triage',
+    name: 'Voice + Vision Triage',
+    description: 'Real-time voice & camera assessment via Gemini Live API',
+    icon: Activity,
+    status: 'active',
+    model: 'Gemini Live 2.5 Flash (Audio + Vision)'
   },
   {
     id: 'trend-analysis',
@@ -180,11 +188,11 @@ export function AIStatusIndicator() {
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-surface-500">Powered by</span>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-surface-200 dark:bg-surface-700 rounded text-surface-600 dark:text-surface-400">
-                      Gemini
+                    <span className="px-2 py-0.5 bg-purple-500/20 rounded text-purple-400">
+                      Google GenAI SDK
                     </span>
-                    <span className="px-2 py-0.5 bg-surface-200 dark:bg-surface-700 rounded text-surface-600 dark:text-surface-400">
-                      OpenRouter
+                    <span className="px-2 py-0.5 bg-cyan-500/20 rounded text-cyan-400">
+                      Live API
                     </span>
                   </div>
                 </div>

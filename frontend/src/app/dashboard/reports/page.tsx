@@ -303,7 +303,7 @@ export default function ReportsPage() {
   if (!selectedChild) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <FileText className="w-16 h-16 text-surface-300 mb-4" />
+        <FileText className="w-16 h-16 text-surface-600 dark:text-surface-300 mb-4" />
         <h2 className="text-xl font-bold text-surface-900 dark:text-white mb-2">No Child Selected</h2>
         <p className="text-surface-600 dark:text-surface-400">Select a child to generate reports</p>
       </div>
@@ -665,7 +665,7 @@ export default function ReportsPage() {
                         {section.name}
                       </div>
                       {section.dataCount !== undefined && section.dataCount > 0 && (
-                        <span className="text-surface-400">
+                        <span className="text-surface-600 dark:text-surface-400">
                           {abnormalOnly && section.abnormalCount !== undefined 
                             ? section.abnormalCount 
                             : section.dataCount
@@ -676,7 +676,7 @@ export default function ReportsPage() {
                   ))}
                 </div>
                 {sectionsWithCounts.filter(s => s.included).length === 0 && (
-                  <p className="text-center text-surface-400 text-xs py-4">Select sections to include</p>
+                  <p className="text-center text-surface-600 dark:text-surface-400 text-xs py-4">Select sections to include</p>
                 )}
               </div>
 

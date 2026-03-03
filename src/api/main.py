@@ -40,6 +40,24 @@ async def lifespan(app: FastAPI) -> Any:
     app.state.metrics = get_metrics_collector()
     app.state.started_at = time.time()
 
+    # Initialize Vertex AI
+    try:
+        from ..services.vertex_ai_service import get_vertex_ai_service, VERTEX_AI_AVAILABLE
+        
+        if VERTEX_AI_AVAILABLE:
+            vertex_service = get_vertex_ai_service()
+            app.state.vertex_ai = vertex_service
+            app.state.vertex_ai_available = vertex_service.is_available
+            logger.info(f"Vertex AI initialized: available={vertex_service.is_available}")
+        else:
+            app.state.vertex_ai = None
+            app.state.vertex_ai_available = False
+            logger.info("Vertex AI SDK not available - running without Vertex AI")
+    except Exception as e:
+        logger.warning(f"Vertex AI initialization failed: {e}")
+        app.state.vertex_ai = None
+        app.state.vertex_ai_available = False
+
     logger.info("EPCID API server started successfully")
 
     yield
@@ -207,6 +225,7 @@ Authorization: Bearer <your_token>
 
     # Include routers
     from .routes import (
+        ai_analysis,
         assessment,
         auth,
         care_advice,
@@ -227,6 +246,9 @@ Authorization: Bearer <your_token>
     app.include_router(assessment.router, prefix="/api/v1/assessment", tags=["Assessment"])
     app.include_router(guidelines.router, prefix="/api/v1/guidelines", tags=["Guidelines"])
     app.include_router(environment.router, prefix="/api/v1/environment", tags=["Environment"])
+
+    # AI-powered analysis (Vertex AI)
+    app.include_router(ai_analysis.router, prefix="/api/v1", tags=["AI Analysis (Vertex AI)"])
 
     # New ChildrensMD-style endpoints
     app.include_router(symptom_checker.router, prefix="/api/v1", tags=["Symptom Checker"])
@@ -276,6 +298,20 @@ Authorization: Bearer <your_token>
     async def liveness_check() -> dict[str, str]:
         """Liveness check - verifies the service is running."""
         return {"status": "alive"}
+
+    @app.get("/health/vertex-ai", tags=["Health"])
+    async def vertex_ai_health(request: Request) -> dict[str, Any]:
+        """Check Vertex AI availability and status."""
+        vertex_available = getattr(request.app.state, "vertex_ai_available", False)
+        vertex_service = getattr(request.app.state, "vertex_ai", None)
+        
+        return {
+            "status": "available" if vertex_available else "unavailable",
+            "vertex_ai_sdk": "installed" if vertex_service is not None else "not_installed",
+            "model": "gemini-2.5-flash-preview-05-20" if vertex_available else None,
+            "project": os.environ.get("GOOGLE_CLOUD_PROJECT", "unknown"),
+            "location": "us-central1",
+        }
 
     @app.get("/metrics", tags=["Monitoring"])
     async def get_metrics(request: Request) -> dict[str, Any]:
@@ -331,6 +367,10 @@ def custom_openapi() -> dict[str, Any]:
 
     # Add tags metadata
     openapi_schema["tags"] = [
+        {
+            "name": "AI Analysis (Vertex AI)",
+            "description": "AI-powered symptom analysis using Google Cloud Vertex AI with Gemini 2.5 Flash",
+        },
         {
             "name": "Authentication",
             "description": "User authentication and token management",

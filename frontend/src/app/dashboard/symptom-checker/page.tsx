@@ -676,13 +676,13 @@ export default function SymptomCheckerPage() {
                     ? 'bg-primary-500 text-white' 
                     : index === currentStep
                       ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 ring-2 ring-primary-500'
-                      : 'bg-surface-100 dark:bg-surface-800 text-surface-400'
+                      : 'bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400'
                   }
                 `}>
                   {index < currentStep ? <CheckCircle className="w-5 h-5" /> : index + 1}
                 </div>
                 <div className="mt-2 text-center hidden sm:block">
-                  <div className={`text-xs font-medium ${index <= currentStep ? 'text-surface-900 dark:text-white' : 'text-surface-400'}`}>
+                  <div className={`text-xs font-medium ${index <= currentStep ? 'text-surface-900 dark:text-white' : 'text-surface-600 dark:text-surface-400'}`}>
                     {step.title}
                   </div>
                 </div>
@@ -733,7 +733,7 @@ export default function SymptomCheckerPage() {
                             : 'border-surface-200 dark:border-surface-700 focus:border-cyan-500'
                         }`}
                       />
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-600 dark:text-surface-400" />
                     </div>
                     <button
                       onClick={startVoiceInput}
@@ -792,12 +792,12 @@ export default function SymptomCheckerPage() {
                       <div className="absolute inset-0 flex items-center justify-center">
                         {/* Simple body outline SVG */}
                         <svg viewBox="0 0 100 200" className="h-full max-h-[350px] opacity-20">
-                          <ellipse cx="50" cy="25" rx="15" ry="20" fill="currentColor" className="text-surface-400" />
-                          <rect x="35" y="45" width="30" height="50" rx="5" fill="currentColor" className="text-surface-400" />
-                          <rect x="20" y="50" width="10" height="40" rx="3" fill="currentColor" className="text-surface-400" />
-                          <rect x="70" y="50" width="10" height="40" rx="3" fill="currentColor" className="text-surface-400" />
-                          <rect x="37" y="95" width="10" height="50" rx="3" fill="currentColor" className="text-surface-400" />
-                          <rect x="53" y="95" width="10" height="50" rx="3" fill="currentColor" className="text-surface-400" />
+                          <ellipse cx="50" cy="25" rx="15" ry="20" fill="currentColor" className="text-surface-600 dark:text-surface-400" />
+                          <rect x="35" y="45" width="30" height="50" rx="5" fill="currentColor" className="text-surface-600 dark:text-surface-400" />
+                          <rect x="20" y="50" width="10" height="40" rx="3" fill="currentColor" className="text-surface-600 dark:text-surface-400" />
+                          <rect x="70" y="50" width="10" height="40" rx="3" fill="currentColor" className="text-surface-600 dark:text-surface-400" />
+                          <rect x="37" y="95" width="10" height="50" rx="3" fill="currentColor" className="text-surface-600 dark:text-surface-400" />
+                          <rect x="53" y="95" width="10" height="50" rx="3" fill="currentColor" className="text-surface-600 dark:text-surface-400" />
                         </svg>
                       </div>
                       

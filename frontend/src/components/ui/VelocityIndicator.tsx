@@ -74,7 +74,7 @@ export function VelocityIndicator({
     },
     stable: {
       icon: Minus,
-      color: 'text-surface-400',
+      color: 'text-surface-600 dark:text-surface-400',
       bg: 'bg-surface-100 dark:bg-surface-800',
       label: 'Stable',
       animate: false,
@@ -156,7 +156,7 @@ export function VelocityArrow({
     },
     stable: {
       icon: ArrowRight,
-      color: 'text-surface-400',
+      color: 'text-surface-600 dark:text-surface-400',
     },
   }
 

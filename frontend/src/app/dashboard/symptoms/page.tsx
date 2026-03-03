@@ -135,8 +135,8 @@ export default function SymptomsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <AlertTriangle className="w-16 h-16 text-yellow-400 mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">No Child Selected</h2>
-        <p className="text-surface-400">Please select a child from the sidebar to log symptoms.</p>
+        <h2 className="text-xl font-bold text-surface-900 dark:text-white mb-2">No Child Selected</h2>
+        <p className="text-surface-600 dark:text-surface-400">Please select a child from the sidebar to log symptoms.</p>
       </div>
     )
   }
@@ -145,8 +145,8 @@ export default function SymptomsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Log Symptoms</h1>
-        <p className="text-surface-400">Record {selectedChild.name}&apos;s symptoms for AI analysis</p>
+        <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Log Symptoms</h1>
+        <p className="text-surface-600 dark:text-surface-400">Record {selectedChild.name}&apos;s symptoms for AI analysis</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -172,12 +172,12 @@ export default function SymptomsPage() {
                         p-3 rounded-xl border transition-all text-left flex items-center gap-2 active:scale-95 transform
                         ${isSelected
                           ? 'border-primary-500 bg-primary-500/20'
-                          : 'border-surface-700 bg-surface-800/50 hover:border-surface-600'
+                          : 'border-surface-300 dark:border-surface-700 bg-surface-100 dark:bg-surface-800/50 hover:border-surface-400 dark:hover:border-surface-600'
                         }
                       `}
                     >
                       <symptom.icon className={`w-5 h-5 ${symptom.color}`} />
-                      <span className={isSelected ? 'text-primary-300' : 'text-surface-300'}>
+                      <span className={isSelected ? 'text-primary-300' : 'text-surface-600 dark:text-surface-300'}>
                         {symptom.name}
                       </span>
                       {isSelected && (
@@ -231,7 +231,7 @@ export default function SymptomsPage() {
                     key={symptom.name}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-4 rounded-xl bg-surface-800/50 space-y-4"
+                    className="p-4 rounded-xl bg-surface-100 dark:bg-surface-800/50 space-y-4"
                   >
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium text-white">{symptom.name}</h4>
@@ -245,7 +245,7 @@ export default function SymptomsPage() {
 
                     {/* Severity */}
                     <div>
-                      <label className="text-sm text-surface-400 mb-2 block">Severity</label>
+                      <label className="text-sm text-surface-600 dark:text-surface-400 mb-2 block">Severity</label>
                       <div className="flex gap-2">
                         {severityLevels.map((level) => (
                           <button
@@ -255,7 +255,7 @@ export default function SymptomsPage() {
                               flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all active:scale-95 transform
                               ${symptom.severity === level.value
                                 ? `${level.color} text-white`
-                                : 'bg-surface-700 text-surface-300 hover:bg-surface-600'
+                                : 'bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-300 dark:hover:bg-surface-600'
                               }
                             `}
                           >
@@ -267,7 +267,7 @@ export default function SymptomsPage() {
 
                     {/* Duration */}
                     <div>
-                      <label className="text-sm text-surface-400 mb-2 block">Duration</label>
+                      <label className="text-sm text-surface-600 dark:text-surface-400 mb-2 block">Duration</label>
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
@@ -278,18 +278,18 @@ export default function SymptomsPage() {
                           })}
                           className="w-24"
                         />
-                        <span className="text-surface-400">hours</span>
+                        <span className="text-surface-600 dark:text-surface-400">hours</span>
                       </div>
                     </div>
 
                     {/* Notes */}
                     <div>
-                      <label className="text-sm text-surface-400 mb-2 block">Notes (optional)</label>
+                      <label className="text-sm text-surface-600 dark:text-surface-400 mb-2 block">Notes (optional)</label>
                       <textarea
                         placeholder="Any additional details..."
                         value={symptom.notes || ''}
                         onChange={(e) => updateSymptom(symptom.name, { notes: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-surface-900 border border-surface-700 text-white placeholder-surface-500 focus:outline-none focus:border-primary-500 resize-none"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-300 dark:border-surface-700 text-surface-900 dark:text-white placeholder-surface-400 dark:placeholder-surface-500 focus:outline-none focus:border-primary-500 resize-none"
                         rows={2}
                       />
                     </div>
@@ -312,7 +312,7 @@ export default function SymptomsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm text-surface-400 mb-2 block flex items-center gap-2">
+                <label className="text-sm text-surface-600 dark:text-surface-400 mb-2 block flex items-center gap-2">
                   <Thermometer className="w-4 h-4" />
                   Temperature (°F)
                 </label>
@@ -326,7 +326,7 @@ export default function SymptomsPage() {
               </div>
 
               <div>
-                <label className="text-sm text-surface-400 mb-2 block flex items-center gap-2">
+                <label className="text-sm text-surface-600 dark:text-surface-400 mb-2 block flex items-center gap-2">
                   <Heart className="w-4 h-4" />
                   Heart Rate (bpm)
                 </label>
@@ -339,7 +339,7 @@ export default function SymptomsPage() {
               </div>
 
               <div>
-                <label className="text-sm text-surface-400 mb-2 block flex items-center gap-2">
+                <label className="text-sm text-surface-600 dark:text-surface-400 mb-2 block flex items-center gap-2">
                   <Wind className="w-4 h-4" />
                   Respiratory Rate (breaths/min)
                 </label>
@@ -352,7 +352,7 @@ export default function SymptomsPage() {
               </div>
 
               <div>
-                <label className="text-sm text-surface-400 mb-2 block">
+                <label className="text-sm text-surface-600 dark:text-surface-400 mb-2 block">
                   Oxygen Saturation (%)
                 </label>
                 <Input
@@ -383,11 +383,11 @@ export default function SymptomsPage() {
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full p-8 border-2 border-dashed border-surface-700 rounded-xl hover:border-surface-600 transition-all text-center active:scale-[0.98] transform"
+                className="w-full p-8 border-2 border-dashed border-surface-300 dark:border-surface-700 rounded-xl hover:border-surface-400 dark:hover:border-surface-600 transition-all text-center active:scale-[0.98] transform"
               >
-                <Camera className="w-8 h-8 text-surface-500 mx-auto mb-2" />
-                <p className="text-surface-400">Upload symptom photos</p>
-                <p className="text-xs text-surface-500 mt-1">Rashes, throat, etc.</p>
+                <Camera className="w-8 h-8 text-surface-600 dark:text-surface-500 mx-auto mb-2" />
+                <p className="text-surface-600 dark:text-surface-400">Upload symptom photos</p>
+                <p className="text-xs text-surface-600 dark:text-surface-500 mt-1">Rashes, throat, etc.</p>
               </button>
             </CardContent>
           </Card>
@@ -424,7 +424,7 @@ export default function SymptomsPage() {
             )}
           </AnimatePresence>
 
-          <p className="text-xs text-surface-500 text-center">
+          <p className="text-xs text-surface-600 dark:text-surface-500 text-center">
             After saving, run a Risk Assessment to get AI analysis
           </p>
         </div>

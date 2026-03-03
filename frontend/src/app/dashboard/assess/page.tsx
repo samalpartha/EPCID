@@ -1023,7 +1023,7 @@ export default function AssessmentPage() {
                   </span>
                   <button
                     onClick={() => handleDeleteAssessment(latestAssessment.id)}
-                    className="p-2 text-surface-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                    className="p-2 text-surface-600 dark:text-surface-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-all"
                     title="Delete assessment"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1452,7 +1452,7 @@ export default function AssessmentPage() {
                       <Timer className="w-5 h-5 text-cyan-600" />
                       Set Re-Assessment Reminder
                     </CardTitle>
-                    <button onClick={() => setShowReminderModal(false)} className="text-surface-400 hover:text-surface-600">
+                    <button onClick={() => setShowReminderModal(false)} className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-600">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
@@ -1490,7 +1490,7 @@ export default function AssessmentPage() {
         <Card className="py-16">
           <div className="text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
-              <Activity className="w-10 h-10 text-surface-400" />
+              <Activity className="w-10 h-10 text-surface-600 dark:text-surface-400" />
             </div>
             <h3 className="text-xl font-bold text-surface-900 dark:text-white mb-2">No Assessment Yet</h3>
             <p className="text-surface-500 mb-6 max-w-md mx-auto">
@@ -1569,7 +1569,7 @@ export default function AssessmentPage() {
                             </Button>
                             <button
                               onClick={() => handleDeleteAssessment(assessment.id)}
-                              className="p-1.5 text-surface-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                              className="p-1.5 text-surface-600 dark:text-surface-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-all"
                               title="Delete assessment"
                             >
                               <Trash2 className="w-4 h-4" />

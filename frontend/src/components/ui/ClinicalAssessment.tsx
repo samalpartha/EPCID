@@ -185,7 +185,7 @@ export function ClinicalAssessment({
               </p>
             </div>
           </div>
-          <ChevronDown className={`w-5 h-5 text-surface-400 transition-transform ${isActive ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-5 h-5 text-surface-600 dark:text-surface-400 transition-transform ${isActive ? 'rotate-180' : ''}`} />
         </button>
 
         <AnimatePresence>
@@ -265,7 +265,7 @@ export function ClinicalAssessment({
           <button
             type="button"
             onClick={() => setShowHelp(showHelp === 'capRefill' ? null : 'capRefill')}
-            className="text-surface-400 hover:text-surface-600"
+            className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-600"
           >
             <HelpCircle className="w-4 h-4" />
           </button>
@@ -311,7 +311,7 @@ export function ClinicalAssessment({
             className="w-24 px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-sm"
           />
           <span className="text-surface-500">/</span>
-          <span className="text-surface-400 text-sm">mmHg</span>
+          <span className="text-surface-600 dark:text-surface-400 text-sm">mmHg</span>
         </div>
       </div>
     </>
@@ -456,7 +456,7 @@ export function ClinicalAssessment({
           <button
             type="button"
             onClick={() => setShowHelp(showHelp === 'avpu' ? null : 'avpu')}
-            className="text-surface-400 hover:text-surface-600"
+            className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-600"
           >
             <HelpCircle className="w-4 h-4" />
           </button>

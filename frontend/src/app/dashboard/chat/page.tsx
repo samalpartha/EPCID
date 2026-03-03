@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import {
@@ -8,6 +8,9 @@ import {
   MicOff,
   Send,
   Camera,
+  CameraOff,
+  Video,
+  Eye,
   Bot,
   User,
   Sparkles,
@@ -26,11 +29,14 @@ import {
   AlertTriangle,
   Phone,
   FileText,
+  Radio,
+  PhoneOff,
 } from 'lucide-react'
 import { Button, Badge } from '@/components/ui'
 import type { VitalReading, SymptomEntry, Medication, DoseLog } from '@/store/useStore'
 import useStore from '@/store/useStore'
 import { chat, startVoiceRecording, Message as AIMessage } from '@/lib/ai'
+import { VoiceTriageSession, type VoiceTriageStatus, type VoiceTriageCallbacks } from '@/lib/voiceTriage'
 
 // Action types that can be embedded in messages
 type ActionType = 
@@ -297,6 +303,137 @@ Once you've added a child profile, I can help you:
 
   const [aiProvider, setAiProvider] = useState<string>('')
 
+  // ── Voice Triage (Gemini Live API) state ──
+  const [voiceMode, setVoiceMode] = useState(false)
+  const [voiceStatus, setVoiceStatus] = useState<VoiceTriageStatus>('idle')
+  const [voiceTranscript, setVoiceTranscript] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([])
+  const [audioLevel, setAudioLevel] = useState(0)
+  const [cameraActive, setCameraActive] = useState(false)
+  const voiceSessionRef = useRef<VoiceTriageSession | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const cameraPreviewRef = useRef<HTMLDivElement>(null)
+  const animFrameRef = useRef<number>(0)
+
+  const startVoiceTriage = useCallback(async () => {
+    setVoiceTranscript([])
+    setVoiceMode(true)
+    setVoiceStatus('connecting')
+
+    try {
+      const res = await fetch('/api/voice-session', { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.message || 'Could not start voice session')
+      }
+      const { apiKey } = await res.json()
+
+      const callbacks: VoiceTriageCallbacks = {
+        onStatusChange: (s) => setVoiceStatus(s),
+        onTranscriptUpdate: (role, text) => {
+          setVoiceTranscript((prev) => {
+            const last = prev[prev.length - 1]
+            if (last && last.role === role) {
+              return [...prev.slice(0, -1), { role, text: last.text + text }]
+            }
+            return [...prev, { role, text }]
+          })
+        },
+        onAudioLevel: (level) => setAudioLevel(level),
+        onError: (msg) => {
+          console.error('[VoiceTriage]', msg)
+        },
+        onCameraChange: (active) => setCameraActive(active),
+      }
+
+      const session = new VoiceTriageSession(callbacks)
+      voiceSessionRef.current = session
+
+      const childCtx = selectedChild
+        ? `Child: ${selectedChild.name}, age context available`
+        : undefined
+
+      await session.start(apiKey, childCtx)
+      setAiProvider('gemini-live')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Voice triage failed'
+      console.error(message)
+      setVoiceStatus('error')
+    }
+  }, [selectedChild])
+
+  const toggleCamera = useCallback(async () => {
+    const session = voiceSessionRef.current
+    if (!session) return
+    if (session.cameraActive) {
+      session.disableCamera()
+      if (cameraPreviewRef.current) cameraPreviewRef.current.innerHTML = ''
+    } else {
+      const videoEl = await session.enableCamera()
+      if (videoEl && cameraPreviewRef.current) {
+        videoEl.style.width = '100%'
+        videoEl.style.height = '100%'
+        videoEl.style.objectFit = 'cover'
+        videoEl.style.borderRadius = '0.75rem'
+        cameraPreviewRef.current.innerHTML = ''
+        cameraPreviewRef.current.appendChild(videoEl)
+      }
+    }
+  }, [])
+
+  const stopVoiceTriage = useCallback(() => {
+    if (cameraPreviewRef.current) cameraPreviewRef.current.innerHTML = ''
+    voiceSessionRef.current?.stop()
+    voiceSessionRef.current = null
+    setVoiceMode(false)
+    setVoiceStatus('idle')
+    setAudioLevel(0)
+    setCameraActive(false)
+  }, [])
+
+  // Waveform animation
+  useEffect(() => {
+    if (!voiceMode || !canvasRef.current) return
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let phase = 0
+    const draw = () => {
+      const w = canvas.width
+      const h = canvas.height
+      ctx.clearRect(0, 0, w, h)
+
+      const amplitude = Math.min(audioLevel * 800, h / 2.5)
+      const barCount = 48
+      const barW = w / barCount - 2
+
+      for (let i = 0; i < barCount; i++) {
+        const x = i * (barW + 2)
+        const barH = Math.max(4, amplitude * Math.abs(Math.sin((i + phase) * 0.3)))
+        const gradient = ctx.createLinearGradient(x, h / 2 - barH / 2, x, h / 2 + barH / 2)
+
+        if (voiceStatus === 'ai_speaking') {
+          gradient.addColorStop(0, 'rgba(99,102,241,0.8)')
+          gradient.addColorStop(1, 'rgba(168,85,247,0.4)')
+        } else {
+          gradient.addColorStop(0, 'rgba(6,182,212,0.8)')
+          gradient.addColorStop(1, 'rgba(20,184,166,0.4)')
+        }
+
+        ctx.fillStyle = gradient
+        ctx.beginPath()
+        ctx.roundRect(x, h / 2 - barH / 2, barW, barH, 2)
+        ctx.fill()
+      }
+
+      phase += 0.15
+      animFrameRef.current = requestAnimationFrame(draw)
+    }
+
+    draw()
+    return () => cancelAnimationFrame(animFrameRef.current)
+  }, [voiceMode, audioLevel, voiceStatus])
+
   // Handle action button clicks
   const handleAction = (messageId: string, action: MessageAction) => {
     switch (action.type) {
@@ -508,26 +645,30 @@ Once you've added a child profile, I can help you:
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col">
       {/* Chat Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-surface-800">
+      <div className="flex items-center justify-between pb-4 border-b border-surface-200 dark:border-surface-800">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="font-semibold text-white flex items-center gap-2">
+            <h2 className="font-semibold text-surface-900 dark:text-white flex items-center gap-2">
               EPCID Assistant
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                 Online
               </span>
               {aiProvider && (
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs">
-                  <Zap className="w-3 h-3" />
-                  {aiProvider}
+                <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
+                  aiProvider === 'gemini-live'
+                    ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400'
+                    : 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400'
+                }`}>
+                  {aiProvider === 'gemini-live' ? <Radio className="w-3 h-3 animate-pulse" /> : <Zap className="w-3 h-3" />}
+                  {aiProvider === 'gemini-live' ? 'Gemini Live' : aiProvider}
                 </span>
               )}
             </h2>
-            <p className="text-sm text-surface-400">
+            <p className="text-sm text-surface-600 dark:text-surface-400">
               {selectedChild 
                 ? `Smart Health Assistant for ${selectedChild.name}` 
                 : 'Early Pediatric Critical Illness Detection'}
@@ -536,13 +677,13 @@ Once you've added a child profile, I can help you:
         </div>
         <div className="flex items-center gap-2">
           {reminders.length > 0 && (
-            <span className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-400 text-xs">
+            <span className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs">
               <Bell className="w-3 h-3" />
               {reminders.length} Reminder{reminders.length > 1 ? 's' : ''}
             </span>
           )}
           {isRecording && (
-            <span className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-500/20 text-red-400 text-xs animate-pulse">
+            <span className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-500/20 text-red-600 dark:text-red-400 text-xs animate-pulse">
               <Mic className="w-3 h-3" />
               Listening...
             </span>
@@ -573,7 +714,7 @@ Once you've added a child profile, I can help you:
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="mb-2 px-3 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2"
+                    className="mb-2 px-3 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs flex items-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4 flex-shrink-0" />
                     <span>{message.systemNote}</span>
@@ -585,7 +726,7 @@ Once you've added a child profile, I can help you:
                     rounded-2xl px-4 py-3
                     ${message.role === 'user'
                       ? 'bg-primary-500 text-white rounded-tr-none'
-                      : 'glass text-surface-200 rounded-tl-none'
+                      : 'glass text-surface-800 dark:text-surface-200 rounded-tl-none'
                     }
                   `}
                 >
@@ -595,7 +736,7 @@ Once you've added a child profile, I can help you:
                       {message.attachments.map((attachment, i) => (
                         <div
                           key={i}
-                          className="relative w-24 h-24 rounded-lg overflow-hidden bg-surface-800"
+                          className="relative w-24 h-24 rounded-lg overflow-hidden bg-surface-100 dark:bg-surface-800"
                         >
                           {attachment.type === 'image' ? (
                             <img
@@ -638,8 +779,8 @@ Once you've added a child profile, I can help you:
                         className={`
                           flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all
                           ${action.completed
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-surface-800 hover:bg-surface-700 text-surface-300 hover:text-white border border-surface-700'
+                            ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                            : 'bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-surface-700 dark:text-surface-300 hover:text-surface-900 dark:hover:text-white border border-surface-300 dark:border-surface-700'
                           }
                         `}
                       >
@@ -678,7 +819,7 @@ Once you've added a child profile, I can help you:
                   setInput(prompt)
                   setShowSuggestions(false)
                 }}
-                className="px-4 py-2 glass rounded-full text-sm text-surface-300 hover:text-white hover:bg-white/10 transition-all active:scale-95 transform"
+                className="px-4 py-2 glass rounded-full text-sm text-surface-700 dark:text-surface-300 hover:text-surface-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-95 transform"
               >
                 <Sparkles className="w-3 h-3 inline mr-2" />
                 {prompt}
@@ -690,13 +831,107 @@ Once you've added a child profile, I can help you:
         <div ref={messagesEndRef} />
       </div>
 
+      {/* ── Voice + Vision Triage Panel ── */}
+      <AnimatePresence>
+        {voiceMode && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border-t border-surface-200 dark:border-surface-800"
+          >
+            <div className="py-4 space-y-4">
+              {/* Status + Camera Badge */}
+              <div className="flex items-center justify-center gap-3">
+                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+                  voiceStatus === 'listening'
+                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-400'
+                    : voiceStatus === 'ai_speaking'
+                    ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400'
+                    : voiceStatus === 'connecting'
+                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                    : voiceStatus === 'error'
+                    ? 'bg-red-500/20 text-red-700 dark:text-red-400'
+                    : 'bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400'
+                }`}>
+                  {voiceStatus === 'listening' && <><span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" /> Listening...</>}
+                  {voiceStatus === 'ai_speaking' && <><span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" /> AI Speaking...</>}
+                  {voiceStatus === 'connecting' && <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</>}
+                  {voiceStatus === 'processing' && <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>}
+                  {voiceStatus === 'error' && <>Connection Error</>}
+                  {voiceStatus === 'ended' && <>Session Ended</>}
+                  {voiceStatus === 'idle' && <>Ready</>}
+                </span>
+                {cameraActive && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
+                    <Eye className="w-3 h-3" />
+                    Vision Active
+                  </span>
+                )}
+              </div>
+
+              {/* Camera Preview + Waveform */}
+              <div className="flex items-center justify-center gap-4">
+                {cameraActive && (
+                  <div
+                    ref={cameraPreviewRef}
+                    className="w-40 h-30 rounded-xl overflow-hidden bg-surface-900 border-2 border-emerald-500/40 flex-shrink-0"
+                    style={{ aspectRatio: '4/3' }}
+                  />
+                )}
+                <canvas
+                  ref={canvasRef}
+                  width={400}
+                  height={60}
+                  className={`rounded-lg bg-surface-100 dark:bg-surface-900/50 ${cameraActive ? 'w-48' : 'w-full max-w-md'}`}
+                />
+              </div>
+
+              {/* Transcript */}
+              {voiceTranscript.length > 0 && (
+                <div className="max-h-40 overflow-y-auto space-y-2 px-4">
+                  {voiceTranscript.map((entry, i) => (
+                    <div key={i} className={`text-sm ${entry.role === 'user' ? 'text-cyan-700 dark:text-cyan-400' : 'text-purple-700 dark:text-purple-400'}`}>
+                      <span className="font-semibold">{entry.role === 'user' ? 'You: ' : 'AI: '}</span>
+                      {entry.text}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Controls */}
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={toggleCamera}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl transition-all font-medium ${
+                    cameraActive
+                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30'
+                      : 'bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700 border border-surface-300 dark:border-surface-700'
+                  }`}
+                >
+                  {cameraActive ? <CameraOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+                  {cameraActive ? 'Turn Off Camera' : 'Show Symptom on Camera'}
+                </button>
+                <button
+                  onClick={stopVoiceTriage}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/30 transition-all font-medium"
+                >
+                  <PhoneOff className="w-5 h-5" />
+                  End Session
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Attachments Preview */}
       {attachments.length > 0 && (
         <div className="flex gap-2 pb-3 overflow-x-auto">
           {attachments.map((file, i) => (
             <div
               key={i}
-              className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-surface-800 group"
+              className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-surface-100 dark:bg-surface-800 group"
             >
               {file.type.startsWith('image/') ? (
                 <img
@@ -721,7 +956,24 @@ Once you've added a child profile, I can help you:
       )}
 
       {/* Input Area */}
-      <div className="border-t border-surface-800 pt-4">
+      <div className="border-t border-surface-200 dark:border-surface-800 pt-4">
+        {/* Voice Triage CTA */}
+        {!voiceMode && (
+          <div className="flex justify-center mb-3">
+            <button
+              onClick={startVoiceTriage}
+              className="group flex items-center gap-3 px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-purple-500/30 hover:border-purple-500/60 text-surface-900 dark:text-white transition-all hover:shadow-lg hover:shadow-purple-500/10"
+            >
+              <div className="relative">
+                <Radio className="w-5 h-5 text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300" />
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <span className="text-sm font-medium">Talk to EPCID</span>
+              <span className="text-xs text-surface-500">Gemini Live</span>
+            </button>
+          </div>
+        )}
+
         <div className="flex items-end gap-3">
           {/* Attachment Buttons */}
           <div className="flex gap-2">
@@ -734,8 +986,9 @@ Once you've added a child profile, I can help you:
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="p-3 rounded-xl glass text-surface-400 hover:text-white hover:bg-white/10 transition-all active:scale-90"
+              className="p-3 rounded-xl glass text-surface-500 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-90"
               title="Upload image"
+              disabled={voiceMode}
             >
               <Camera className="w-5 h-5" />
             </button>
@@ -750,7 +1003,7 @@ Once you've added a child profile, I can help you:
               placeholder={isProcessing ? 'Processing voice...' : 'Describe symptoms or ask a question...'}
               disabled={isProcessing}
               rows={1}
-              className="w-full px-4 py-3 pr-12 rounded-xl bg-surface-900 border border-surface-700 text-white placeholder-surface-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-none transition-all disabled:opacity-50"
+              className="w-full px-4 py-3 pr-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-300 dark:border-surface-700 text-surface-900 dark:text-white placeholder-surface-400 dark:placeholder-surface-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-none transition-all disabled:opacity-50"
               style={{ minHeight: '48px', maxHeight: '120px' }}
             />
             {isProcessing && (
@@ -768,7 +1021,7 @@ Once you've added a child profile, I can help you:
               p-3 rounded-xl transition-all
               ${isRecording
                 ? 'bg-red-500 text-white recording-pulse'
-                : 'glass text-surface-400 hover:text-white hover:bg-white/10'
+                : 'glass text-surface-500 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10'
               }
               disabled:opacity-50
             `}
@@ -792,7 +1045,7 @@ Once you've added a child profile, I can help you:
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-center gap-2 mt-3 text-red-400"
+            className="flex items-center justify-center gap-2 mt-3 text-red-600 dark:text-red-400"
           >
             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
             Recording... Click the microphone to stop

@@ -391,7 +391,7 @@ export default function FamilyPage() {
   if (!selectedChild) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <Users className="w-16 h-16 text-surface-300 mb-4" />
+        <Users className="w-16 h-16 text-surface-600 dark:text-surface-300 mb-4" />
         <h2 className="text-xl font-bold text-surface-900 dark:text-white mb-2">No Child Selected</h2>
         <p className="text-surface-600 dark:text-surface-400">Select a child to manage family sharing</p>
       </div>
@@ -562,7 +562,7 @@ export default function FamilyPage() {
                         )}
                       </div>
                       <div className="text-sm text-surface-500">{member.email}</div>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-surface-400 flex-wrap">
+                      <div className="flex items-center gap-3 mt-1 text-xs text-surface-600 dark:text-surface-400 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {formatLastActive(member.lastActive)}
@@ -607,7 +607,7 @@ export default function FamilyPage() {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="text-surface-400 hover:text-red-500"
+                          className="text-surface-600 dark:text-surface-400 hover:text-red-500"
                           onClick={() => handleRemoveMember(member.id)}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -638,9 +638,9 @@ export default function FamilyPage() {
         <CardContent>
           {activeProviders.length === 0 && pendingProviders.length === 0 ? (
             <div className="text-center py-8">
-              <Stethoscope className="w-12 h-12 text-surface-300 mx-auto mb-3" />
+              <Stethoscope className="w-12 h-12 text-surface-600 dark:text-surface-300 mx-auto mb-3" />
               <p className="text-surface-500">No healthcare providers added yet</p>
-              <p className="text-sm text-surface-400 mt-1">Add your pediatrician or specialists to share health data securely</p>
+              <p className="text-sm text-surface-600 dark:text-surface-400 mt-1">Add your pediatrician or specialists to share health data securely</p>
               <Button 
                 variant="secondary" 
                 className="mt-4"
@@ -681,7 +681,7 @@ export default function FamilyPage() {
                       {provider.clinic && (
                         <div className="text-sm text-surface-500">{provider.clinic}</div>
                       )}
-                      <div className="text-xs text-surface-400 mt-1">{provider.email}</div>
+                      <div className="text-xs text-surface-600 dark:text-surface-400 mt-1">{provider.email}</div>
                       {provider.privacyScopes && provider.status === 'active' && (
                         <div className="flex items-center gap-1 mt-1 text-xs text-emerald-600">
                           <Lock className="w-3 h-3" />
@@ -708,7 +708,7 @@ export default function FamilyPage() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="text-surface-400 hover:text-red-500"
+                        className="text-surface-600 dark:text-surface-400 hover:text-red-500"
                         onClick={() => handleRemoveMember(provider.id, true)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -767,7 +767,7 @@ export default function FamilyPage() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="text-surface-400 hover:text-red-500"
+                        className="text-surface-600 dark:text-surface-400 hover:text-red-500"
                         onClick={() => handleRemoveMember(member.id)}
                       >
                         <X className="w-4 h-4" />
@@ -814,7 +814,7 @@ export default function FamilyPage() {
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-surface-400">{formatLastActive(activity.time)}</span>
+                  <span className="text-xs text-surface-600 dark:text-surface-400">{formatLastActive(activity.time)}</span>
                 </div>
               )
             })}
@@ -992,7 +992,7 @@ export default function FamilyPage() {
                                   }`}
                                 >
                                   <div className="flex items-center gap-3">
-                                    <config.icon className={`w-5 h-5 ${inviteRole === role ? 'text-cyan-500' : 'text-surface-400'}`} />
+                                    <config.icon className={`w-5 h-5 ${inviteRole === role ? 'text-cyan-500' : 'text-surface-600 dark:text-surface-400'}`} />
                                     <div className="flex-1">
                                       <div className="font-medium text-surface-900 dark:text-white">{config.label}</div>
                                       <div className="text-sm text-surface-500">{config.description}</div>
@@ -1026,7 +1026,7 @@ export default function FamilyPage() {
                                   : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800'
                               }`}
                             >
-                              <scope.icon className={`w-4 h-4 ${scope.enabled ? 'text-emerald-600' : 'text-surface-400'}`} />
+                              <scope.icon className={`w-4 h-4 ${scope.enabled ? 'text-emerald-600' : 'text-surface-600 dark:text-surface-400'}`} />
                               <span className={`text-sm ${scope.enabled ? 'text-emerald-800 dark:text-emerald-200' : 'text-surface-500'}`}>
                                 {scope.name}
                               </span>
@@ -1170,7 +1170,7 @@ export default function FamilyPage() {
                                   : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800'
                               }`}
                             >
-                              <scope.icon className={`w-4 h-4 ${scope.enabled ? 'text-emerald-600' : 'text-surface-400'}`} />
+                              <scope.icon className={`w-4 h-4 ${scope.enabled ? 'text-emerald-600' : 'text-surface-600 dark:text-surface-400'}`} />
                               <span className={`text-sm ${scope.enabled ? 'text-emerald-800 dark:text-emerald-200' : 'text-surface-500'}`}>
                                 {scope.name}
                               </span>
@@ -1316,7 +1316,7 @@ export default function FamilyPage() {
                         key={member.id}
                         className="flex items-center gap-3 p-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-move"
                       >
-                        <GripVertical className="w-5 h-5 text-surface-400" />
+                        <GripVertical className="w-5 h-5 text-surface-600 dark:text-surface-400" />
                         <div className="w-8 h-8 rounded-full bg-red-500 text-white text-sm font-bold flex items-center justify-center">
                           {index + 1}
                         </div>
@@ -1416,7 +1416,7 @@ export default function FamilyPage() {
                             {activity.detail && (
                               <div className="text-xs text-surface-500 mt-1">{activity.detail}</div>
                             )}
-                            <div className="text-xs text-surface-400 mt-1">
+                            <div className="text-xs text-surface-600 dark:text-surface-400 mt-1">
                               {activity.time.toLocaleString()}
                             </div>
                           </div>

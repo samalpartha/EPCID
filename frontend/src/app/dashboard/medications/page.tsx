@@ -449,7 +449,7 @@ export default function MedicationsPage() {
   if (!selectedChild) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <Pill className="w-16 h-16 text-surface-300 mb-4" />
+        <Pill className="w-16 h-16 text-surface-600 dark:text-surface-300 mb-4" />
         <h2 className="text-xl font-bold text-surface-900 dark:text-white mb-2">No Child Selected</h2>
         <p className="text-surface-600 dark:text-surface-400">Select a child to track medications</p>
       </div>
@@ -773,7 +773,7 @@ export default function MedicationsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteMedication(med.id)}
-                          className="text-surface-400 hover:text-red-500"
+                          className="text-surface-600 dark:text-surface-400 hover:text-red-500"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -826,7 +826,7 @@ export default function MedicationsPage() {
 
         {medications.length === 0 && (
           <Card className="text-center py-12">
-            <Pill className="w-16 h-16 text-surface-300 mx-auto mb-4" />
+            <Pill className="w-16 h-16 text-surface-600 dark:text-surface-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-2">No Medications Added</h3>
             <p className="text-surface-600 dark:text-surface-400 mb-4">Add medications to track doses and get reminders</p>
             <Button onClick={() => setShowAddMedication(true)} icon={<Plus className="w-4 h-4" />}>
@@ -908,7 +908,7 @@ export default function MedicationsPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Add Medication</CardTitle>
-                    <button onClick={() => setShowAddMedication(false)} className="text-surface-400 hover:text-surface-600">
+                    <button onClick={() => setShowAddMedication(false)} className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-600">
                       <X className="w-5 h-5" />
                     </button>
                   </div>

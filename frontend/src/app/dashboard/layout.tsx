@@ -237,15 +237,15 @@ export default function DashboardLayout({
       <AIStatusIndicator />
 
       {/* Top Safety Bar - Glass Style */}
-      <div className="bg-gradient-to-r from-surface-900/95 to-surface-800/95 dark:from-navy-950/95 dark:to-navy-925/95 backdrop-blur-xl border-b border-surface-700/30 dark:border-primary-400/10">
+      <div className="bg-gradient-to-r from-surface-100 to-surface-50 dark:from-navy-950/95 dark:to-navy-925/95 backdrop-blur-xl border-b border-surface-200 dark:border-primary-400/10">
         <div className="max-w-full mx-auto px-4 py-2">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-primary-400">
-                <div className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
+              <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400">
+                <div className="w-2 h-2 rounded-full bg-primary-500 dark:bg-primary-400 animate-pulse" />
                 <span className="font-medium">EPCID Safety Net</span>
               </div>
-              <div className="hidden sm:flex items-center gap-2 text-surface-400">
+              <div className="hidden sm:flex items-center gap-2 text-surface-600 dark:text-surface-400">
                 <Clock className="w-3.5 h-3.5" />
                 <span className="text-xs">24/7 Monitoring Active</span>
               </div>
@@ -260,7 +260,7 @@ export default function DashboardLayout({
               </button>
               <button
                 onClick={handleFindCare}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 font-medium rounded-lg transition-all text-xs border border-primary-500/30"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary-500/20 hover:bg-primary-500/30 text-primary-600 dark:text-primary-400 font-medium rounded-lg transition-all text-xs border border-primary-500/30"
               >
                 <MapPin className="w-3.5 h-3.5" />
                 <span>Find Care</span>

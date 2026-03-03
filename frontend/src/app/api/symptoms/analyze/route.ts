@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenAI } from '@google/genai'
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
@@ -139,40 +140,22 @@ Rules:
 - Provide practical, actionable home care tips
 - List specific warning signs that would warrant escalation`
 
-    // Try Gemini first, then Groq, then static fallback
+    // Try Gemini (via GenAI SDK) first, then Groq, then static fallback
     let analysisText: string
 
     if (GEMINI_API_KEY) {
       try {
-        const geminiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: 'user',
-                  parts: [{ text: 'You are a pediatric triage assistant. Analyze symptoms and provide structured JSON responses. Always prioritize safety and recommend professional evaluation when in doubt.\n\n' + prompt }],
-                },
-              ],
-              generationConfig: {
-                temperature: 0.3,
-                maxOutputTokens: 800,
-                responseMimeType: 'application/json',
-              },
-              safetySettings: [
-                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-              ],
-            }),
-          }
-        )
-        if (!geminiResponse.ok) throw new Error(`Gemini: ${geminiResponse.status}`)
-        const geminiData = await geminiResponse.json()
-        analysisText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text
+        const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
+        const geminiResponse = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: 'You are a pediatric triage assistant. Analyze symptoms and provide structured JSON responses. Always prioritize safety and recommend professional evaluation when in doubt.\n\n' + prompt,
+          config: {
+            temperature: 0.3,
+            maxOutputTokens: 800,
+            responseMimeType: 'application/json',
+          },
+        })
+        analysisText = geminiResponse.text || ''
         if (!analysisText) throw new Error('Empty Gemini response')
       } catch (geminiErr) {
         console.warn(`[${requestId}] Gemini symptom analysis failed:`, geminiErr)

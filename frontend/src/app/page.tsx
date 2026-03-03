@@ -386,7 +386,7 @@ export default function LandingPage() {
                 icon: Activity, 
                 title: 'Symptom Intake Agent', 
                 desc: 'Extracts clinically relevant signals from unstructured parent input.',
-                metrics: 'LLama-3-70b • <800ms'
+                metrics: 'Gemini 2.5 Flash • <800ms'
               },
               { 
                 icon: Wind, 
@@ -440,8 +440,9 @@ export default function LandingPage() {
                 <span className="px-4 py-2 bg-surface-800 border border-surface-700 rounded-full hover:border-cyan-500 transition-colors cursor-default">Next.js 14</span>
                 <span className="px-4 py-2 bg-surface-800 border border-surface-700 rounded-full hover:border-cyan-500 transition-colors cursor-default">FastAPI</span>
                 <span className="px-4 py-2 bg-surface-800 border border-surface-700 rounded-full hover:border-cyan-500 transition-colors cursor-default">SQLAlchemy</span>
-                <span className="px-4 py-2 bg-surface-800 border border-surface-700 rounded-full hover:border-cyan-500 transition-colors cursor-default">Groq Inference Engine</span>
-                <span className="px-4 py-2 bg-surface-800 border border-surface-700 rounded-full hover:border-cyan-500 transition-colors cursor-default">Llama 3 70B</span>
+                <span className="px-4 py-2 bg-surface-800 border border-surface-700 rounded-full hover:border-cyan-500 transition-colors cursor-default">Gemini 2.5 Flash</span>
+                <span className="px-4 py-2 bg-surface-800 border border-surface-700 rounded-full hover:border-cyan-500 transition-colors cursor-default">Google GenAI SDK</span>
+                <span className="px-4 py-2 bg-surface-800 border border-surface-700 rounded-full hover:border-cyan-500 transition-colors cursor-default">Gemini Live API</span>
                 <span className="px-4 py-2 bg-surface-800 border border-surface-700 rounded-full hover:border-cyan-500 transition-colors cursor-default">Tailwind CSS</span>
               </div>
             </div>

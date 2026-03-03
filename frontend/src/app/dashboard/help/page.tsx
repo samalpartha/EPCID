@@ -436,7 +436,7 @@ export default function HelpPage() {
           </h2>
           <form onSubmit={handleSearchSubmit} className="relative">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-600 dark:text-surface-400" />
               <input
                 type="text"
                 value={searchQuery}
@@ -951,7 +951,7 @@ export default function HelpPage() {
                     <p className="text-sm text-surface-500 mt-1">
                       support@epcid.health
                     </p>
-                    <p className="text-xs text-surface-400 mt-1">
+                    <p className="text-xs text-surface-600 dark:text-surface-400 mt-1">
                       Response within 24 hours
                     </p>
                   </div>
@@ -970,7 +970,7 @@ export default function HelpPage() {
                     <p className="text-sm text-surface-500 mt-1">
                       1-800-EPCID-HELP
                     </p>
-                    <p className="text-xs text-surface-400 mt-1">
+                    <p className="text-xs text-surface-600 dark:text-surface-400 mt-1">
                       Mon-Fri, 9am-5pm EST
                     </p>
                   </div>

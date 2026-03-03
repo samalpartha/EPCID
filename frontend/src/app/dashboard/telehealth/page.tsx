@@ -252,7 +252,7 @@ export default function TelehealthPage() {
   if (!selectedChild) {
     return (
       <div className="p-6 text-center">
-        <Stethoscope className="w-12 h-12 text-surface-400 mx-auto mb-4" />
+        <Stethoscope className="w-12 h-12 text-surface-600 dark:text-surface-400 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-surface-700 dark:text-surface-300">No Child Selected</h2>
         <p className="text-surface-500 mt-2">Please select a child profile to access telehealth services.</p>
         <Link href="/dashboard/children">
@@ -531,7 +531,7 @@ export default function TelehealthPage() {
                 <div className={`p-3 rounded-lg text-center ${
                   latestVitals.hr ? 'bg-pink-50 dark:bg-pink-900/20' : 'bg-surface-100 dark:bg-surface-800'
                 }`}>
-                  <Heart className={`w-5 h-5 mx-auto mb-1 ${latestVitals.hr ? 'text-pink-500' : 'text-surface-400'}`} />
+                  <Heart className={`w-5 h-5 mx-auto mb-1 ${latestVitals.hr ? 'text-pink-500' : 'text-surface-600 dark:text-surface-400'}`} />
                   <div className="text-lg font-bold text-surface-900 dark:text-white">
                     {latestVitals.hr ? latestVitals.hr.value : '--'}
                   </div>
@@ -543,7 +543,7 @@ export default function TelehealthPage() {
                 <div className={`p-3 rounded-lg text-center ${
                   latestVitals.o2 ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-surface-100 dark:bg-surface-800'
                 }`}>
-                  <Wind className={`w-5 h-5 mx-auto mb-1 ${latestVitals.o2 ? 'text-blue-500' : 'text-surface-400'}`} />
+                  <Wind className={`w-5 h-5 mx-auto mb-1 ${latestVitals.o2 ? 'text-blue-500' : 'text-surface-600 dark:text-surface-400'}`} />
                   <div className="text-lg font-bold text-surface-900 dark:text-white">
                     {latestVitals.o2 ? `${latestVitals.o2.value}%` : '--'}
                   </div>
@@ -578,7 +578,7 @@ export default function TelehealthPage() {
                       )
                     })}
                   </div>
-                  <div className="flex justify-between text-xs text-surface-400 mt-1">
+                  <div className="flex justify-between text-xs text-surface-600 dark:text-surface-400 mt-1">
                     <span>24h ago</span>
                     <span>Now</span>
                   </div>
@@ -774,7 +774,7 @@ export default function TelehealthPage() {
                     </div>
                     <button 
                       onClick={() => setShowPreview(false)} 
-                      className="text-surface-400 hover:text-surface-600"
+                      className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-600"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -809,7 +809,7 @@ export default function TelehealthPage() {
                   {/* Simulated Provider Document */}
                   <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg p-4 font-mono text-sm">
                     <div className="border-b border-surface-200 dark:border-surface-700 pb-3 mb-3">
-                      <div className="text-xs text-surface-400 uppercase tracking-wider mb-1">Patient Report</div>
+                      <div className="text-xs text-surface-600 dark:text-surface-400 uppercase tracking-wider mb-1">Patient Report</div>
                       <div className="text-lg font-bold text-surface-900 dark:text-white">
                         {selectedChild.name}
                       </div>
@@ -820,14 +820,14 @@ export default function TelehealthPage() {
                     
                     <div className="space-y-3">
                       <div>
-                        <span className="text-surface-400">Priority:</span>
+                        <span className="text-surface-600 dark:text-surface-400">Priority:</span>
                         <span className={`ml-2 font-bold ${config.color}`}>{priority}</span>
-                        <span className="text-surface-400 ml-4">Risk Score:</span>
+                        <span className="text-surface-600 dark:text-surface-400 ml-4">Risk Score:</span>
                         <span className="ml-2 font-bold">{calculatedRiskScore}/100</span>
                       </div>
                       
                       <div className="border-t border-surface-200 dark:border-surface-700 pt-3">
-                        <div className="text-surface-400 text-xs uppercase mb-1">Current Vitals</div>
+                        <div className="text-surface-600 dark:text-surface-400 text-xs uppercase mb-1">Current Vitals</div>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
                             <span className="text-surface-500">Temp:</span>
@@ -848,14 +848,14 @@ export default function TelehealthPage() {
                       
                       {selectedChild.medical_conditions && selectedChild.medical_conditions.length > 0 && (
                         <div className="border-t border-surface-200 dark:border-surface-700 pt-3">
-                          <div className="text-surface-400 text-xs uppercase mb-1">Medical History</div>
+                          <div className="text-surface-600 dark:text-surface-400 text-xs uppercase mb-1">Medical History</div>
                           <div>{selectedChild.medical_conditions.join(', ')}</div>
                         </div>
                       )}
                       
                       {recentMeds.length > 0 && (
                         <div className="border-t border-surface-200 dark:border-surface-700 pt-3">
-                          <div className="text-surface-400 text-xs uppercase mb-1">Medications (24h)</div>
+                          <div className="text-surface-600 dark:text-surface-400 text-xs uppercase mb-1">Medications (24h)</div>
                           {recentMeds.map((dose, i) => (
                             <div key={i} className="text-surface-700 dark:text-surface-300">
                               • {dose.medication?.name || 'Unknown'} {dose.dosage} at {new Date(dose.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
@@ -867,7 +867,7 @@ export default function TelehealthPage() {
                       
                       {recentSymptoms.length > 0 && (
                         <div className="border-t border-surface-200 dark:border-surface-700 pt-3">
-                          <div className="text-surface-400 text-xs uppercase mb-1">Reported Symptoms</div>
+                          <div className="text-surface-600 dark:text-surface-400 text-xs uppercase mb-1">Reported Symptoms</div>
                           {recentSymptoms.map((entry, i) => {
                             const symptoms = Array.isArray(entry?.symptoms) ? entry.symptoms : [];
                             const symptomNames = symptoms.map(s => 
@@ -882,7 +882,7 @@ export default function TelehealthPage() {
                         </div>
                       )}
                       
-                      <div className="border-t border-surface-200 dark:border-surface-700 pt-3 text-xs text-surface-400">
+                      <div className="border-t border-surface-200 dark:border-surface-700 pt-3 text-xs text-surface-600 dark:text-surface-400">
                         Generated: {new Date().toLocaleString()} | EPCID Smart Handoff v1.0
                       </div>
                     </div>

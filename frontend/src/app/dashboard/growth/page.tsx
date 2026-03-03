@@ -415,7 +415,7 @@ export default function GrowthPage() {
   if (!selectedChild) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <Ruler className="w-16 h-16 text-surface-300 mb-4" />
+        <Ruler className="w-16 h-16 text-surface-600 dark:text-surface-300 mb-4" />
         <h2 className="text-xl font-bold text-surface-900 dark:text-white mb-2">No Child Selected</h2>
         <p className="text-surface-600 dark:text-surface-400">Select a child to track growth</p>
       </div>
@@ -698,7 +698,7 @@ export default function GrowthPage() {
                     y2={padding + (i * (chartHeight - 2 * padding)) / 4}
                     stroke="currentColor"
                     strokeWidth="0.2"
-                    className="text-surface-300 dark:text-surface-600"
+                    className="text-surface-600 dark:text-surface-300"
                   />
                 ))}
                 

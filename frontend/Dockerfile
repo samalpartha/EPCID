@@ -1,5 +1,5 @@
 # EPCID Frontend Dockerfile
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -21,7 +21,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Set API URL for production
-ARG NEXT_PUBLIC_API_URL=https://epcid-backend-lqgrtavcha-uc.a.run.app
+ARG NEXT_PUBLIC_API_URL=https://epcid-backend-365415503294.us-central1.run.app
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Build the application

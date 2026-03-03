@@ -472,7 +472,7 @@ export default function VaccinesPage() {
   if (!selectedChild) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <Syringe className="w-16 h-16 text-surface-300 mb-4" />
+        <Syringe className="w-16 h-16 text-surface-600 dark:text-surface-300 mb-4" />
         <h2 className="text-xl font-bold text-surface-900 dark:text-white mb-2">No Child Selected</h2>
         <p className="text-surface-600 dark:text-surface-400">Select a child to view vaccination schedule</p>
       </div>
@@ -670,7 +670,7 @@ export default function VaccinesPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge variant="danger">Due Now</Badge>
-                      <ChevronRight className="w-5 h-5 text-surface-400" />
+                      <ChevronRight className="w-5 h-5 text-surface-600 dark:text-surface-400" />
                     </div>
                   </div>
                 </Card>
@@ -718,7 +718,7 @@ export default function VaccinesPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge variant="warning">Upcoming</Badge>
-                      <ChevronRight className="w-5 h-5 text-surface-400" />
+                      <ChevronRight className="w-5 h-5 text-surface-600 dark:text-surface-400" />
                     </div>
                   </div>
                 </Card>
@@ -761,7 +761,7 @@ export default function VaccinesPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge variant="success">Complete</Badge>
-                      <ChevronRight className="w-5 h-5 text-surface-400" />
+                      <ChevronRight className="w-5 h-5 text-surface-600 dark:text-surface-400" />
                     </div>
                   </div>
                 </Card>
@@ -774,7 +774,7 @@ export default function VaccinesPage() {
       {/* Not Applicable Section */}
       {categorizedVaccines.notApplicable.length > 0 && activeFilter === 'all' && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-surface-400 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-surface-600 dark:text-surface-400 flex items-center gap-2">
             <Info className="w-5 h-5" />
             Not Applicable (Infant Vaccines)
           </h2>
@@ -831,7 +831,7 @@ export default function VaccinesPage() {
                       {selectedVaccine.schoolRequired && <Badge variant="warning">School Required</Badge>}
                     </div>
                   </div>
-                  <button onClick={() => setSelectedVaccine(null)} className="text-surface-400 hover:text-surface-600">
+                  <button onClick={() => setSelectedVaccine(null)} className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-600">
                     <X className="w-5 h-5" />
                   </button>
                 </div>

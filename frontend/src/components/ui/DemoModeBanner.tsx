@@ -146,7 +146,7 @@ export function DemoModeBanner() {
                 <div className="mt-6 pt-4 border-t border-surface-200 dark:border-surface-700">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-surface-500">Tech Stack:</span>
-                    {['Next.js 14', 'FastAPI', 'Google Gemini 2.5', 'Google Cloud Run', 'Zustand', 'Tailwind CSS', 'Framer Motion'].map((tech) => (
+                    {['Next.js 14', 'FastAPI', 'Google GenAI SDK', 'Gemini Live API', 'Google Cloud Run', 'Zustand', 'Tailwind CSS', 'Framer Motion'].map((tech) => (
                       <span key={tech} className="px-2 py-1 text-xs bg-surface-100 dark:bg-surface-800 rounded text-surface-600 dark:text-surface-400">
                         {tech}
                       </span>

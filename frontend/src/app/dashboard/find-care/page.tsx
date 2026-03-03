@@ -567,10 +567,10 @@ export default function FindCarePage() {
           <div className="absolute inset-0 opacity-30">
             <svg className="w-full h-full">
               {[...Array(10)].map((_, i) => (
-                <line key={`v${i}`} x1={`${i * 10}%`} y1="0" x2={`${i * 10}%`} y2="100%" stroke="currentColor" strokeWidth="0.5" className="text-surface-400" />
+                <line key={`v${i}`} x1={`${i * 10}%`} y1="0" x2={`${i * 10}%`} y2="100%" stroke="currentColor" strokeWidth="0.5" className="text-surface-600 dark:text-surface-400" />
               ))}
               {[...Array(6)].map((_, i) => (
-                <line key={`h${i}`} x1="0" y1={`${i * 20}%`} x2="100%" y2={`${i * 20}%`} stroke="currentColor" strokeWidth="0.5" className="text-surface-400" />
+                <line key={`h${i}`} x1="0" y1={`${i * 20}%`} x2="100%" y2={`${i * 20}%`} stroke="currentColor" strokeWidth="0.5" className="text-surface-600 dark:text-surface-400" />
               ))}
             </svg>
           </div>
@@ -823,7 +823,7 @@ export default function FindCarePage() {
 
         {filteredLocations.length === 0 && (
           <Card className="text-center py-12">
-            <MapPin className="w-16 h-16 text-surface-300 mx-auto mb-4" />
+            <MapPin className="w-16 h-16 text-surface-600 dark:text-surface-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-2">No Locations Found</h3>
             <p className="text-surface-600 dark:text-surface-400">
               {showInNetworkOnly 
@@ -891,7 +891,7 @@ export default function FindCarePage() {
                         </div>
                       </div>
                     </div>
-                    <button onClick={() => setSelectedLocation(null)} className="text-surface-400 hover:text-surface-600">
+                    <button onClick={() => setSelectedLocation(null)} className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-600">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
@@ -911,15 +911,15 @@ export default function FindCarePage() {
                   
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <MapPin className="w-5 h-5 text-surface-400" />
+                      <MapPin className="w-5 h-5 text-surface-600 dark:text-surface-400" />
                       <span className="text-surface-700 dark:text-surface-300">{selectedLocation.address}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Phone className="w-5 h-5 text-surface-400" />
+                      <Phone className="w-5 h-5 text-surface-600 dark:text-surface-400" />
                       <span className="text-surface-700 dark:text-surface-300">{selectedLocation.phone}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Clock className="w-5 h-5 text-surface-400" />
+                      <Clock className="w-5 h-5 text-surface-600 dark:text-surface-400" />
                       <span className="text-surface-700 dark:text-surface-300">{selectedLocation.hours}</span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -927,7 +927,7 @@ export default function FindCarePage() {
                       <span className="text-surface-700 dark:text-surface-300">{selectedLocation.rating} rating</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Shield className="w-5 h-5 text-surface-400" />
+                      <Shield className="w-5 h-5 text-surface-600 dark:text-surface-400" />
                       <span className="text-surface-700 dark:text-surface-300">
                         Accepts: {selectedLocation.insuranceAccepted.slice(0, 3).join(', ')}
                         {selectedLocation.insuranceAccepted.length > 3 && ` +${selectedLocation.insuranceAccepted.length - 3} more`}

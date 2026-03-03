@@ -45,11 +45,17 @@ test*.ts
 # Unnecessary Markdown & Images
 *.md
 !README.md
+!HACKATHON_STRATEGY.md
+!docs/GOOGLE_CLOUD_PROOF.md
+!frontend/.env.example
 !LICENSE
 tests/ignore/
-docs/
 temp/
 *.svg
 !frontend/public/icons/*.svg
 *.jpg
 *.jpeg
+
+# Large media files
+*.mp4
+*.pptx

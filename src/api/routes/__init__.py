@@ -4,13 +4,34 @@ EPCID API Routes
 RESTful API route definitions for all EPCID endpoints.
 """
 
-from . import assessment, auth, children, environment, guidelines, symptoms
+from . import (
+    ai_analysis,
+    assessment,
+    auth,
+    care_advice,
+    children,
+    clinical_scoring,
+    dosage,
+    environment,
+    external_data,
+    guidelines,
+    mental_health,
+    symptom_checker,
+    symptoms,
+)
 
 __all__ = [
-    "auth",
-    "children",
-    "symptoms",
+    "ai_analysis",
     "assessment",
-    "guidelines",
+    "auth",
+    "care_advice",
+    "children",
+    "clinical_scoring",
+    "dosage",
     "environment",
+    "external_data",
+    "guidelines",
+    "mental_health",
+    "symptom_checker",
+    "symptoms",
 ]

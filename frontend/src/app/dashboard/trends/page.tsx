@@ -289,7 +289,7 @@ export default function TrendsPage() {
   if (!selectedChild) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <TrendingUp className="w-16 h-16 text-surface-300 mb-4" />
+        <TrendingUp className="w-16 h-16 text-surface-600 dark:text-surface-300 mb-4" />
         <h2 className="text-xl font-bold text-surface-900 dark:text-white mb-2">No Child Selected</h2>
         <p className="text-surface-600 dark:text-surface-400">Select a child to view health trends</p>
       </div>
@@ -329,7 +329,7 @@ export default function TrendsPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-surface-500 mb-1">Current Temperature</div>
-              <div className={`text-4xl font-bold ${stats.current ? getTemperatureColor(stats.current) : 'text-surface-400'}`}>
+              <div className={`text-4xl font-bold ${stats.current ? getTemperatureColor(stats.current) : 'text-surface-600 dark:text-surface-400'}`}>
                 {stats.current ? `${stats.current}°F` : '--'}
               </div>
               {stats.current && (
@@ -516,7 +516,7 @@ export default function TrendsPage() {
                         strokeOpacity={temp === 100.4 ? 0.5 : 0.1}
                         strokeWidth={temp === 100.4 ? 2 : 1}
                         strokeDasharray={temp === 100.4 ? "5,5" : "none"}
-                        className={temp === 100.4 ? "text-red-400" : "text-surface-400"}
+                        className={temp === 100.4 ? "text-red-400" : "text-surface-600 dark:text-surface-400"}
                       />
                       <text
                         x={largePadding - 5}
@@ -758,7 +758,7 @@ export default function TrendsPage() {
                         ? 'text-emerald-600 dark:text-emerald-400'
                         : reading.value > filteredTemperatures[filteredTemperatures.length - 1 - i - 1]?.value
                           ? 'text-red-600 dark:text-red-400'
-                          : 'text-surface-400'
+                          : 'text-surface-600 dark:text-surface-400'
                     }`}>
                       {reading.value < filteredTemperatures[filteredTemperatures.length - 1 - i - 1]?.value ? (
                         <>
@@ -780,7 +780,7 @@ export default function TrendsPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Thermometer className="w-16 h-16 text-surface-300 mx-auto mb-4" />
+              <Thermometer className="w-16 h-16 text-surface-600 dark:text-surface-300 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-2">No Temperature Data</h3>
               <p className="text-surface-600 dark:text-surface-400 mb-4">Start tracking temperature to see trends</p>
               <Button onClick={() => setShowAddTemp(true)} icon={<Plus className="w-4 h-4" />}>
@@ -865,7 +865,7 @@ export default function TrendsPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Activity className="w-16 h-16 text-surface-300 mx-auto mb-4" />
+              <Activity className="w-16 h-16 text-surface-600 dark:text-surface-300 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-2">No Symptom Data</h3>
               <p className="text-surface-600 dark:text-surface-400">Log symptoms to track progression</p>
             </div>
@@ -1024,7 +1024,7 @@ export default function TrendsPage() {
                   </CardTitle>
                   <button 
                     onClick={() => setShowShareModal(false)}
-                    className="text-surface-400 hover:text-surface-600"
+                    className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-600"
                   >
                     ✕
                   </button>
@@ -1046,7 +1046,7 @@ export default function TrendsPage() {
                     <div>
                       <div className="text-xs text-surface-500">Peak Temperature</div>
                       <div className="text-lg font-bold text-orange-600">{recoveryReport.peakTemp}°F</div>
-                      <div className="text-xs text-surface-400">{recoveryReport.peakDate}</div>
+                      <div className="text-xs text-surface-600 dark:text-surface-400">{recoveryReport.peakDate}</div>
                     </div>
                     <div>
                       <div className="text-xs text-surface-500">Current Temperature</div>
@@ -1055,7 +1055,7 @@ export default function TrendsPage() {
                       }`}>
                         {recoveryReport.currentTemp}°F
                       </div>
-                      <div className="text-xs text-surface-400">
+                      <div className="text-xs text-surface-600 dark:text-surface-400">
                         {recoveryReport.currentTemp < 100.4 ? 'Normal range' : 'Elevated'}
                       </div>
                     </div>

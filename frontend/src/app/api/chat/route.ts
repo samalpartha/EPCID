@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenAI } from '@google/genai'
 
 // API keys are now server-side only (not exposed to client)
 const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
@@ -149,60 +150,44 @@ async function chatWithOpenRouter(messages: Message[]): Promise<string> {
   return data.choices[0].message.content
 }
 
-// Call Google Gemini API (primary)
+// Call Google Gemini API via official GenAI SDK (primary)
 async function chatWithGemini(messages: Message[]): Promise<string> {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API key not configured')
   }
 
+  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
+
   const contents = [
     {
-      role: 'user',
+      role: 'user' as const,
       parts: [{ text: PEDIATRIC_SYSTEM_PROMPT }],
     },
     {
-      role: 'model',
+      role: 'model' as const,
       parts: [{ text: 'Understood. I am the EPCID Assistant, ready to help parents detect early warning signs of serious illness in children. I will follow all safety rules and communicate with warmth and clarity. How can I help?' }],
     },
     ...messages.map((msg) => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
+      role: (msg.role === 'assistant' ? 'model' : 'user') as 'user' | 'model',
       parts: [{ text: msg.content }],
     })),
   ]
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-          topP: 0.95,
-        },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-        ],
-      }),
-    }
-  )
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents,
+    config: {
+      temperature: 0.7,
+      maxOutputTokens: 1024,
+      topP: 0.95,
+    },
+  })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
-  }
-
-  const data = await response.json()
-  const candidate = data.candidates?.[0]
-  if (!candidate?.content?.parts?.[0]?.text) {
+  const text = response.text
+  if (!text) {
     throw new Error('Gemini returned empty response')
   }
-  return candidate.content.parts[0].text
+  return text
 }
 
 export async function POST(request: NextRequest) {

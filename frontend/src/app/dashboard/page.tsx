@@ -168,7 +168,7 @@ const DeviceStatus = ({
     <div className="flex items-center gap-2 text-[10px]">
       {/* Source device */}
       {source && (
-        <div className="flex items-center gap-1 text-surface-400">
+        <div className="flex items-center gap-1 text-surface-600 dark:text-surface-400">
           <Bluetooth className="w-3 h-3 text-primary-400" />
           <span>{source}</span>
         </div>
@@ -338,7 +338,7 @@ const VitalCard = ({
             <span className="vital-unit">{unit}</span>
           </div>
           {normalRange && (
-            <div className="text-[10px] text-surface-400 mt-0.5">
+            <div className="text-[10px] text-surface-600 dark:text-surface-400 mt-0.5">
               Normal: {normalRange}
             </div>
           )}
@@ -357,7 +357,7 @@ const VitalCard = ({
           <div className={`flex items-center gap-0.5 text-xs ${
             trend === 'up' ? (isAbnormal ? 'text-danger-400' : 'text-accent-400') 
             : trend === 'down' ? 'text-success-400' 
-            : 'text-surface-400'
+            : 'text-surface-600 dark:text-surface-400'
           }`}>
             <TrendIcon className="w-3 h-3" />
             <span>{trendValue}</span>
@@ -440,7 +440,7 @@ const SymptomHistoryBar = ({
         />
       ))}
     </div>
-    <div className="flex justify-between text-[10px] text-surface-400">
+    <div className="flex justify-between text-[10px] text-surface-600 dark:text-surface-400">
       <span>7 days ago</span>
       <span>Today</span>
     </div>
@@ -515,7 +515,7 @@ const AlertConfigStatus = ({
       {/* Sound indicator */}
       <div 
         className={`w-6 h-6 rounded-full flex items-center justify-center ${
-          soundEnabled ? 'bg-success-500/20 text-success-400' : 'bg-surface-200 dark:bg-navy-800 text-surface-400'
+          soundEnabled ? 'bg-success-500/20 text-success-400' : 'bg-surface-200 dark:bg-navy-800 text-surface-600 dark:text-surface-400'
         }`}
         title={soundEnabled ? 'Sound alerts enabled' : 'Sound alerts disabled'}
       >
@@ -531,7 +531,7 @@ const AlertConfigStatus = ({
       {/* Push notification indicator */}
       <div 
         className={`w-6 h-6 rounded-full flex items-center justify-center ${
-          pushEnabled ? 'bg-success-500/20 text-success-400' : 'bg-surface-200 dark:bg-navy-800 text-surface-400'
+          pushEnabled ? 'bg-success-500/20 text-success-400' : 'bg-surface-200 dark:bg-navy-800 text-surface-600 dark:text-surface-400'
         }`}
         title={pushEnabled ? 'Push notifications enabled' : 'Push notifications disabled'}
       >
@@ -569,7 +569,7 @@ const ContributingFactorsDisplay = ({
       <h4 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">
         Contributing Factors (PEWS Weighted)
       </h4>
-      <div className="flex items-center gap-1 text-[10px] text-surface-400">
+      <div className="flex items-center gap-1 text-[10px] text-surface-600 dark:text-surface-400">
         <Info className="w-3 h-3" />
         <span>Hover for details</span>
       </div>
@@ -584,7 +584,7 @@ const ContributingFactorsDisplay = ({
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-surface-600 dark:text-surface-300">{factor.name}</span>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-surface-400">
+              <span className="text-[10px] text-surface-600 dark:text-surface-400">
                 {factor.score}/{factor.maxScore} pts
               </span>
               <span className="text-xs font-medium text-surface-900 dark:text-white">
@@ -604,7 +604,7 @@ const ContributingFactorsDisplay = ({
               }`}
             />
           </div>
-          <div className="text-[10px] text-surface-400 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="text-[10px] text-surface-600 dark:text-surface-400 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
             Weight: {factor.weight}% | Contribution: +{contribution} to overall score
           </div>
         </div>
@@ -647,7 +647,7 @@ const AccessibilityPanel = ({
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-surface-900 dark:text-white text-sm">Accessibility</h3>
-        <button onClick={onClose} className="text-surface-400 hover:text-surface-600">
+        <button onClick={onClose} className="text-surface-600 dark:text-surface-400 hover:text-surface-700">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -788,7 +788,7 @@ const ThresholdConfigModal = ({
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-surface-900 dark:text-white">Custom Alert Thresholds</h2>
-          <button onClick={onClose} className="text-surface-400 hover:text-surface-600 p-1">
+          <button onClick={onClose} className="text-surface-600 dark:text-surface-400 hover:text-surface-700 p-1">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -818,7 +818,7 @@ const ThresholdConfigModal = ({
               onChange={(e) => setLocalThresholds(prev => ({ ...prev, temperature: parseFloat(e.target.value) }))}
               className="w-full h-2 bg-surface-200 dark:bg-navy-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
             />
-            <div className="flex justify-between text-xs text-surface-400 mt-1">
+            <div className="flex justify-between text-xs text-surface-600 dark:text-surface-400 mt-1">
               <span>99°F</span>
               <span className="text-success-500">Clinical: 100.4°F</span>
               <span>104°F</span>
@@ -843,7 +843,7 @@ const ThresholdConfigModal = ({
               onChange={(e) => setLocalThresholds(prev => ({ ...prev, heartRate: parseInt(e.target.value) }))}
               className="w-full h-2 bg-surface-200 dark:bg-navy-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
             />
-            <div className="flex justify-between text-xs text-surface-400 mt-1">
+            <div className="flex justify-between text-xs text-surface-600 dark:text-surface-400 mt-1">
               <span>90 bpm</span>
               <span className="text-success-500">Clinical: 120 bpm</span>
               <span>180 bpm</span>
@@ -868,7 +868,7 @@ const ThresholdConfigModal = ({
               onChange={(e) => setLocalThresholds(prev => ({ ...prev, oxygen: parseInt(e.target.value) }))}
               className="w-full h-2 bg-surface-200 dark:bg-navy-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
             />
-            <div className="flex justify-between text-xs text-surface-400 mt-1">
+            <div className="flex justify-between text-xs text-surface-600 dark:text-surface-400 mt-1">
               <span>88%</span>
               <span className="text-success-500">Clinical: 95%</span>
               <span>98%</span>
@@ -945,7 +945,7 @@ const MedicationVitalCorrelation = ({
                   {corr.tempDrop && corr.tempDrop > 0 ? `-${corr.tempDrop.toFixed(1)}°F` : 'No change'}
                 </span>
               </div>
-              <div className="text-xs text-surface-400">
+              <div className="text-xs text-surface-600 dark:text-surface-400">
                 {corr.time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} • 
                 {corr.effective ? ' Effective response' : ' Limited response'}
               </div>
@@ -1636,7 +1636,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-surface-500">Run symptom checker</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-surface-400 group-hover:text-primary-500 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-surface-600 dark:text-surface-400 group-hover:text-primary-500 transition-colors" />
                 </div>
               </Link>
               <Link href="/dashboard/medications" className="block">
@@ -1650,7 +1650,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-surface-500">Track doses</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-surface-400 group-hover:text-accent-500 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-surface-600 dark:text-surface-400 group-hover:text-accent-500 transition-colors" />
                 </div>
               </Link>
               <Link href="/dashboard/trends" className="block">
@@ -1664,7 +1664,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-surface-500">Health charts</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-surface-400 group-hover:text-purple-500 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-surface-600 dark:text-surface-400 group-hover:text-purple-500 transition-colors" />
                 </div>
               </Link>
             </div>
