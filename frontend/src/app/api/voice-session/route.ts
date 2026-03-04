@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     apiKey: GEMINI_API_KEY,
-    model: 'gemini-live-2.5-flash-preview',
+    model: 'gemini-2.5-flash-native-audio-preview-12-2025',
     expiresIn: 900,
   })
 }
