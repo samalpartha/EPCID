@@ -68,17 +68,31 @@ export default function LoginPage() {
     router.push('/dashboard')
   }
 
+  const loginAsDemo = () => {
+    setUser({
+      id: 'user-001',
+      email: 'demo@epcid.health',
+      full_name: 'Demo User',
+    })
+    setToken(`demo-token-${Date.now()}`)
+    router.push('/dashboard')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
+    // Fast path: demo credentials bypass backend entirely
+    if (email === 'demo@epcid.health') {
+      loginAsDemo()
+      return
+    }
+
     try {
-      // Try real backend login first
       const response = await authApi.login(email, password)
       setToken(response.access_token)
       
-      // Set user from login response if available
       if (response.user) {
         setUser({
           id: response.user.id,
@@ -86,30 +100,18 @@ export default function LoginPage() {
           full_name: response.user.full_name,
         })
       } else {
-        // Fetch profile if not in response
         const user = await authApi.getProfile()
         setUser(user)
       }
       
       router.push('/dashboard')
     } catch (err: any) {
-      // Check if it's a specific error
       const message = err?.response?.data?.detail || err?.message || ''
       
       if (message.includes('Incorrect email or password')) {
         setError('Invalid email or password. Try demo@epcid.health / password123')
-      } else if (message.includes('Demo mode')) {
-        // API client blocked call - fall back to demo mode
-        const mockUser = {
-          id: `user-${Date.now()}`,
-          email: email,
-          full_name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-        }
-        setUser(mockUser)
-        setToken(`demo-token-${Date.now()}`)
-        router.push('/dashboard')
       } else {
-        // Backend might be down - fall back to demo mode
+        // Backend unavailable — fall back to demo mode
         const mockUser = {
           id: `user-${Date.now()}`,
           email: email,
@@ -326,14 +328,7 @@ export default function LoginPage() {
             </p>
             <button
               type="button"
-              onClick={() => {
-                setEmail('demo@epcid.health')
-                setPassword('password123')
-                setTimeout(() => {
-                  const form = document.querySelector('form')
-                  if (form) form.requestSubmit()
-                }, 100)
-              }}
+              onClick={loginAsDemo}
               disabled={loading || socialLoading !== null}
               className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
             >

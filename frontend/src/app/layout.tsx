@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   keywords: ['pediatric', 'health', 'AI', 'illness detection', 'children', 'monitoring'],
   authors: [{ name: 'EPCID Team' }],
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/icons/icon-512x512.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

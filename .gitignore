@@ -53,6 +53,7 @@ tests/ignore/
 temp/
 *.svg
 !frontend/public/icons/*.svg
+!frontend/public/favicon.svg
 *.jpg
 *.jpeg
 

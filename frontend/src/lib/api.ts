@@ -120,7 +120,7 @@ export const childrenApi = {
 // Symptoms API
 export const symptomsApi = {
   list: async (childId: string) => {
-    const response = await api.get(`/symptoms/${childId}`)
+    const response = await api.get(`/symptoms/child/${childId}`)
     return response.data
   },
   
