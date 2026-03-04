@@ -206,6 +206,20 @@ async def login(request: LoginRequest) -> TokenResponse:
 
 
 @router.post(
+    "/token",
+    response_model=TokenResponse,
+    summary="Login with form data (OAuth2)",
+    description="OAuth2 compatible token endpoint. Accepts form-encoded username/password.",
+)
+async def token(form_data: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:
+    """OAuth2 compatible token endpoint — used by frontend login."""
+    return cast(
+        TokenResponse,
+        await login(LoginRequest(email=form_data.username, password=form_data.password)),
+    )
+
+
+@router.post(
     "/login/form",
     response_model=TokenResponse,
     summary="Login with form data",
