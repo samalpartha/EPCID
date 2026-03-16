@@ -23,7 +23,9 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # Check if we're running on Google Cloud
-IS_GOOGLE_CLOUD = os.environ.get("K_SERVICE") is not None or os.environ.get("GOOGLE_CLOUD_PROJECT") is not None
+IS_GOOGLE_CLOUD = (
+    os.environ.get("K_SERVICE") is not None or os.environ.get("GOOGLE_CLOUD_PROJECT") is not None
+)
 
 if IS_GOOGLE_CLOUD:
     try:
@@ -35,6 +37,7 @@ if IS_GOOGLE_CLOUD:
             HarmCategory,
             SafetySetting,
         )
+
         VERTEX_AI_AVAILABLE = True
     except ImportError:
         VERTEX_AI_AVAILABLE = False
@@ -81,7 +84,9 @@ class VertexAIService:
             )
 
             self._initialized = True
-            logger.info(f"Vertex AI initialized: project={self.project_id}, model={self.model_name}")
+            logger.info(
+                f"Vertex AI initialized: project={self.project_id}, model={self.model_name}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to initialize Vertex AI: {e}")
@@ -183,7 +188,9 @@ OUTPUT FORMAT:
             # Return partial fallback but mark as vertex_ai since the model DID respond
             fallback = self._fallback_analysis(symptoms, child_age_years)
             fallback["provider"] = "vertex_ai_partial"
-            fallback["reasoning"] = "Vertex AI responded but output could not be parsed. Conservative fallback applied."
+            fallback["reasoning"] = (
+                "Vertex AI responded but output could not be parsed. Conservative fallback applied."
+            )
             return fallback
         except Exception as e:
             logger.error(f"Vertex AI symptom analysis failed: {e}")
@@ -250,9 +257,13 @@ RULES:
         elif age_years < 2:
             return "Toddler 1-2 years. May not communicate well. Watch behavior changes."
         elif age_years < 5:
-            return "Preschool 2-5 years. May exaggerate or minimize. Correlate with observed behavior."
+            return (
+                "Preschool 2-5 years. May exaggerate or minimize. Correlate with observed behavior."
+            )
         elif age_years < 12:
-            return "School-age 5-12 years. Can usually describe symptoms. Verify with objective signs."
+            return (
+                "School-age 5-12 years. Can usually describe symptoms. Verify with objective signs."
+            )
         else:
             return "Adolescent 12+ years. Can describe symptoms well. Consider age-specific conditions."
 
@@ -261,8 +272,14 @@ RULES:
         symptoms_lower = " ".join(symptoms).lower()
 
         emergency_keywords = [
-            "not breathing", "difficulty breathing", "blue lips", "seizure",
-            "unresponsive", "unconscious", "stiff neck", "purple spots"
+            "not breathing",
+            "difficulty breathing",
+            "blue lips",
+            "seizure",
+            "unresponsive",
+            "unconscious",
+            "stiff neck",
+            "purple spots",
         ]
 
         is_emergency = any(kw in symptoms_lower for kw in emergency_keywords)
@@ -294,12 +311,9 @@ RULES:
             ],
             "whenToSeekCare": "Contact your pediatrician if symptoms worsen or don't improve within 24-48 hours.",
             "possibleConditions": [],
-            "clinicalScores": {
-                "pewsEstimate": "unknown",
-                "sepsisRisk": "unknown"
-            },
+            "clinicalScores": {"pewsEstimate": "unknown", "sepsisRisk": "unknown"},
             "provider": "fallback",
-            "model": "rule_based"
+            "model": "rule_based",
         }
 
     async def generate_care_advice(

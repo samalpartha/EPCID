@@ -29,7 +29,7 @@ class AISymptomAnalysisRequest(BaseModel):
     symptoms: list[str] = Field(..., min_length=1, description="List of symptoms")
     vitals: dict[str, float] | None = Field(
         None,
-        description="Optional vital signs (temperature, heart_rate, respiratory_rate, oxygen_saturation)"
+        description="Optional vital signs (temperature, heart_rate, respiratory_rate, oxygen_saturation)",
     )
     additional_context: str | None = Field(None, description="Additional notes or context")
 
@@ -199,6 +199,7 @@ async def analyze_symptoms_with_ai(
         except Exception as e:
             # Log error and fall through to fallback
             import logging
+
             logging.error(f"Vertex AI analysis failed: {e}")
 
     # Fallback: Rule-based analysis
@@ -296,8 +297,14 @@ def _fallback_symptom_analysis(
 
     # Emergency detection
     emergency_keywords = [
-        "not breathing", "difficulty breathing", "blue lips", "seizure",
-        "unresponsive", "unconscious", "stiff neck", "purple spots"
+        "not breathing",
+        "difficulty breathing",
+        "blue lips",
+        "seizure",
+        "unresponsive",
+        "unconscious",
+        "stiff neck",
+        "purple spots",
     ]
 
     is_emergency = any(kw in symptoms_lower for kw in emergency_keywords)
