@@ -26,6 +26,7 @@
 - [The Problem We're Solving](#-the-problem-were-solving)
 - [Our Solution](#-our-solution)
 - [Live Demo & Deployment](#-live-demo--deployment)
+- [Reproducible Testing Guide](#-reproducible-testing-guide)
 - [Key Features](#-key-features)
 - [Technical Architecture](#-technical-architecture)
 - [How We Built It](#-how-we-built-it)
@@ -161,6 +162,117 @@ The result is an experience closer to calling a pediatric nurse hotline than usi
 Email: demo@epcid.health
 Password: demo1234
 ```
+
+---
+
+## 🧪 Reproducible Testing Guide
+
+**Judges — here's exactly how to test every major feature of EPCID.** No local setup required; everything runs on the live deployed app.
+
+### Prerequisites
+
+- A modern browser (Chrome or Edge recommended for microphone/camera access)
+- A microphone (for voice triage testing)
+- A webcam (optional, for visual assessment testing)
+
+### Step 1: Login with Demo Credentials
+
+1. Open **[https://epcid-frontend-365415503294.us-central1.run.app](https://epcid-frontend-365415503294.us-central1.run.app)**
+2. Click **"Try Demo — Instant Access"** for one-click entry, or manually enter:
+   ```
+   Email:    demo@epcid.health
+   Password: demo1234
+   ```
+3. You'll land on the **Dashboard** pre-loaded with a sample child profile (Emma, age 4) and health data
+
+### Step 2: Test Voice Triage (Gemini Live API)
+
+This is the flagship multimodal feature — real-time voice + vision conversation with an AI pediatric nurse.
+
+1. From the dashboard, click **"Talk to EPCID"** (microphone icon)
+2. **Grant microphone permission** when prompted
+3. **Speak naturally** — try these test phrases:
+   - *"My daughter has had a fever of 102 for two days and she's not eating"*
+   - *"My 2-month-old baby feels warm and is fussier than usual"* (triggers critical infant alert)
+   - *"My son fell and has a bump on his head but seems fine"*
+4. Listen for the AI's **audio response** — it will ask follow-up questions and provide triage guidance
+5. **Test barge-in** — interrupt the AI mid-sentence by speaking; it stops and listens
+6. (Optional) **Enable camera** to test visual assessment — show a skin area or describe what you see
+7. After ending the call, review the **transcript** that was generated
+
+### Step 3: Test AI Chat (Gemini 2.5 Flash)
+
+1. Navigate to the **Chat** page from the sidebar
+2. Type a symptom question, e.g.:
+   - *"My 4-year-old has a cough and runny nose for 3 days. Should I be worried?"*
+   - *"What's a normal temperature for a toddler?"*
+   - *"My child has red spots on her chest that don't fade when I press them"* (triggers high-urgency response)
+3. Observe the AI's response — it includes clinical reasoning, home care tips, and escalation guidance
+4. Try follow-up questions to test conversational context
+
+### Step 4: Test Symptom Checker (Structured JSON Analysis)
+
+1. Navigate to **Symptom Checker** from the sidebar
+2. Select body region and symptoms from the interactive selector
+3. Click **Analyze** — the system runs structured Gemini analysis with:
+   - 4-tier urgency classification (low / moderate / high / critical)
+   - Age-adjusted risk assessment
+   - Home care recommendations
+   - Warning signs to watch for
+
+### Step 5: Test Dosage Calculator
+
+1. Navigate to **Medications → Dosage Calculator**
+2. Select a common medication (e.g., Acetaminophen / Ibuprofen)
+3. Enter child's weight
+4. View the calculated age- and weight-appropriate dosage with safety warnings
+
+### Step 6: Test Health Dashboard Features
+
+Explore the pre-loaded demo data across these pages:
+- **Children** — View Emma's profile, growth charts, vaccination records
+- **Vitals** — Temperature, heart rate, SpO2 trends over time
+- **Growth Charts** — CDC percentile tracking
+- **Mental Health** — Mood tracking and coping tools
+- **Reports** — Exportable health summaries
+
+### Step 7: Test Backend API Directly (Optional)
+
+The FastAPI backend has full interactive documentation:
+
+1. Open **[https://epcid-backend-365415503294.us-central1.run.app/docs](https://epcid-backend-365415503294.us-central1.run.app/docs)**
+2. Try these endpoints:
+   - `GET /health` — Service health check
+   - `GET /health/vertex-ai` — Vertex AI status
+   - `GET /api/v1/ai/status` — AI service availability
+   - `POST /api/v1/ai/analyze-symptoms` — AI symptom analysis (use the "Try it out" button):
+     ```json
+     {
+       "child_age_years": 4,
+       "symptoms": ["fever", "cough", "not eating"],
+       "vitals": { "temperature": 102.5 }
+     }
+     ```
+   - `POST /api/v1/ai/care-advice` — AI care guidance:
+     ```json
+     {
+       "condition": "fever",
+       "child_age_years": 4,
+       "severity": "moderate"
+     }
+     ```
+
+### What to Observe
+
+| Feature | What Demonstrates It |
+|---------|---------------------|
+| **Multimodal AI** | Voice triage combines audio + video + text in real-time |
+| **Agentic Behavior** | System asks follow-up questions, escalates red flags automatically |
+| **Gemini Live API** | Barge-in, real-time audio streaming, input/output transcription |
+| **Gemini 2.5 Flash** | Chat responses, structured JSON symptom analysis |
+| **Vertex AI** | Backend `/ai/` endpoints use enterprise IAM-authenticated Gemini |
+| **Clinical Intelligence** | Age-adjusted triage, PEWS scoring, Phoenix Sepsis criteria |
+| **Google Cloud** | Entire app runs on Cloud Run with Cloud Build CI/CD |
 
 ---
 
