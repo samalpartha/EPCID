@@ -9,11 +9,11 @@ Gemini Live Agent Challenge hackathon.
 """
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/ai", tags=["AI Analysis (Vertex AI)"])
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/ai", tags=["AI Analysis (Vertex AI)"])
 
 class AISymptomAnalysisRequest(BaseModel):
     """Request for AI-powered symptom analysis."""
-    
+
     child_age_years: float = Field(..., ge=0, le=18, description="Child's age in years")
     symptoms: list[str] = Field(..., min_length=1, description="List of symptoms")
     vitals: dict[str, float] | None = Field(
@@ -36,14 +36,14 @@ class AISymptomAnalysisRequest(BaseModel):
 
 class ClinicalScores(BaseModel):
     """Clinical risk scores."""
-    
+
     pews_estimate: str = Field(..., description="Pediatric Early Warning Score estimate")
     sepsis_risk: str = Field(..., description="Sepsis risk level")
 
 
 class AISymptomAnalysisResponse(BaseModel):
     """Response from AI-powered symptom analysis."""
-    
+
     id: str
     timestamp: datetime
     urgency: str = Field(..., description="low, moderate, high, or critical")
@@ -62,7 +62,7 @@ class AISymptomAnalysisResponse(BaseModel):
 
 class AICareAdviceRequest(BaseModel):
     """Request for AI-generated care advice."""
-    
+
     condition: str = Field(..., description="Condition to get advice for (e.g., fever, cough)")
     child_age_years: float = Field(..., ge=0, le=18)
     severity: str = Field("mild", description="mild, moderate, or severe")
@@ -70,7 +70,7 @@ class AICareAdviceRequest(BaseModel):
 
 class AICareAdviceResponse(BaseModel):
     """Response with AI-generated care advice."""
-    
+
     id: str
     timestamp: datetime
     condition: str
@@ -88,7 +88,7 @@ class AICareAdviceResponse(BaseModel):
 
 class AIStatusResponse(BaseModel):
     """Response showing AI service status."""
-    
+
     vertex_ai_available: bool
     model: str | None
     project_id: str | None
@@ -104,22 +104,22 @@ class AIStatusResponse(BaseModel):
 async def get_ai_status(request: Request) -> AIStatusResponse:
     """
     Check AI service status.
-    
+
     Returns information about Vertex AI availability and configuration.
     This endpoint is useful for debugging and demonstrating GCP integration.
     """
     vertex_available = getattr(request.app.state, "vertex_ai_available", False)
     vertex_service = getattr(request.app.state, "vertex_ai", None)
-    
+
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    
+
     if vertex_available:
         message = "Vertex AI is active and ready for AI-powered analysis"
     elif vertex_service is not None:
         message = "Vertex AI SDK installed but not initialized (may need GCP credentials)"
     else:
         message = "Running with fallback rule-based analysis (Vertex AI not available)"
-    
+
     return AIStatusResponse(
         vertex_ai_available=vertex_available,
         model="gemini-2.5-flash-preview-05-20" if vertex_available else None,
@@ -137,35 +137,35 @@ async def analyze_symptoms_with_ai(
 ) -> AISymptomAnalysisResponse:
     """
     Analyze symptoms using Vertex AI Gemini.
-    
+
     This endpoint uses Google Cloud Vertex AI with the Gemini 2.5 Flash model
     to provide intelligent symptom analysis with:
     - Urgency assessment (4-tier triage)
     - Clinical reasoning
     - Age-appropriate recommendations
     - PEWS and sepsis risk estimates
-    
+
     Falls back to rule-based analysis if Vertex AI is unavailable.
-    
+
     **Google Cloud Integration:**
     - Uses Vertex AI Gemini API
     - IAM-authenticated (no API keys in code)
     - Runs on Cloud Run
     """
     analysis_id = f"ai-{uuid4().hex[:8]}"
-    timestamp = datetime.now(timezone.utc)
-    
+    timestamp = datetime.now(UTC)
+
     # Get Vertex AI service
     vertex_service = getattr(request.app.state, "vertex_ai", None)
     vertex_available = getattr(request.app.state, "vertex_ai_available", False)
-    
+
     disclaimers = [
         "This AI analysis is for informational purposes only and is NOT a medical diagnosis.",
         "Always consult a healthcare provider for medical advice.",
         "If you believe your child is experiencing a medical emergency, call 911 immediately.",
         "AI-powered by Google Cloud Vertex AI with Gemini 2.5 Flash.",
     ]
-    
+
     # Try Vertex AI first
     if vertex_available and vertex_service:
         try:
@@ -175,7 +175,7 @@ async def analyze_symptoms_with_ai(
                 vitals=request_body.vitals,
                 additional_context=request_body.additional_context,
             )
-            
+
             return AISymptomAnalysisResponse(
                 id=analysis_id,
                 timestamp=timestamp,
@@ -195,12 +195,12 @@ async def analyze_symptoms_with_ai(
                 model=result.get("model", "gemini-2.5-flash-preview-05-20"),
                 disclaimers=disclaimers,
             )
-            
+
         except Exception as e:
             # Log error and fall through to fallback
             import logging
             logging.error(f"Vertex AI analysis failed: {e}")
-    
+
     # Fallback: Rule-based analysis
     return _fallback_symptom_analysis(
         analysis_id=analysis_id,
@@ -219,27 +219,27 @@ async def get_ai_care_advice(
 ) -> AICareAdviceResponse:
     """
     Get AI-generated care advice for a specific condition.
-    
+
     Uses Vertex AI Gemini to generate personalized care advice based on:
     - The specific condition
     - Child's age
     - Severity level
-    
+
     Returns detailed home care instructions, medication guidance,
     and warning signs to watch.
     """
     advice_id = f"advice-{uuid4().hex[:8]}"
-    timestamp = datetime.now(timezone.utc)
-    
+    timestamp = datetime.now(UTC)
+
     vertex_service = getattr(request.app.state, "vertex_ai", None)
     vertex_available = getattr(request.app.state, "vertex_ai_available", False)
-    
+
     disclaimers = [
         "This advice is for informational purposes only.",
         "Always follow your healthcare provider's specific instructions.",
         "If symptoms worsen or you're concerned, contact your doctor.",
     ]
-    
+
     # Try Vertex AI
     if vertex_available and vertex_service:
         try:
@@ -248,7 +248,7 @@ async def get_ai_care_advice(
                 child_age_years=request_body.child_age_years,
                 severity=request_body.severity,
             )
-            
+
             if "error" not in result:
                 return AICareAdviceResponse(
                     id=advice_id,
@@ -267,7 +267,7 @@ async def get_ai_care_advice(
                 )
         except Exception:
             pass
-    
+
     # Fallback care advice
     return _fallback_care_advice(
         advice_id=advice_id,
@@ -291,24 +291,24 @@ def _fallback_symptom_analysis(
     disclaimers: list[str],
 ) -> AISymptomAnalysisResponse:
     """Provide rule-based fallback analysis."""
-    
+
     symptoms_lower = " ".join(symptoms).lower()
-    
+
     # Emergency detection
     emergency_keywords = [
         "not breathing", "difficulty breathing", "blue lips", "seizure",
         "unresponsive", "unconscious", "stiff neck", "purple spots"
     ]
-    
+
     is_emergency = any(kw in symptoms_lower for kw in emergency_keywords)
     is_infant = child_age_years < 0.25
     has_fever = "fever" in symptoms_lower
-    
+
     # Check vitals for high fever
     high_fever = False
     if vitals and vitals.get("temperature"):
         high_fever = vitals["temperature"] >= 104.0
-    
+
     # Determine urgency
     if is_emergency:
         urgency = "critical"
@@ -330,7 +330,7 @@ def _fallback_symptom_analysis(
         recommendation = "These symptoms can likely be managed at home. Monitor for any worsening."
         pews = "low"
         sepsis_risk = "low"
-    
+
     return AISymptomAnalysisResponse(
         id=analysis_id,
         timestamp=timestamp,
@@ -372,7 +372,7 @@ def _fallback_care_advice(
     disclaimers: list[str],
 ) -> AICareAdviceResponse:
     """Provide fallback care advice."""
-    
+
     # Generic care advice
     care_instructions = [
         "Rest and plenty of fluids",
@@ -380,13 +380,13 @@ def _fallback_care_advice(
         "Keep a symptom diary",
         "Maintain comfortable room temperature",
     ]
-    
+
     medication_guidance = {
         "appropriate": ["Acetaminophen (Tylenol)", "Ibuprofen (if >6 months)"],
         "avoid": ["Aspirin (risk of Reye's syndrome in children)"],
         "notes": "Follow package directions for age/weight-appropriate dosing",
     }
-    
+
     return AICareAdviceResponse(
         id=advice_id,
         timestamp=timestamp,

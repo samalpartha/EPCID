@@ -42,8 +42,8 @@ async def lifespan(app: FastAPI) -> Any:
 
     # Initialize Vertex AI
     try:
-        from ..services.vertex_ai_service import get_vertex_ai_service, VERTEX_AI_AVAILABLE
-        
+        from ..services.vertex_ai_service import VERTEX_AI_AVAILABLE, get_vertex_ai_service
+
         if VERTEX_AI_AVAILABLE:
             vertex_service = get_vertex_ai_service()
             app.state.vertex_ai = vertex_service
@@ -304,7 +304,7 @@ Authorization: Bearer <your_token>
         """Check Vertex AI availability and status."""
         vertex_available = getattr(request.app.state, "vertex_ai_available", False)
         vertex_service = getattr(request.app.state, "vertex_ai", None)
-        
+
         return {
             "status": "available" if vertex_available else "unavailable",
             "vertex_ai_sdk": "installed" if vertex_service is not None else "not_installed",
