@@ -9,7 +9,7 @@ Gemini Live Agent Challenge hackathon.
 """
 
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
@@ -153,7 +153,7 @@ async def analyze_symptoms_with_ai(
     - Runs on Cloud Run
     """
     analysis_id = f"ai-{uuid4().hex[:8]}"
-    timestamp = datetime.now(UTC)
+    timestamp = datetime.now(tz=timezone.utc)  # noqa: UP017
 
     # Get Vertex AI service
     vertex_service = getattr(request.app.state, "vertex_ai", None)
@@ -230,7 +230,7 @@ async def get_ai_care_advice(
     and warning signs to watch.
     """
     advice_id = f"advice-{uuid4().hex[:8]}"
-    timestamp = datetime.now(UTC)
+    timestamp = datetime.now(tz=timezone.utc)  # noqa: UP017
 
     vertex_service = getattr(request.app.state, "vertex_ai", None)
     vertex_available = getattr(request.app.state, "vertex_ai_available", False)
