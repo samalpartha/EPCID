@@ -73,7 +73,7 @@ class VertexAIService:
         if VERTEX_AI_AVAILABLE and self.project_id:
             self._initialize()
 
-    def _initialize(self):
+    def _initialize(self) -> None:
         """Initialize Vertex AI with project and location."""
         try:
             vertexai.init(project=self.project_id, location=self.location)
@@ -109,7 +109,7 @@ OUTPUT FORMAT:
 - Include confidence levels for assessments
 - Provide clear reasoning for recommendations"""
 
-    def _get_safety_settings(self) -> list:
+    def _get_safety_settings(self) -> list[Any]:
         """Safety settings tuned for healthcare content."""
         if not VERTEX_AI_AVAILABLE:
             return []
@@ -144,7 +144,7 @@ OUTPUT FORMAT:
         child_age_years: float,
         vitals: dict | None = None,
         additional_context: str | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Analyze pediatric symptoms using Vertex AI Gemini.
 
@@ -162,6 +162,7 @@ OUTPUT FORMAT:
 
         prompt = self._build_symptom_prompt(symptoms, child_age_years, vitals, additional_context)
 
+        assert self.model is not None
         try:
             response = await self.model.generate_content_async(
                 prompt,
@@ -178,7 +179,7 @@ OUTPUT FORMAT:
             if raw_text.startswith("```"):
                 raw_text = raw_text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
 
-            result = json.loads(raw_text)
+            result: dict[str, Any] = json.loads(raw_text)
             result["provider"] = "vertex_ai"
             result["model"] = self.model_name
             return result
@@ -267,7 +268,7 @@ RULES:
         else:
             return "Adolescent 12+ years. Can describe symptoms well. Consider age-specific conditions."
 
-    def _fallback_analysis(self, symptoms: list[str], child_age_years: float) -> dict:
+    def _fallback_analysis(self, symptoms: list[str], child_age_years: float) -> dict[str, Any]:
         """Provide a safe fallback analysis when Vertex AI is unavailable."""
         symptoms_lower = " ".join(symptoms).lower()
 
@@ -321,7 +322,7 @@ RULES:
         condition: str,
         child_age_years: float,
         severity: str = "mild",
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Generate home care advice for a specific condition.
 
@@ -358,6 +359,7 @@ Provide a JSON response with:
     "sources": ["AAP", "CDC", etc.]
 }}"""
 
+        assert self.model is not None
         try:
             response = await self.model.generate_content_async(
                 prompt,
@@ -373,7 +375,7 @@ Provide a JSON response with:
             if raw_text.startswith("```"):
                 raw_text = raw_text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
 
-            result = json.loads(raw_text)
+            result: dict[str, Any] = json.loads(raw_text)
             result["provider"] = "vertex_ai"
             return result
 
