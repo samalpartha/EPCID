@@ -15,7 +15,7 @@
   
   <br />
   
-  [**🚀 Live Demo**](https://epcid-frontend-365415503294.us-central1.run.app) · [**📖 API Docs**](https://epcid-backend-365415503294.us-central1.run.app/docs) · [**🎬 Video Demo**](https://youtu.be/demo)
+  [**🚀 Live Demo**](https://epcid-frontend-365415503294.us-central1.run.app) · [**📖 API Docs**](https://epcid-backend-365415503294.us-central1.run.app/docs) · [**🎬 Video Demo**](https://youtu.be/U4pdaKB2UV0?si=CxyPnoYhodAdyPmP)
   
 </div>
 
